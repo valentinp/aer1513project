@@ -2,6 +2,7 @@
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all;
+rng(1212);
 
 %Simulate
 dt = 0.01; %time differential
@@ -13,10 +14,11 @@ x_true = [p_gt; v_gt];
 l = 1.5;
 
 %Generate measurements
-r_meas = p_gt;
+r_meas = p_gt + 1e-1*randn(size(p_gt));
 v_meas = v_gt;
-meas_idx_v = 1:2:length(p_gt);%find(abs(v_gt) < 1e-3);
-meas_idx_r = 1:2:length(p_gt);%find(abs(v_gt) < 1e-3);
+%meas_idx_v = 1:10:length(p_gt);%find(abs(v_gt) < 1e-3);
+meas_idx_v = [];
+meas_idx_r = 1:50:length(p_gt);%find(abs(v_gt) < 1e-3);
 
 r_meas = r_meas(meas_idx_r);
 v_meas = v_meas(meas_idx_v);
@@ -89,21 +91,27 @@ bvec = H'/T*G*z;
 
 %Solve!
 x_star =  Amat\bvec; %Fast!
-%x_star_var = diag(inv(Amat)); %Slow, but only necessary for uncertainty
+x_star_var = diag(inv(Amat)); %Slow, but only necessary for uncertainty
 
 % Plot
 % Extract position and velocity from k=2 to end
 p_star = x_star(3:2:end);
 v_star = x_star(4:2:end);
+p_star_var = x_star_var(3:2:end);
+v_star_var = x_star_var(4:2:end);
+
 
 close all;
 figure
-%x_errors = x_star' - x_true(2,:);
+p_errors = p_star' - x_true(1,:);
 %plot(t, x_errors, 'b');
 subplot(2,1,1)
 plot(t, p_star', 'b');
 hold on;
 plot(t, x_true(1,:), '--k');
+plot(t, p_star - 3*sqrt(p_star_var), '-r', 'Linewidth', 1);
+plot(t, p_star + 3*sqrt(p_star_var), '-r', 'Linewidth', 1);
+
 xlabel('Time [s]');
 ylabel('Position [m]');
 set(gca,'FontSize',12);
@@ -113,20 +121,20 @@ subplot(2,1,2)
 plot(t, v_star', 'b');
 hold on;
 plot(t, x_true(2,:), '--k');
+plot(t, v_star - 3*sqrt(v_star_var), '-r', 'Linewidth', 1);
+plot(t, v_star + 3*sqrt(v_star_var), '-r', 'Linewidth', 1);
 
-%plot(t, -3*sqrt(x_star_var(2:end)), '--r', 'Linewidth', 1);
-%plot(t, 3*sqrt(x_star_var(2:end)), '--r', 'Linewidth', 1);
 xlabel('Time [s]');
 ylabel('Speed [m/s]');
 set(gca,'FontSize',12);
 set(findall(gcf,'type','text'),'FontSize',12)
 
 % Histogram
-% figure
-% hist(x_errors)
-% ylabel('Frequency as Occurences');
-% xlabel('Position Error [m]');
-% title(sprintf('Position Error \n 3-sigma: %.5f [m]', 3*std(x_errors))); 
-% set(gca,'FontSize',12)
-% set(findall(gcf,'type','text'),'FontSize',12)
-% pbaspect([2 1 1])
+figure
+hist(p_errors)
+ylabel('Frequency as Occurences');
+xlabel('Position Error [m]');
+title(sprintf('Position Error \n 3-sigma: %.5f [m]', 3*std(p_errors))); 
+set(gca,'FontSize',12)
+set(findall(gcf,'type','text'),'FontSize',12)
+pbaspect([2 1 1])
