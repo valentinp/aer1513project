@@ -1,7 +1,7 @@
 % Velocity Updates Yo!
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-clear all;
+clear all; close all; clc;
 rng(1212);
 
 %Simulate
@@ -16,18 +16,18 @@ l = 1.5;
 %Generate measurements
 r_meas = p_gt + 1e-1*randn(size(p_gt));
 v_meas = v_gt;
-%meas_idx_v = 1:10:length(p_gt);%find(abs(v_gt) < 1e-3);
-meas_idx_v = [];
-meas_idx_r = 1:50:length(p_gt);%find(abs(v_gt) < 1e-3);
+meas_idx_v = 1:200:length(p_gt);%find(abs(v_gt) < 1e-3);
+%meas_idx_v = [];
+meas_idx_r = 1:100:length(p_gt);%find(abs(v_gt) < 1e-3);
 
 r_meas = r_meas(meas_idx_r);
 v_meas = v_meas(meas_idx_v);
 
 %Set noise values
-sigma_p = sqrt(2.5e-3);
-sigma_v = sqrt(2.5e-3);
+sigma_p = sqrt(1e-2);
+sigma_v = sqrt(1e-2);
 sigma_rm = sqrt(2.5e-3);
-sigma_vm = sqrt(2.5e-3);
+sigma_vm = sqrt(2.5e-10);
 
 K = size(x_true,2); %total time steps
 
