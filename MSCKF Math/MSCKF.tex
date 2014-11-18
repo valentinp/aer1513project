@@ -1,0 +1,429 @@
+\documentclass[10pt,letterpaper,fleqn,oneside]{article}
+
+% Packages
+\usepackage{sectsty}
+\usepackage{caption}
+%\usepackage{pslatex}
+\usepackage{times}
+\usepackage{amssymb,amsfonts,amsmath,amscd}
+\usepackage[pdftex,colorlinks]{hyperref}
+\usepackage[pdftex]{graphicx}
+\usepackage{fnpos}
+\usepackage{subfigure}
+\usepackage{verbatim}
+\usepackage{fancyhdr}
+\usepackage{theorem}
+\usepackage{float}
+
+% Some handy commands
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\abs}[1]{\left\vert#1\right\vert}
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\Real}{\mathbb R}
+\newcommand{\Complex}{\mathbb C}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\To}{\longrightarrow}
+\newcommand{\Ker}{\textup{Ker}}
+\newcommand{\Img}{\textup{Img}}
+\newcommand{\diag}{\textup{diag}}
+\newcommand{\circulant}{\textup{circ}}
+\newcommand{\nl}{\\[0.5em]}
+
+% Tim's Math Defs
+\newcommand{\bcf}{\;\mbox{\boldmath ${\cal F}$\unboldmath}}
+\def\Vec#1{\mathbf{#1}} %
+\newcommand{\bbm}{\begin{bmatrix}}
+\newcommand{\ebm}{\end{bmatrix}}
+\DeclareMathAlphabet{\mbf}{OT1}{ptm}{b}{n}
+\newcommand{\mbs}[1]{{\boldsymbol{#1}}}
+\def\ep{\epsilon}
+\def\la{\lambda}
+\def\om{\omega}
+\newcommand{\qc}[1]{{#1}^+}
+\newcommand{\qo}[1]{{#1}^\oplus}
+\newcommand{\qi}[1]{{#1}^{\scalebox{0.5}{$-1$}}}
+\def\four#1#2#3#4#5{\left.^{#2}_{#3}#1^{#4}_{#5}\right.} %
+
+\floatstyle{ruled}
+\newfloat{algorithm}{htp}{loa}
+\floatname{algorithm}{\sf\bfseries Algorithm}
+
+% Some new environments
+\newtheorem{preexample}{\sf\bfseries Example}
+\newenvironment{example}
+    {\begin{preexample}\upshape\hspace{-5.9pt}{\sf\bfseries :}}
+    {~\hfill $\blacktriangleleft$ \end{preexample}}
+
+\newtheorem{prethm}{\sf\bfseries Theorem}
+\newenvironment{thm}[1]
+    {\begin{prethm}\hspace{-5.9pt}{\sf\bfseries #1:}}
+    {\end{prethm}}
+
+\newtheorem{prelem}{\sf\bfseries Lemma}
+\newenvironment{lem}[1]
+    {\begin{prelem}\hspace{-5.9pt}{\sf\bfseries #1:}}
+    {\end{prelem}}
+
+\newtheorem{preprop}{\sf\bfseries Proposition}
+\newenvironment{prop}[1]
+    {\begin{preprop}\hspace{-5.9pt}{\sf\bfseries #1:}}
+    {\end{preprop}}
+
+\newenvironment{prf}[1]
+    {\indent\textit{Proof#1:}}
+    {~\hfill $\blacksquare$\\}
+
+% Fix some error reporting
+\vfuzz2pt % Don't report over-full v-boxes if over-edge is small
+\hfuzz2pt % Don't report over-full h-boxes if over-edge is small
+
+% Set the page size
+\addtolength{\hoffset}{-1.0in} \addtolength{\voffset}{-0.75in}
+\setlength{\textwidth}{7in} \setlength{\textheight}{8.25in}
+\setlength{\headheight}{0.6in}
+\setlength{\headsep}{0.4in}
+
+\setlength{\footskip}{40pt}
+\setlength{\fboxsep}{12pt}
+
+% Set the paragraph ski
+\setlength{\parskip}{3pt}
+
+% - User Input --------------------------------------------------
+%
+% Insert the program, document title, author, etc.
+
+\newcommand{\UTIASprogram}{N/A}
+\newcommand{\UTIAStitle}{UTIAS PDF\LaTeX \hspace{0.05in} Report Template \\ \vspace{0.1in} \large{with PDF Graphics from IPE}}
+\newcommand{\UTIASdocument}{Multi-State Constraint Kalman Filter: The Math}
+\newcommand{\UTIASrevision}{Rev: 1.0}
+\newcommand{\UTIASauthor}{Lee Clement and Valentin Peretroukhin}
+\newcommand{\UTIASreviewer}{}
+
+% ---------------------------------------------------------------
+
+% PDF setup
+\hypersetup{%
+    pdftitle={\UTIASdocument: \UTIAStitle},
+    pdfauthor={\UTIASauthor},
+    pdfkeywords={},
+    pdfsubject={\UTIASprogram},
+    pdfstartview={},
+    urlcolor=cyan,
+    linkcolor=red,
+}%
+
+% Define some hyphenation
+\hyphenation{aero-space} \hyphenation{auton-omous}
+
+
+
+% Fix the footnotes location
+\makeFNbottom \makeFNbelow
+
+% ---------------------------------------------------------------
+\begin{document}
+
+% Define the basic page style
+\fancypagestyle{plain}{%
+    \fancyhf{}%
+    \fancyfoot[C]{}%
+    \fancyhead[R]{\begin{tabular}[b]{r}\small\sf \UTIASdocument\\
+        \small\sf\UTIASrevision\\
+        \small\sf\today \end{tabular}}%
+    \fancyhead[L]{\includegraphics[height=0.45in]%
+        {figs/utias.pdf} \begin{tabular}[b]{l}\sc{University of Toronto} \\ \sc{Institute for Aerospace Studies} \\ \mbox{} \end{tabular}}%
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}}
+
+% Set the page style for the document
+\pagestyle{fancy}
+
+% Set the section labeling font
+\allsectionsfont{\sf\bfseries}
+
+% Set the caption labeling font
+\renewcommand{\captionlabelfont}{\sf\bfseries}
+
+\title{ \vspace{2in}{\sf\bfseries \UTIAStitle} \\
+        \vspace{0.5in} \large\normalfont
+       Somebody and Somebody Else\\
+       Institute for Aerospace Studies \\
+       University of Toronto\\
+       4925 Dufferin Street \\
+       Toronto, Ontario \\
+       Canada M3H 5T6 \\
+       \texttt{<somebody@utoronto.ca>} \\
+       \texttt{<somebodyelse@utoronto.ca>}
+}
+
+\author{}
+\date{}
+%{\sf \maketitle}
+
+% ---------------------------------------------------------------
+\newpage
+
+% Set the page headers and footers.
+\lhead{ \includegraphics[height=0.45in]%
+        {figs/utias.pdf} \begin{tabular}[b]{l}\sc{University of Toronto} \\ \sc{Institute for Aerospace Studies} \\ \mbox{} \end{tabular}}
+\rhead{ \begin{tabular}[b]{r}\small\sf \UTIASdocument\\
+        \small\sf\UTIASrevision\\
+        \small\sf\today \end{tabular}}
+\chead{}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+
+% - Tables ------------------------------------------------------
+
+% Generate table of contents
+\newpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+%{\sf\tableofcontents}
+
+% Generate a list of figures
+%\newpage
+%{\sf\listoffigures}
+
+% Generate a list of tables
+%\newpage
+%{\sf\listoftables}
+
+% Generate a list of algorithms
+%\newpage
+%{\sf\listof{algorithm}{List of Algorithms}}
+
+% - Start the Document ------------------------------------------
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% - User Input Document Text ------------------------------------
+
+\section{State Parametrization}
+\paragraph{IMU State at Time k $(16\times1)$}
+\begin{align}
+\Vec{X}_{I_k} &= \bbm ^{I_k}_G \bar{q}^T \nl
+								^G\Vec{p}_k \nl
+								^G\Vec{v}_k \nl
+								\Vec{b}_{g_k} \nl
+								\Vec{b}_{a_k}
+						 \ebm 
+						 \begin{array}{l}
+						 \leftarrow \text{Global to IMU rotation unit quaterion} \nl
+						 \leftarrow \text{IMU position in global frame} \nl
+						 \leftarrow \text{IMU velocity in global frame} \nl
+						 \leftarrow \text{Gyro bias} \nl
+						 \leftarrow \text{Accelerometer bias}
+						 \end{array}						 
+\end{align}
+
+\paragraph{IMU Error State $(15\times1)$}
+\begin{align}
+\widetilde{\Vec{X}} &= 	\bbm ^G\widetilde{\boldsymbol{\theta}} \nl
+										^G\widetilde{\Vec{p}} \nl
+										^G\widetilde{\Vec{v}} \nl
+										^G\widetilde{\Vec{b}}_g \nl
+										^G\widetilde{\Vec{b}}_a
+								\ebm
+								=
+								\bbm
+										\boldsymbol{\delta\theta}_I \nl
+										^G\Vec{p} - ^G\hat{\Vec{p}} \nl
+										^G\Vec{p} - ^G\hat{\Vec{v}} \nl
+										\Vec{b}_g - \hat{\Vec{b}}_g \nl
+										\Vec{b}_a - \hat{\Vec{b}}_a 
+								\ebm
+\end{align}
+where
+\begin{align}
+\delta\bar{q} &= ^I_G\hat{\bar{q}}^{-1} \otimes ^I_G\bar{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta} \nl 1 \ebm
+\end{align}
+
+\paragraph{MSCKF State at Time k $((16+7N)\times1)$}
+\begin{align}
+\hat{\Vec{X}}_k &= \bbm	\hat{\Vec{X}}_{I_k} \nl
+										^{C_1}_G\hat{\bar{q}} \nl
+										^G\hat{\Vec{p}}_{C_1} \nl
+										\vdots \nl
+										^{C_N}_G\hat{\bar{q}} \nl
+										^G\hat{\Vec{p}}_{C_N} \nl										
+								\ebm
+								\begin{array}{l}
+								\leftarrow \text{IMU State estimate} \nl
+								\leftarrow \text{Camera pose 1 orientation estimate} \nl
+								\leftarrow \text{Camera pose 1 position estimate} \nl
+								\vdots \nl
+								\leftarrow \text{Camera pose N orientation estimate} \nl
+								\leftarrow \text{Camera pose N position estimate} \nl
+								\end{array}		
+\end{align}
+
+\paragraph{MSCKF Error State $((15 + 6N) \times 1)$}
+\begin{align}
+\widetilde{\Vec{X}}_k &= \bbm	\widetilde{\Vec{X}}_{I_k} \nl
+											\boldsymbol{\delta\theta}_{C_1} \nl
+											^G\widetilde{\Vec{p}}_{C_1} \nl
+											\vdots \nl
+											\boldsymbol{\delta\theta}_{C_N} \nl
+											^G\widetilde{\Vec{p}}_{C_N}
+								\ebm
+\end{align}
+
+\section{IMU State Estimate Propagation}
+Integrate these with RK5 from $t_k$ to $t_k + T$ where $T$ is the sampling period of the IMU:
+\begin{align}
+^I_G\dot{\hat{\bar{q}}} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_a - \Vec{C}\left(^I_G\hat{\bar{q}}\right) \boldsymbol{\omega}_G \right)^I_G\hat{\bar{q}} \nl
+\dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
+^G\dot{\hat{\Vec{v}}}_I &= \Vec{C}\left(^I_G\hat{\bar{q}}\right)^T\left(\Vec{a}_m - \hat{\Vec{b}}_a\right) - 2\left(\boldsymbol{\omega}_G^\times\right)^G\hat{\Vec{v}}_I - \left(\boldsymbol{\omega}_G^\times\right)^2 \left.^G\hat{\Vec{p}}_I\right. + ^G\Vec{g} \nl
+\dot{\hat{\Vec{b}}}_a &= \Vec{0}_{3\times1} \nl
+^G\dot{\hat{\Vec{p}}}_I &= ^G\hat{\Vec{v}}_I \nl
+\dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
+\end{align}
+where
+\begin{align}
+\boldsymbol{\Omega}\left(\boldsymbol{\omega}\right) &= \bbm -\boldsymbol{\omega}^\times & \boldsymbol{\omega} \nl
+																										-\boldsymbol{\omega}^T & 0
+																								\ebm 
+																								\text{ is }4\times4,
+\end{align}
+$\Vec{C}(\bar{q})$ is the rotation matrix form of the quaternion $\bar{q}$,
+\begin{align}
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					-\Vec{C}\left(^I_G\hat{\bar{q}}\right)^T\hat{\Vec{a}}^\times & \Vec{0}_{3\times3} & -2\boldsymbol{\omega}_G^\times & -\Vec{C}\left(^I_G\hat{\bar{q}}\right)^T & -\left(\boldsymbol{\omega}_G^\times\right)^2 \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+		\ebm \text{ is } 15\times15, \nl
+\Vec{G} &= 	\bbm	-\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+								\Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\Vec{C}\left(^I_G\hat{\bar{q}}\right) & \Vec{0}_{3\times3} \nl
+								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \nl
+								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3}
+					\ebm \text{ is } 15\times12,
+\end{align}
+and
+\begin{align}
+\Vec{n}_I &= \bbm \Vec{n}_g \nl \Vec{n}_{wg} \nl \Vec{n}_a \nl \Vec{n}_{wa} \ebm
+\end{align}
+is the system noise whose covariance matrix $\Vec{Q}_I$ is computed offline during calibration.
+\newpage\noindent
+For the covariance,
+\begin{align}
+\Vec{P}_{k+1 | k} &= \bbm	\Vec{P}_{II_{k+1|k}} & \boldsymbol{\Phi}\left(t_k + T, t_k\right)\Vec{P}_{IC_{k|k}}\nl
+											\Vec{P}_{IC_{k|k}}^T\boldsymbol{\Phi}\left(t_k + T, t_k\right)^T & \Vec{P}_{CC_{k|k}}\nl
+								\ebm \text{ is }\left(15 + 6N\right)\times\left(15 + 6N\right)
+\end{align}
+where:
+\begin{itemize}
+\item $\Vec{P}_{CC_{k|k}}$ is the $6N\times6N$ covariance matrix of the camera pose estimates (see section on State Augmentation), 
+\item $\Vec{P}_{IC_{k|k}}$ is the correlation between the errors in the IMU state and the camera pose estimates,
+\item the state transition matrix $\boldsymbol{\Phi}\left(t_k + T, t_k\right)$ is computed by integrating (with RK5)
+\begin{align}
+\dot{\boldsymbol{\Phi}}\left(t_k + \tau, t_k\right) &= \Vec{F}\boldsymbol{\Phi}\left(t_k + \tau, t_k\right), &\tau\in\left[0,T\right]
+\end{align}
+with initial condition $\boldsymbol{\Phi}\left(t_k, t_k\right) = \Vec{1}_{15}$, and
+\item $\Vec{P}_{II_{k+1|k}}$ is obtained by integrating (with RK5)
+\begin{align}
+\dot{\Vec{P}}_{II} &= \Vec{F}\Vec{P}_{II} + \Vec{P}_{II}\Vec{F}^T + \Vec{G}\Vec{Q}_I\Vec{G}^T
+\end{align}
+over the interval $\left(t_k, t_k+T\right)$.
+\end{itemize}
+
+\section{State Augmentation}
+\subsection{Camera Poses}
+For the $\left(N+1\right)^{\text{th}}$ image, the camera pose is estimated as
+\begin{align}
+^C_G\hat{\bar{q}} &= \left.^C_I\bar{q}\right.\otimes\left.^I_G\hat{\bar{q}}\right. \nl
+^G\hat{\Vec{p}}_C &= \left.^G\hat{\Vec{p}}_I\right. + \Vec{C}\left(^I_G\hat{\bar{q}}\right)^T \left.^I\Vec{p}_C\right.
+\end{align}
+and the EKF covariance matrix is augmented according to
+\begin{align}
+\Vec{P}_{k|k} &\leftarrow \bbm \Vec{1}_{15+6N}  \nl \Vec{J}\ebm \Vec{P}_{k|k} \bbm \Vec{1}_{15+6N}  \nl \Vec{J}\ebm^T
+\end{align}
+where the Jacobian
+\begin{align}
+\Vec{J} &= \bbm \Vec{C}\left(^C_I\hat{\bar{q}}\right) & \Vec{0}_{3\times9} & \Vec{0}_{3\times3} & \Vec{0}_{3\times6N} \nl
+							\left(\Vec{C}\left(^I_G\hat{\bar{q}}\right)^T \left.^I\Vec{p}_C\right.\right)^\times & \Vec{0}_{3\times9} & \Vec{I}_3 & \Vec{0}_{3\times6N}
+				\ebm \text{ is } 6\times\left(15 + 6N\right)
+\end{align}
+
+\newpage
+\section{Correction Equations}
+\paragraph{Residuals}
+\begin{align}
+	\Vec{r}_n &= \Vec{T}_H \widetilde{\Vec{X}} + \Vec{n}_n
+\end{align}
+where $\Vec{T}_H$ (an upper-triangular matrix) is obtained from the QR decomposition of $\Vec{H}_o$ ($\Vec{H}_\Vec{x}$ in the original tech report, but I think that's an error...)
+\begin{align}
+\Vec{H}_o &= \bbm	\Vec{H}^{(1)}_o \nl \vdots \nl \Vec{H}^{(L)}_o \ebm
+ = \bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm \bbm \Vec{T}_H \nl \Vec{0} \ebm.
+\end{align}
+Each $\Vec{H}^{(j)}_o$ is the projection of $\Vec{H}^{(j)}_\Vec{x}$ onto the left nullspace of $\Vec{H}^{(j)}_f$
+
+$T_H$ and $\Vec{r}_n$ can be computed in $O(r^2d)$ time using Givens rotations without having to form $\Vec{Q}_1$ explicitly. [FIGURE OUT HOW TO DO THIS]
+
+Each $\Vec{H}^{(j)}_\Vec{x}$ is a stack of Jacobians $\Vec{H}^{(j)}_{\Vec{x}_i}$ of the $i^\text{th}$ measurement of feature $j$ with respect to the state (only the entries corresponding to pose $i$ are non-zero):
+\begin{align}
+\Vec{H}^{(j)}_{\Vec{x}_i} &= \bbm \Vec{0}_{2\times15} & \Vec{0}_{2\times6} & \hdots & \Vec{J}^{\left(j\right)}_i \left(^{C_i}\hat{\Vec{X}}_{f_j}\right)^\times & -\Vec{J}^{\left(j\right)}_i \Vec{C}\left(^{C_i}_G\hat{\bar{q}}\right) & \hdots & \Vec{0}_{2\times6} \ebm \text{ is } 2\times\left(15 + 6N\right)
+\end{align}
+
+Each $\Vec{H}^{(j)}_f$ is a stack of Jacobians $\Vec{H}^{(j)}_{f_i}$ of the $i^\text{th}$ measurement of feature $j$ with respect to the feature position:
+\begin{align}
+\Vec{H}^{(j)}_{f_i} &= \Vec{J}^{\left(j\right)}_i \Vec{C}\left(^{C_i}_G\hat{\bar{q}}\right) \text{ is } 2\times3
+\end{align}
+
+In both equations,
+\begin{align}
+\Vec{J}^{\left(j\right)}_i &= \frac{1}{^{C_i}\hat{Z}_j}
+\bbm 1 & 0 & -\frac{^{C_i}\hat{X}_j}{^{C_i}\hat{Z}_j} \nl
+		 0 & 1 & -\frac{^{C_i}\hat{Y}_j}{^{C_i}\hat{Z}_j}
+\ebm
+\end{align}
+where 
+\begin{align}
+\bbm ^{C_i}\hat{X}_j \nl ^{C_i}\hat{Y}_j \nl ^{C_i}\hat{Z}_j \ebm &= \Vec{C}\left(^{C_i}_G\hat{\bar{q}}\right) \left(^G\hat{\Vec{p}}_{f_j} - ^G\hat{\Vec{p}}_{C_i} \right)
+\end{align}
+are the 3D coordinates of feature $j$ in the frame of image $i$.
+
+$\Vec{n}_n$ is a noise vector with covariance matrix
+\begin{align}
+\Vec{R}_n &= \sigma^2_{\text{im}} \Vec{1}_r
+\end{align}
+where $r$ is the number of columns in $\Vec{Q}_1$.
+\newpage
+\paragraph{Kalman Gain}
+\begin{align}
+\Vec{K} &= \Vec{P}_{k+1|k}\Vec{T}_H^T\left(\Vec{T}_H\Vec{P}_{k+1|k}\Vec{T}_H^T + \Vec{R}_n \right)^{-1}
+\end{align}
+
+\paragraph{State Vector Correction}
+\begin{align}
+\Delta\Vec{X} &= \Vec{K}\Vec{r}_n
+\end{align}
+
+\paragraph{State Covariance Correction}
+\begin{align}
+\Vec{P}_{k+1|k+1} &= \left(\Vec{1}_{15+6N} - \Vec{K}\Vec{T}_H \right)\Vec{P}_{k+1|k}\left(\Vec{1}_{15+6N} - \Vec{K}\Vec{T}_H \right)^T + \Vec{K}\Vec{R}_n\Vec{K}^T
+\end{align}
+
+% ---------------------------------------------------------------
+
+%\newpage
+%\bibliographystyle{plain}
+%\bibliography{bib/refs}
+% ---------------------------------------------------------------
+
+%\newpage
+%\appendix
+%\section{Appendix Title}
+%\subsection{Subsection of Appendix}
+
+\end{document}
