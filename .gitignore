@@ -11,3 +11,6 @@
 *.out
 *.synctex.gz
 *.toc
+
+#MATLAB
+*.m~
