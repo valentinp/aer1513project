@@ -1,6 +1,7 @@
-function rotMat = quatToRotMat(quat)
+function C = quatToRotMat(quat)
 %
-% Converts a quaternion into a 3x3 rotation matrix using {1,i,j,k} convention
+% Converts a quaternion into a 3x3 rotation matrix
+% using the {i,j,k,1} convention
 %
     if( size(quat,1) ~= 4 || size(quat,2) ~= 1 )
         error('Input quaternion must be 4x1');
@@ -10,12 +11,6 @@ function rotMat = quatToRotMat(quat)
         error('Input quaternion must be unit-length');
     end
     
-    a = quat(1); % scalar component
-    b = quat(2); % i component
-    c = quat(3); % j component
-    d = quat(4); % k component
-    
-    rotMat = [  a*a + b*b - c*c - d*d,  2*(b*c - a*d),          2*(b*d + a*c);
-                2*(b*c + a*d),          a*a - b*b + c*c - d*d,  2*(c*d - a*b);
-                2*(b*d - a*c),          2*(c*d + a*b),          a*a - b*b - c*c + d*d   ];
+    R = quatRightComp(quat)' * quatLeftComp(quat);
+    C = R(1:3,1:3);
 end
