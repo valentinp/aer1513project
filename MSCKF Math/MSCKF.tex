@@ -338,9 +338,9 @@ where:
 with initial condition $\boldsymbol{\Phi}\left(t_{k-1}, t_{k-1}\right) = \Vec{1}_{15}$, and
 \item $\hat{\Vec{P}}^-_{II, k}$ is obtained by integrating (with RK5)
 \begin{align}
-\dot{\hat{\Vec{P}}}^-_{II} &= \Vec{F}\hat{\Vec{P}}^-_{II} + \hat{\Vec{P}}^-_{II}\Vec{F}^T + \Vec{G}\Vec{Q}_I\Vec{G}^T
+\dot{\hat{\Vec{P}}}_{II}\left(t_{k-1}, t_{k-1}+\tau\right) &= \Vec{F}\hat{\Vec{P}}_{II}\left(t_{k-1}, t_{k-1}+\tau\right) + \hat{\Vec{P}}_{II}\left(t_{k-1}, t_{k-1}+\tau\right)\Vec{F}^T + \Vec{G}\Vec{Q}_I\Vec{G}^T, &\tau\in\left[0,T\right]
 \end{align}
-over the interval $\left(t_{k-1}, t_{k-1}+T\right)$.
+with initial condition $\Vec{P}_{II}\left(t_{k-1}, t_{k-1}\right) = \hat{\Vec{P}}_{II, k-1}$.
 \end{itemize}
 
 \section{State Augmentation}
