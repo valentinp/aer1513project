@@ -6,7 +6,7 @@ function vecCross = crossMat(vec)
         error('Input vector must be 3x1');
     end
 
-    vecCross = [0, 			-vec(3), 	vec(2);
-				vec(3),		0,			-vec(1);
-				-vec(2),	vec(2),		0];
+    vecCross = [ 0, 		-vec(3), 	vec(2);
+				 vec(3),	0,			-vec(1);
+				 -vec(2),	vec(1),		0        ];
 end
