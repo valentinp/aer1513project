@@ -8,6 +8,8 @@ camera.f_u = fu;
 camera.f_v = fv;
 camera.b = b;
 
+
+
 % Notation: X_sub_super
 
 imuState.q_iG = [zeros(3,1); 1];  %Global to IMU rotation quaternion
