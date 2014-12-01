@@ -280,7 +280,7 @@ where
 \section{IMU State Estimate Propagation}
 Integrate these with RK5 from $t_{k-1}$ to $t_{k-1} + T$ where $T$ is the sampling period of the IMU:
 \begin{align}
-\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{v}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\Vec{a}_m - \hat{\Vec{b}}_a\right) - 2\left(\boldsymbol{\omega}_G^\times\right)\hat{\Vec{v}}^G_I - \left(\boldsymbol{\omega}_G^\times\right)^2 \left.\hat{\Vec{p}}^G_I\right. + \Vec{g}^G \nl
 \dot{\hat{\Vec{b}}}_a &= \Vec{0}_{3\times1} \nl
@@ -289,6 +289,7 @@ Integrate these with RK5 from $t_{k-1}$ to $t_{k-1} + T$ where $T$ is the sampli
 \end{align}
 where
 \begin{align}
+\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G, \nl
 \boldsymbol{\Omega}\left(\boldsymbol{\omega}\right) &= \bbm -\boldsymbol{\omega}^\times & \boldsymbol{\omega} \nl
 																										-\boldsymbol{\omega}^T & 0
 																								\ebm 
@@ -298,7 +299,7 @@ where
 $\hat{\Vec{C}}_{I G} := \Vec{C}(\hat{\Vec{q}}_{I G})$ is the rotation matrix form of the quaternion $\hat{\Vec{q}}_{I G}$,
 
 \begin{align}
-\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					-\hat{\Vec{C}}_{I G}^T\hat{\Vec{a}}^\times & \Vec{0}_{3\times3} & -2\boldsymbol{\omega}_G^\times & -\hat{\Vec{C}}_{I G}^T & -\left(\boldsymbol{\omega}_G^\times\right)^2 \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
@@ -459,15 +460,19 @@ where $r$ is the number of columns in $\Vec{Q}_1$.
 
 \subsection{IMU State Propagation}
 \begin{align}
-\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g \right)\hat{\Vec{q}}_{I G} \nl
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}} \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
 \dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
 \end{align}
+where
+\begin{align}
+\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g, \nl
+\end{align}
 
 \begin{align}
-\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
