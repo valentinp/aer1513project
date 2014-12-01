@@ -284,8 +284,7 @@ Integrate these with RK5 from $t_{k-1}$ to $t_{k-1} + T$ where $T$ is the sampli
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{v}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\Vec{a}_m - \hat{\Vec{b}}_a\right) - 2\left(\boldsymbol{\omega}_G^\times\right)\hat{\Vec{v}}^G_I - \left(\boldsymbol{\omega}_G^\times\right)^2 \left.\hat{\Vec{p}}^G_I\right. + \Vec{g}^G \nl
 \dot{\hat{\Vec{b}}}_a &= \Vec{0}_{3\times1} \nl
-\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{v}}^G_I \nl
-\dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
+\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{v}}^G_I 
 \end{align}
 where
 \begin{align}
@@ -463,12 +462,11 @@ where $r$ is the number of columns in $\Vec{Q}_1$.
 \dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}} \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
-\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
-\dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
+\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)
 \end{align}
 where
 \begin{align}
-\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g, \nl
+\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g,
 \end{align}
 
 \begin{align}
