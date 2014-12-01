@@ -19,3 +19,22 @@ camState.q_CG = [zeros(3,1); 1];
 camState.p_C_G = zeros(3,1);
 
 %msckfState = {imuState, camState1, camState2,....}
+
+Nmax = 50;
+
+
+%Propagate state and covariance
+
+%Add camera pose to msckfState
+
+%Continue until a feature is no longer seen or there are Nmax camera frames
+
+%Estimate feature 3D location through Gauss Newton inverse depth
+
+%Compute rh, Th
+
+%Calculate Kalman gain
+
+%Correct covariance
+
+%Remove any camera states with no tracked features
