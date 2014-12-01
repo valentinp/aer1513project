@@ -459,7 +459,7 @@ where $r$ is the number of columns in $\Vec{Q}_1$.
 
 \subsection{IMU State Propagation}
 \begin{align}
-\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
