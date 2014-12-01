@@ -277,10 +277,42 @@ where
 								\ebm
 \end{align}
 
+\subsection{AER 1513 Mods}
+\paragraph{IMU State at Time k $(13\times1)$}
+\begin{align}
+\Vec{X}_{I_k} &= \bbm \Vec{q}_{I_k G} \nl
+								\Vec{p}^G_k \nl
+								\Vec{b}_{g,k} \nl
+								\Vec{b}_{v,k}
+						 \ebm 
+						 \begin{array}{l}
+						 \leftarrow \text{Global to IMU rotation unit quaterion} \nl
+						 \leftarrow \text{IMU position in global frame} \nl
+						 \leftarrow \text{Gyro bias} \nl
+						 \leftarrow \text{Velocity measurement bias}
+						 \end{array}						 
+\end{align}
+
+\paragraph{IMU Error State at Time k $(12\times1)$}
+\begin{align}
+\widetilde{\Vec{X}}_{I_k} &= 	\bbm \widetilde{\boldsymbol{\theta}}^G_k \nl
+										\widetilde{\Vec{p}}^G_k \nl
+										\widetilde{\Vec{b}}_{g,k} \nl
+										\widetilde{\Vec{b}}_{v,k}
+								\ebm
+								=
+								\bbm
+										\boldsymbol{\delta\theta}_I \nl
+										\Vec{p}^G_k - \hat{\Vec{p}}^G_k \nl
+										\Vec{b}_{g,k} - \hat{\Vec{b}}_{g,k} \nl
+										\Vec{b}_{v,k} - \hat{\Vec{b}}_{v,k} 
+								\ebm
+\end{align}
+
 \section{IMU State Estimate Propagation}
 Integrate these with RK5 from $t_{k-1}$ to $t_{k-1} + T$ where $T$ is the sampling period of the IMU:
 \begin{align}
-\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_a - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{v}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\Vec{a}_m - \hat{\Vec{b}}_a\right) - 2\left(\boldsymbol{\omega}_G^\times\right)\hat{\Vec{v}}^G_I - \left(\boldsymbol{\omega}_G^\times\right)^2 \left.\hat{\Vec{p}}^G_I\right. + \Vec{g}^G \nl
 \dot{\hat{\Vec{b}}}_a &= \Vec{0}_{3\times1} \nl
@@ -296,7 +328,7 @@ where
 \end{align}
 $\hat{\Vec{C}}_{I G} := \Vec{C}(\hat{\Vec{q}}_{I G})$ is the rotation matrix form of the quaternion $\hat{\Vec{q}}_{I G}$,
 \begin{align}
-\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					-\hat{\Vec{C}}_{I G}^T\hat{\Vec{a}}^\times & \Vec{0}_{3\times3} & -2\boldsymbol{\omega}_G^\times & -\hat{\Vec{C}}_{I G}^T & -\left(\boldsymbol{\omega}_G^\times\right)^2 \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
@@ -343,6 +375,41 @@ with initial condition $\boldsymbol{\Phi}\left(t_{k-1}, t_{k-1}\right) = \Vec{1}
 with initial condition $\Vec{P}_{II}\left(t_{k-1}, t_{k-1}\right) = \hat{\Vec{P}}_{II, k-1}$.
 \end{itemize}
 
+\subsection{AER 1513 Mods}
+\begin{align}
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
+\dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
+\dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
+\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{v}}^G_I \nl
+\dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
+\end{align}
+
+\begin{align}
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+		\ebm \text{ is } 15\times12, \nl
+\Vec{G} &= 	\bbm	-\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+								\Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \nl
+								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3}
+					\ebm \text{ is } 12\times12,
+\end{align}
+and
+\begin{align}
+\Vec{n}_I &= \bbm \Vec{n}_g \nl \Vec{n}_{wg} \nl \Vec{n}_a \nl \Vec{n}_{wa} \ebm
+					\begin{array}{l}
+					\leftarrow \text{Gyro noise} \nl
+					\leftarrow \text{Gyro-bias rate-of-change noise} \nl
+					\leftarrow \text{Velocity measurement noise} \nl
+					\leftarrow \text{Velocity bias rate-of-change noise}
+					\end{array}		
+\end{align}
+
+$\hat{\Vec{P}}^-_k$ is $(12+6N)\times(12+6N)$.
+
+
 \section{State Augmentation}
 \subsection{Camera Poses}
 For the $\left(N+1\right)^{\text{th}}$ image, the camera pose is estimated as
@@ -361,7 +428,18 @@ where the Jacobian
 				\ebm \text{ is } 6\times\left(15 + 6N\right)
 \end{align}
 
-\newpage
+\subsection{AER 1513 Mods}
+\begin{align}
+\hat{\Vec{P}}_{k-1} &\leftarrow \bbm \Vec{1}_{12+6N}  \nl \Vec{J}\ebm \hat{\Vec{P}}_{k-1} \bbm \Vec{1}_{12+6N}  \nl \Vec{J}\ebm^T
+\end{align}
+where the Jacobian (not quite sure if I took out the right columns)...
+\begin{align}
+\Vec{J} &= \bbm \hat{\Vec{C}}_{C I} & \Vec{0}_{3\times6} & \Vec{0}_{3\times3} & \Vec{0}_{3\times6N} \nl
+							\left(\hat{\Vec{C}}_{I G}^T \left.\Vec{p}^I_C\right.\right)^\times & \Vec{0}_{3\times6} & \Vec{1}_3 & \Vec{0}_{3\times6N}
+				\ebm \text{ is } 6\times\left(12 + 6N\right)
+\end{align}
+
+
 \section{Correction Equations}
 \paragraph{Residuals (pretend everything has a k subscript...)}
 \begin{align}
@@ -418,6 +496,11 @@ where $r$ is the number of columns in $\Vec{Q}_1$.
 \paragraph{State Covariance Correction}
 \begin{align}
 \hat{\Vec{P}}_k &= \left(\Vec{1}_{15+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)\hat{\Vec{P}}^-_k\left(\Vec{1}_{15+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)^T + \Vec{K}_k\Vec{R}_{n,k}\Vec{K}_k^T
+\end{align}
+
+\subsection{AER 1513 Mods}
+\begin{align}
+\Vec{H}^{(j)}_{\Vec{x}_i} &= \bbm \Vec{0}_{2\times12} & \Vec{0}_{2\times6} & \hdots & \Vec{J}^{\left(j\right)}_i \left(\hat{\Vec{X}}^{C_i}_{f_j}\right)^\times & -\Vec{J}^{\left(j\right)}_i \hat{\Vec{C}}_{C_i G} & \hdots & \Vec{0}_{2\times6} \ebm \text{ is } 2\times\left(12 + 6N\right)
 \end{align}
 
 % ---------------------------------------------------------------
