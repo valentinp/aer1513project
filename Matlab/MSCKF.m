@@ -7,18 +7,24 @@ camera.c_v = cv;
 camera.f_u = fu;
 camera.f_v = fv;
 camera.b = b;
+camera.q_CI  = C_c_v;
+camera.p_C_I = rho_v_c_v;
+
+% Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
 
 
+imuState.q_IG{1} = [zeros(3,1); 1];    %Global to IMU rotation quaternion
+imuState.p_G{1}  = zeros(3,1);         %IMU Position in the Global frame
+imuState.b_g{1}  = zeros(3,1);         %Gyro bias
+imuState.b_v{1}  = zeros(3,1);         %Velocity bias
 
-% Notation: X_sub_super
+imuErrorState.dTheta{1} = zeros(3,1);
+imuErrorState.dp = zeros(3,1);
+imuErrorState.db_g{1} = zeros(3,1);
+imuErrorState.db_v{1} = zeros(3,1);
 
-imuState.q_iG = [zeros(3,1); 1];  %Global to IMU rotation quaternion
-imuState.p_G = zeros(3,1); %IMU Position in the Global frame
-imuState.b_g = zeros(3,1); %Gyro bias
-imuState.b_v = zeros(3,1); %Velocity bias
-
-camState.q_CG = [zeros(3,1); 1];
-camState.p_C_G = zeros(3,1);
+camState.q_CG{1}  = [zeros(3,1); 1];
+camState.p_C_G{1} = zeros(3,1);
 
 %msckfState = {imuState, camState1, camState2,....}
 
@@ -26,6 +32,7 @@ Nmax = 50;
 
 
 %Propagate state and covariance
+
 
 %Add camera pose to msckfState
 
