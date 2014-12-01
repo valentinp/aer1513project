@@ -11,6 +11,11 @@
 *.out
 *.synctex.gz
 *.toc
+*.fdb_latexmk
 
 #MATLAB
 *.m~
+
+#Sublime
+*.sublime-workspace
+*.sublime-project

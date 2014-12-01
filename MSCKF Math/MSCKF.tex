@@ -210,7 +210,7 @@
 \section{State Parametrization}
 \paragraph{IMU State at Time k $(16\times1)$}
 \begin{align}
-\Vec{X}_{I_k} &= \bbm \bar{q}_{I_k G} \nl
+\Vec{X}_{I_k} &= \bbm \Vec{q}_{I_k G} \nl
 								\Vec{p}^G_k \nl
 								\Vec{v}^G_k \nl
 								\Vec{b}_{g,k} \nl
@@ -244,16 +244,16 @@
 \end{align}
 where
 \begin{align}
-\delta\bar{q} &= \left(\hat{\bar{q}}_{I G}\right)^{-1} \otimes \bar{q}_{I G} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta} \nl 1 \ebm
+\delta\Vec{q} &= \left(\hat{\Vec{q}}_{I G}\right)^{-1} \otimes \Vec{q}_{I G} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta} \nl 1 \ebm
 \end{align}
 
 \paragraph{MSCKF State at Time k $((16+7N)\times1)$}
 \begin{align}
 \hat{\Vec{X}}_k &= \bbm	\hat{\Vec{X}}_{I_k} \nl
-										\hat{\bar{q}}_{C_1 G} \nl
+										\hat{\Vec{q}}_{C_1 G} \nl
 										\hat{\Vec{p}}^G_{C_1} \nl
 										\vdots \nl
-										\hat{\bar{q}}_{C_N G} \nl
+										\hat{\Vec{q}}_{C_N G} \nl
 										\hat{\Vec{p}}^G_{C_N} \nl										
 								\ebm
 								\begin{array}{l}
@@ -280,7 +280,7 @@ where
 \section{IMU State Estimate Propagation}
 Integrate these with RK5 from $t_{k-1}$ to $t_{k-1} + T$ where $T$ is the sampling period of the IMU:
 \begin{align}
-\dot{\hat{\bar{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_a - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\bar{q}}_{I G} \nl
+\dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_a - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{v}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\Vec{a}_m - \hat{\Vec{b}}_a\right) - 2\left(\boldsymbol{\omega}_G^\times\right)\hat{\Vec{v}}^G_I - \left(\boldsymbol{\omega}_G^\times\right)^2 \left.\hat{\Vec{p}}^G_I\right. + \Vec{g}^G \nl
 \dot{\hat{\Vec{b}}}_a &= \Vec{0}_{3\times1} \nl
@@ -294,7 +294,7 @@ where
 																								\ebm 
 																								\text{ is }4\times4,
 \end{align}
-$\hat{\Vec{C}}_{I G} := \Vec{C}(\hat{\bar{q}}_{I G})$ is the rotation matrix form of the quaternion $\hat{\bar{q}}_{I G}$,
+$\hat{\Vec{C}}_{I G} := \Vec{C}(\hat{\Vec{q}}_{I G})$ is the rotation matrix form of the quaternion $\hat{\Vec{q}}_{I G}$,
 \begin{align}
 \Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
@@ -347,7 +347,7 @@ with initial condition $\Vec{P}_{II}\left(t_{k-1}, t_{k-1}\right) = \hat{\Vec{P}
 \subsection{Camera Poses}
 For the $\left(N+1\right)^{\text{th}}$ image, the camera pose is estimated as
 \begin{align}
-\hat{\bar{q}}_{C G} &= \left.\bar{q}_{C I}\right.\otimes\left.\hat{\bar{q}}_{I G}\right. \nl
+\hat{\Vec{q}}_{C G} &= \left.\Vec{q}_{C I}\right.\otimes\left.\hat{\Vec{q}}_{I G}\right. \nl
 \hat{\Vec{p}}^G_C &= \left.\hat{\Vec{p}}^G_I\right. + \hat{\Vec{C}}_{I G}^T \left.\Vec{p}^I_C\right.
 \end{align}
 and the EKF covariance matrix is augmented according to
