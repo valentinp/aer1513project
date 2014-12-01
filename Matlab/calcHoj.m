@@ -19,9 +19,9 @@ Z = p_F_C(3);
 J_i = (1/Z)*[1 0 -X/Z; 0 1 -Y/Z];
 
 
-H_x_j = zeros(2, 15 + 6*N);
-H_x_j(:,15+6*(camStateIndex-1) + 1:15+6*(camStateIndex-1) + 3) = J_i*crossMat(p_f_C);
-H_x_j(:,(15+6*(camStateIndex-1) + 4):(15+6*(camStateIndex-1) + 6)) = -J_i*quatToRotMat(camState.q_CG);
+H_x_j = zeros(2, 12 + 6*N);
+H_x_j(:,12+6*(camStateIndex-1) + 1:15+6*(camStateIndex-1) + 3) = J_i*crossMat(p_f_C);
+H_x_j(:,(12+6*(camStateIndex-1) + 4):(15+6*(camStateIndex-1) + 6)) = -J_i*quatToRotMat(camState.q_CG);
 
 
 A = null(H_x_j);
