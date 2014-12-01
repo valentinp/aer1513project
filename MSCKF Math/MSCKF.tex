@@ -326,7 +326,9 @@ where
 																								\ebm 
 																								\text{ is }4\times4,
 \end{align}
+
 $\hat{\Vec{C}}_{I G} := \Vec{C}(\hat{\Vec{q}}_{I G})$ is the rotation matrix form of the quaternion $\hat{\Vec{q}}_{I G}$,
+
 \begin{align}
 \Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
@@ -352,7 +354,7 @@ and
 					\end{array}		
 \end{align}
 is the system noise whose covariance matrix $\Vec{Q}_I$ is computed offline during calibration. Note, $\pmb{\omega}_G$ is the angular velocity of the spinning Earth in our global frame. The magnitude (i.e. rotational speed) is equal to $7.292 \times 10^{−5} \frac{\text{rad}}{s}$. 
-\newpage\noindent
+
 For the covariance,
 \begin{align}
 \hat{\Vec{P}}^-_k &= \bbm	\hat{\Vec{P}}^-_{II, k} & \boldsymbol{\Phi}\left(t_{k-1} + T, t_{k-1}\right)\hat{\Vec{P}}_{IC, k-1}\nl
@@ -380,7 +382,7 @@ with initial condition $\Vec{P}_{II}\left(t_{k-1}, t_{k-1}\right) = \hat{\Vec{P}
 \dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
-\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{v}}^G_I \nl
+\dot{\hat{\Vec{p}}}^G_I &= \left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
 \dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
 \end{align}
 
@@ -482,7 +484,7 @@ $\Vec{n}_n$ is a noise vector with covariance matrix
 \Vec{R}_n &= \sigma^2_{\text{im}} \Vec{1}_r
 \end{align}
 where $r$ is the number of columns in $\Vec{Q}_1$.
-\newpage
+
 \paragraph{Kalman Gain}
 \begin{align}
 \Vec{K}_k &= \hat{\Vec{P}}^-_k\Vec{T}_{H,k}^T\left(\Vec{T}_{H,k}\hat{\Vec{P}}^-_k\Vec{T}_{H,k}^T + \Vec{R}_{n,k} \right)^{-1}
