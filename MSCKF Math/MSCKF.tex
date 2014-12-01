@@ -382,16 +382,16 @@ with initial condition $\Vec{P}_{II}\left(t_{k-1}, t_{k-1}\right) = \hat{\Vec{P}
 \dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\boldsymbol{\omega}_m - \hat{\Vec{b}}_g - \hat{\Vec{C}}_{I G} \boldsymbol{\omega}_G \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
-\dot{\hat{\Vec{p}}}^G_I &= \left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
+\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)\nl
 \dot{\widetilde{\Vec{X}}}_I &= \Vec{F}\widetilde{\Vec{X}}_I + \Vec{G}\Vec{n}_I
 \end{align}
 
 \begin{align}
-\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
-					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
-					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
-					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
-		\ebm \text{ is } 15\times12, \nl
+\Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}_m^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
+		\ebm \text{ is } 12\times12, \nl
 \Vec{G} &= 	\bbm	-\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 								\Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 								\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \nl
