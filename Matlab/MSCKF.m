@@ -1,6 +1,10 @@
 addpath('utils');
 load('dataset3.mat')
 
+%Dataset window bounds
+k1 = 1215;
+k2 = 1714;
+
 %Set up the camera parameters
 camera.c_u      = cu;
 camera.c_v      = cv;
@@ -12,13 +16,14 @@ camera.p_C_I    = rho_v_c_v;
 
 % Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
 
-
+imuState = cell{1,numel(t)};
 imuState{1}.q_IG  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
 imuState{1}.p_I_G = zeros(3,1);         %IMU Position in the Global frame
 imuState{1}.b_g   = zeros(3,1);         %Gyro bias
 imuState{1}.b_v   = zeros(3,1);         %Velocity bias
 imuState{1}.covar = zeros(12,12);       %IMU state covariance
 
+camState = cell{1,numel(t)};
 camStates{1}.q_CG  = [zeros(3,1); 1];
 camStates{1}.p_C_G = zeros(3,1);
 
@@ -26,11 +31,12 @@ camStates{1}.p_C_G = zeros(3,1);
 
 % Measurements as cells
 dT = [0, diff(t)];
-for k = 1:numel(t)    
+measurements = cell{1,numel(t)};
+for k = k1:k2 
     measurements{k}.dT    = dT(k);           % sampling times
     measurements{k}.y     = y_k_j(1:2,k,:);  % left camera only
     measurements{k}.omega = w_vk_vk_i(:,k);  % ang vel
-    measurements{k}.      = v_vk_vk_i(:,k);  % lin vel
+    measurements{k}.v     = v_vk_vk_i(:,k);  % lin vel
 end
 
 Nmax = 50;
