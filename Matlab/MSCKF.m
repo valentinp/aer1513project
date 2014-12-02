@@ -13,24 +13,24 @@ camera.p_C_I    = rho_v_c_v;
 % Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
 
 
-imuState.q_IG{1}  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
-imuState.p_I_G{1} = zeros(3,1);         %IMU Position in the Global frame
-imuState.b_g{1}   = zeros(3,1);         %Gyro bias
-imuState.b_v{1}   = zeros(3,1);         %Velocity bias
-imuState.covar{1} = zeros(12,12);       %IMU state covariance
+imuState{1}.q_IG  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
+imuState{1}.p_I_G = zeros(3,1);         %IMU Position in the Global frame
+imuState{1}.b_g   = zeros(3,1);         %Gyro bias
+imuState{1}.b_v   = zeros(3,1);         %Velocity bias
+imuState{1}.covar = zeros(12,12);       %IMU state covariance
 
-camState.q_CG{1}  = [zeros(3,1); 1];
-camState.p_C_G{1} = zeros(3,1);
+camStates{1}.q_CG  = [zeros(3,1); 1];
+camStates{1}.p_C_G = zeros(3,1);
 
 %msckfState = {imuState, camState1, camState2, ...}
 
 % Measurements as cells
 dT = [0, diff(t)];
-for cellIdx = 1:numel(t)    
-    measurements.dT{cellIdx}    = dT(cellIdx);     % sampling times
-    measurements.y{k}           = y_k_j(1:2,k,:);  % left camera only
-    measurements.omega{k}       = w_vk_vk_i(:,k);  % ang vel
-    measurements.v{k}           = v_vk_vk_i(:,k);  % lin vel
+for k = 1:numel(t)    
+    measurements{k}.dT    = dT(k);           % sampling times
+    measurements{k}.y     = y_k_j(1:2,k,:);  % left camera only
+    measurements{k}.omega = w_vk_vk_i(:,k);  % ang vel
+    measurements{k}.      = v_vk_vk_i(:,k);  % lin vel
 end
 
 Nmax = 50;
