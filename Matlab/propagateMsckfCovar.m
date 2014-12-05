@@ -1,12 +1,13 @@
-function msckfState_prop = propagateMsckfCovar(msckfState, measurements_k)
+function msckfState_prop = propagateMsckfCovar(msckfState, measurements_k, noiseParams)
     % Jacobians
+    Q_imu = noiseParams.Q_imu;
     F = calcF(msckfState.imuState, measurements_k);
     G = calcG();
 
     % IMU-IMU Covariance
     msckfState_prop.imuCovar = (F * msckfState.imuCovar ...
                                 + msckfState.imuCovar * F' ...
-                                + G * measurements_k * Q_imu * G' ) ...
+                                + G * Q_imu * G' ) ...
                             * measurements_k.dT;
                      
     % Camera-Camera Covariance
