@@ -50,7 +50,11 @@ Nmax = 50;
 %Continue until a feature is no longer seen or there are Nmax camera frames
 
 %Estimate feature 3D location through Gauss Newton inverse depth
-[p_f_G] = calcGNPosEst(camStates, observations, camera)
+%IMPORTANT: Use 'ideal' measurements:
+%u' = (u - c_u)/f_u;
+%v' = (v - c_v)/f_v;
+
+[p_f_G] = calcGNPosEst(camStates, observations)
 
 %Compute rh, Th
 [T_H, Q_1] = calcTH(H_o)
