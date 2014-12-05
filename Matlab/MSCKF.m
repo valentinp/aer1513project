@@ -51,7 +51,7 @@ Nmax = 50;
 msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
 
 %Add camera pose to msckfState
-msckfState = augmentState(msckfState, );
+msckfState = augmentState(msckfState, camera);
 
 %Continue until a feature is no longer seen or there are Nmax camera frames
 
