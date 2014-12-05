@@ -50,8 +50,12 @@ Nmax = 50;
 %Continue until a feature is no longer seen or there are Nmax camera frames
 
 %Estimate feature 3D location through Gauss Newton inverse depth
+[p_f_G] = calcGNPosEst(camStates, observations, camera)
 
 %Compute rh, Th
+[T_H, Q_1] = calcTH(H_o)
+[H_o_j, A] = calcHoj(p_f_G, msckfState, camStateIndex)
+[r_n_j] = calcResidual(r__j, A_j, Q_1)
 
 %Calculate Kalman gain
 
