@@ -1,6 +1,7 @@
 %% Test feature Gauss Newton triangulation
 %Generate a forward trajectory
 addpath('../utils');
+addpath('../');
 i = 1;
 T_wCam_GT = [];
 for t = 0:0.2:2
@@ -22,7 +23,7 @@ K  = [focalLength 0 c_u;
     0 0 1];
 
 
-imageMeasurements = genFeatureMeasurements(T_wCam_GT, landmarks_w, K, simSetup)
+imageMeasurements = genFeatureMeasurements(T_wCam_GT, landmarks_w, K, simSetup);
 
 observations = imageMeasurements;
 observations(1,:) = (observations(1,:) - c_u)/focalLength;
@@ -31,9 +32,10 @@ observations(2,:) = (observations(2,:) - c_v)/focalLength;
 camStates = {};
 % Extract all viewable measurements
 for step_i = 1:size(T_wCam_GT,3)
-    camStates{step_i}.q_CG  = rotMatToQuat(T_wCam_GT(1:3,1:3)');
-    camStates{step_i}.p_C_G = T_wCam_GT(1:3,4);
+    camStates{step_i}.q_CG  = rotMatToQuat(T_wCam_GT(1:3,1:3, step_i)');
+    camStates{step_i}.p_C_G = T_wCam_GT(1:3,4, step_i);
 end
+noiseParams.z_1 = 1;
+noiseParams.z_2 = 1;
 
-
-[p_f_G] = calcGNPosEst(camStates, observations, {})
+[p_f_G] = calcGNPosEst(camStates, observations, noiseParams)

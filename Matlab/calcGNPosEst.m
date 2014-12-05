@@ -1,4 +1,4 @@
-function [p_f_G] = calcGNPosEst(camStates, observations)
+function [p_f_G] = calcGNPosEst(camStates, observations, noiseParams)
 %CALCGNPOSEST Calculate the position estimate of the feature using Gauss
 %Newton optimization
 %   INPUT:
@@ -33,24 +33,27 @@ Cnum = length(camStates);
 
 %Optimize
 maxIter = 10;
+Jprev = Inf;
+
 for optI = 1:maxIter
 
-    E = zeros(3, 2*Cnum);
+    E = zeros(2*Cnum, 3);
     W = zeros(2*Cnum, 2*Cnum);
     errorVec = zeros(2*Cnum, 1);
 
     for iState = 1:Cnum
         %Form the weight matrix
-        W((3*State - 2):(3*State),(3*State - 2):(3*State)) = diag([camera.n_u^2 camera.n_v^2]);
+        W((2*iState - 1):(2*iState),(2*iState - 1):(2*iState)) = diag([noiseParams.z_1^2 noiseParams.z_2^2]);
 
         C_i1 = quatToRotMat(camStates{iState}.q_CG)*quatToRotMat(camStates{1}.q_CG)';
-
+        t_1i_i = quatToRotMat(camStates{iState}.q_CG)*(camStates{1}.p_C_G - camStates{iState}.p_C_G);
+        
 
         %Form the error vector
         zHat = observations(:, iState);
-        h = C_i1*[alphaBar; betaBar; 1] + rhoBar*p_f1_1_bar;
+        h = C_i1*[alphaBar; betaBar; 1] + rhoBar*t_1i_i;
 
-        errorVec((2*State - 1):(2*State),1) = zHat - 1/h(3)*[h(1); h(2)];
+        errorVec((2*iState - 1):(2*iState),1) = zHat - 1/h(3)*[h(1); h(2)];
 
 
         %Form the Jacobian
@@ -60,23 +63,24 @@ for optI = 1:maxIter
         dEdbeta = [-1/h(3)*C_i1(1,2) + (1/h(3)^2)*C_i1(3,2)*h(1); ...
                     -1/h(3)*C_i1(2,2) + (1/h(3)^2)*C_i1(3,2)*h(2)];
 
-        dEdrho = [-1/h(3)*xBar + (1/h(3)^2)*zBar*h(1); ...
-                    -1/h(3)*yBar + (1/h(3)^2)*zBar*h(2)];
+        dEdrho = [-1/h(3)*t_1i_i(1) + (1/h(3)^2)*t_1i_i(3)*h(1); ...
+                    -1/h(3)*t_1i_i(2) + (1/h(3)^2)*t_1i_i(3)*h(2)];
 
-
-        Eblock = [dEdalpha; dEdbeta; dEdrho];
-        E((2*State - 1):(2*State), (3*State - 2):(3*State)) = Eblock;
+        Eblock = [dEdalpha dEdbeta dEdrho];
+        E((2*iState - 1):(2*iState), :) = Eblock;
     end
     
     %Calculate the cost function
-    J = 0.5*errorVec'*(W\errorVec)
-    
+    Jnew = 0.5*errorVec'*(W\errorVec);
+    Jprev = Jnew;
     %Solve!
     dx_star =  (E'*(W\E))\(-E'*(W\errorVec)); 
     
     xEst = xEst + dx_star;
     
-    if norm(dx_star) < 0.01
+    Jderiv = abs((Jnew - Jprev)/Jnew);
+    
+    if Jderiv < 0.01
         break;
     else
         alphaBar = xEst(1);

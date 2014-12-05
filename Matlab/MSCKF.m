@@ -16,6 +16,11 @@ camera.p_C_I    = rho_v_c_v;
 
 % Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
 
+%Set up the noise parameters
+noiseParams.z_1 = 1;
+noiseParams.z_2 = 1;
+
+
 imuState = cell{1,numel(t)};
 imuState{1}.q_IG  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
 imuState{1}.p_I_G = zeros(3,1);         %IMU Position in the Global frame
