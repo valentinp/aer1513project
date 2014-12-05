@@ -48,9 +48,10 @@ Nmax = 50;
 
 
 %Propagate state and covariance
-
+msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
 
 %Add camera pose to msckfState
+msckfState = augmentState(msckfState, );
 
 %Continue until a feature is no longer seen or there are Nmax camera frames
 
@@ -62,11 +63,12 @@ Nmax = 50;
 [p_f_G] = calcGNPosEst(camStates, observations)
 
 %Compute rh, Th
-[T_H, Q_1] = calcTH(H_o)
 [H_o_j, A] = calcHoj(p_f_G, msckfState, camStateIndex)
+[T_H, Q_1] = calcTH(H_o)
 [r_n_j] = calcResidual(r__j, A_j, Q_1)
 
 %Calculate Kalman gain
+K = P
 
 %Correct covariance
 

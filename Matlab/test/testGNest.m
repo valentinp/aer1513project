@@ -22,7 +22,6 @@ K  = [focalLength 0 c_u;
     0 focalLength c_v;
     0 0 1];
 
-
 imageMeasurements = genFeatureMeasurements(T_wCam_GT, landmarks_w, K, simSetup);
 
 observations = imageMeasurements;
