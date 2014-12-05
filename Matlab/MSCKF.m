@@ -11,7 +11,7 @@ camera.c_v      = cv;
 camera.f_u      = fu;
 camera.f_v      = fv;
 camera.b        = b;
-camera.q_CI     = C_c_v;
+camera.q_CI     = rotMatToQuat(C_c_v);
 camera.p_C_I    = rho_v_c_v;
 
 % Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
@@ -55,7 +55,7 @@ Nmax = 50;
 msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
 
 %Add camera pose to msckfState
-msckfState = augmentState(msckfState, );
+msckfState = augmentState(msckfState, camera);
 
 %Continue until a feature is no longer seen or there are Nmax camera frames
 
