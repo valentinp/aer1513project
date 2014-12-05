@@ -32,7 +32,11 @@ camState = cell{1,numel(t)};
 camStates{1}.q_CG  = [zeros(3,1); 1];
 camStates{1}.p_C_G = zeros(3,1);
 
-%msckfState = {imuState, camState1, camState2, ...}
+%msckfState.imuState
+%msckfState.imuCovar
+%msckfState.camCovar
+%msckfState.imuCamCovar
+%msckfState.camStates
 
 % Measurements as cells
 dT = [0, diff(t)];

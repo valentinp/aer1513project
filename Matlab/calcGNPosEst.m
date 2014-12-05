@@ -10,6 +10,7 @@ function [p_f_G] = calcGNPosEst(camStates, observations, noiseParams)
 
 %K is not needed if we assume observations are not pixels but x' = (u -
 %c_u)/f_u
+
 %K = [camera.f_u 0 camera.c_u; 0 camera.f_v camera.c_v; 0 0 1];
 
 %Get initial estimate through intersection

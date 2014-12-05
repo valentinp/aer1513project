@@ -423,6 +423,54 @@ where $r$ is the number of columns in $\Vec{Q}_1$.
 \hat{\Vec{P}}_k &= \left(\Vec{1}_{15+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)\hat{\Vec{P}}^-_k\left(\Vec{1}_{15+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)^T + \Vec{K}_k\Vec{R}_{n,k}\Vec{K}_k^T
 \end{align}
 
+\section{Feature Triangulation}
+
+We triangulate features using an inverse depth least squares Gauss-Newton optimization. The procedure takes as input $N$ camera poses and $N$ sets of ideal pixel measurements. We define \textit{ideal} measurements as pixel measurements that have been corrected for the focal length and principal points of the camera:
+\begin{align}
+u' &= (u - c_u)/f_u \\
+v' &= (v - c_v)/f_v \\
+\end{align}
+We calculate the 3D position of the feature in the first camera frame ($\mbf p^{C_1}_{f}$) using  a linear least squares method with measurements from the first two camera poses:
+\begin{align}
+\mbf p^{C_1}_{f} = \gamma \hat{\mbf p}^{C_1}_{f} 
+\end{align}
+where
+\begin{align}
+\gamma = \left[(\mbf A^T \mbf A)^{-1} \mbf A^T \mbf p^{C_1}_{C_2} \right]_1, \quad \hat{\mbf p}^{C}_{f} := \frac{1}{\sqrt{u'^2 + v'^2 + 1}}\bbm u' \\ v' \\ 1\ebm , \quad \mbf A := \bbm \hat{\mbf p}^{C_1}_{f} & -\hat{\mbf p}^{C_2}_{f} \ebm
+\end{align}
+Next, we define a vector of three parameters:
+\begin{align}
+\mbf x = \bbm \alpha \\ \beta \\ \rho \ebm, \quad \alpha = \frac{x^{C_1}_{f}}{z^{C_1}_{f}}, \quad \beta = \frac{y^{C_1}_{f}}{z^{C_1}_{f}}, \quad \rho = \frac{1}{z^{C_1}_{f}}
+\end{align}
+The feature position in the $i^{th}$ camera frame can be expressed as:
+\begin{align}
+\mbf p^{C_i}_{f} = \mbf C_{in} \mbf p^{C_1}_{f}  + \mbf p^{C_i}_{C_1}
+\end{align}
+With our state parameters, we can use this equation to define three functions:
+\begin{align}
+\bbm h_1 (\alpha, \beta, \rho) \\ h_2 (\alpha, \beta, \rho) \\ h_3 (\alpha, \beta, \rho) \ebm = \mbf C_{in} \bbm \alpha \\ \beta \\ 1 \ebm + \rho  \mbf p^{C_i}_{C_1}
+\end{align}
+The camera measurement error can then be written as:
+\begin{align}
+\mbf e = \hat{\mbf z} - \frac{1}{h_3 } \bbm h_1 \\ h_2 \ebm
+\end{align}
+The least squares linear system then becomes:
+\begin{align}
+(\mbf  E \mbf W ^{-1} \mbf E ) \delta \mbf{x}^*  = - \mbf{E}^T\mbf{W}^{-1}\mbf{e}(\bar{\mbf{x}})
+\end{align}
+where
+\begin{align}
+\mbf E := \frac{\partial \mbf e}{\partial \mbf x} \in \Real^{2 N \times 3 }, \quad \mbf W := \bbm \mbf R^{-1} & & \\ & \ddots & \\ & & \mbf R^{-1} \ebm \in \Real^{2 N \times 2 N}
+\end{align}
+
+
+
+
+
+
+
+
+
 \section{AER 1513 Mods}
 
 \subsection{State Parametrization}
