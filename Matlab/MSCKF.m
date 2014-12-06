@@ -91,6 +91,7 @@ for f_i = 1:length(featuresToResidualize)
     iStart = 2*(f_i-1)+1;
     iEnd = iStart+2;
     H_o(iStart:iEnd, :) = H_o_j;
+    
 end
 
 
