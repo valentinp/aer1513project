@@ -51,7 +51,9 @@ for k = k1:k2
     measurements{k}.v     = v_vk_vk_i(:,k);  % lin vel
 end
 
+% Other constants
 Nmax = 50;
+imageVariance = mean(y_var);
 
 
 %Propagate state and covariance
@@ -100,20 +102,26 @@ for f_i = 1:length(featuresToResidualize)
     
 end
 
-
-
-
 %Compute rh, Th
 %Call for every feature
 
 [T_H, Q_1] = calcTH(H_o)
 r_n_j = Q_1'*A_j'*r__j;
 
+% Build MSCKF covariance matrix
+P = [msckfState.imuCovar, msckfState.imuCamCovar;
+       msckfState.imuCamCovar', msckfState.camCovar];
 
+R_n = imageVariance*eye( size(Q_1, 2) );
+   
+% Calculate Kalman gain
+K = P*T_H' / ( T_H*P*T_H' + R_n );
 
-%Calculate Kalman gain
-K = P
+% State correction
+deltaX = K * r_n;
 
-%Correct covariance
+% Covariance correction
+tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
+P_corrected = tempMat * P * tempMat' + K * R_n * K';
 
 %Remove any camera states with no tracked features
