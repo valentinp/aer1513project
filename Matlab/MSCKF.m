@@ -55,69 +55,75 @@ end
 Nmax = 50;
 imageVariance = mean(y_var);
 
-
-%Propagate state and covariance
-msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
-
-%Add camera pose to msckfState
-msckfState = augmentState(msckfState, camera);
-
-%Continue until a feature is no longer seen or there are Nmax camera frames
-
-%Estimate feature 3D location through Gauss Newton inverse depth
-%IMPORTANT: Use 'ideal' measurements:
-%u' = (u - c_u)/f_u;
-%v' = (v - c_v)/f_v;
-
-featuresToResidualize = []; %1xN matrix of feature ids (this is just the column of y_k_j) 
-featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
-
-H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
-r_stacked = [];
-A = [];
-
-for f_i = 1:length(featuresToResidualize)
-    k1 = featureTracksStartEnd(1, f_i);
-    k2 = featureTracksStartEnd(2, f_i);
-    featureId = featuresToResidualize(f_i);
+for state_k = kStart:kEnd
     
-    observations = NaN(2, k2 - k1 + 1);
+    %==========================STATE PROPAGATION========================%
 
-    for k = k1:k2
-        observations(:, k-k1+1) =  measurements{k}.y(:, featureId);
+    %Propagate state and covariance
+    msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
+
+    %Add camera pose to msckfState
+    msckfState = augmentState(msckfState, camera);
+
+    
+    %==========================FEATURE RESIDUAL CORRECTIONS========================%
+    
+    featuresToResidualize = []; %1xN matrix of feature ids (this is just the column of y_k_j) 
+    featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
+
+    
+    H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
+    r_stacked = [];
+    A = [];
+
+    for f_i = 1:length(featuresToResidualize)
+        k1 = featureTracksStartEnd(1, f_i);
+        k2 = featureTracksStartEnd(2, f_i);
+        featureId = featuresToResidualize(f_i);
+
+        observations = NaN(2, k2 - k1 + 1);
+
+        for k = k1:k2
+            observations(:, k-k1+1) =  measurements{k}.y(:, featureId);
+        end
+
+        %Estimate feature 3D location through Gauss Newton inverse depth
+        %optimization
+        [p_f_G] = calcGNPosEst(camStates, observations);
+        
+        %Calculate residual and Hoj 
+        [r_j] = calcResidual(p_f_G, camStates, observations);
+        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex);
+
+        % Stacked residuals and friends
+        iStart = 2*(f_i-1)+1;
+        iEnd = iStart+2;
+
+        H_o(iStart:iEnd, :) = H_o_j;
+        r_stacked(end+1,:) = r_j;
+        A(:, end+1) = A_j;
     end
+
+    [T_H, Q_1] = calcTH(H_o);
+    r_n_j = Q_1'*A'*r_stacked;
+
+    % Build MSCKF covariance matrix
+    P = [msckfState.imuCovar, msckfState.imuCamCovar;
+           msckfState.imuCamCovar', msckfState.camCovar];
+
+    R_n = imageVariance*eye( size(Q_1, 2) );
+
+    % Calculate Kalman gain
+    K = P*T_H' / ( T_H*P*T_H' + R_n );
+
+    % State correction
+    deltaX = K * r_n;
+
+    % Covariance correction
+    tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
+    P_corrected = tempMat * P * tempMat' + K * R_n * K';
+
+    %==========================STATE PRUNING========================%
+    %Remove any camera states with no tracked features
     
-    %Calculate residual and Hoj for every feature
-    [p_f_G] = calcGNPosEst(camStates, observations)
-    [r_j] = calcResidual(p_f_G, camStates, observations)
-    [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
-    
-    % Stacked residuals and friends
-    iStart = 2*(f_i-1)+1;
-    iEnd = iStart+2;
-    
-    H_o(iStart:iEnd, :) = H_o_j;
-    r_stacked(end+1,:) = r_j;
-    A(:, end+1) = A_j;
-end
-
-[T_H, Q_1] = calcTH(H_o)
-r_n_j = Q_1'*A'*r_stacked;
-
-% Build MSCKF covariance matrix
-P = [msckfState.imuCovar, msckfState.imuCamCovar;
-       msckfState.imuCamCovar', msckfState.camCovar];
-
-R_n = imageVariance*eye( size(Q_1, 2) );
-   
-% Calculate Kalman gain
-K = P*T_H' / ( T_H*P*T_H' + R_n );
-
-% State correction
-deltaX = K * r_n;
-
-% Covariance correction
-tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
-P_corrected = tempMat * P * tempMat' + K * R_n * K';
-
-%Remove any camera states with no tracked features
+end %for state_K = ...
