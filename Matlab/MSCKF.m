@@ -44,6 +44,9 @@ measurements = cell{1,numel(t)};
 for k = k1:k2 
     measurements{k}.dT    = dT(k);           % sampling times
     measurements{k}.y     = y_k_j(1:2,k,:);  % left camera only
+    validMeas = (measurements{k}.y(1,:) ~= -1);
+    measurements{k}.y(1,validMeas) = (measurements{k}.y(1,validMeas) - camera.c_u)/f_u; %Idealize measurements
+    measurements{k}.y(2,validMeas) = (measurements{k}.y(2,validMeas) - camera.c_v)/f_v;
     measurements{k}.omega = w_vk_vk_i(:,k);  % ang vel
     measurements{k}.v     = v_vk_vk_i(:,k);  % lin vel
 end
@@ -65,9 +68,10 @@ msckfState = augmentState(msckfState, camera);
 %v' = (v - c_v)/f_v;
 
 
+
 %Calculate residual and Hoj for every feature
 [p_f_G] = calcGNPosEst(camStates, observations)
-[r_j] = calcResidual(p_f_G, camStates, measurements{k})
+[r_j] = calcResidual(p_f_G, camStates, observations)
 [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
 
 
