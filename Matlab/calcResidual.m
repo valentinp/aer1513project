@@ -1,7 +1,6 @@
-function [r_n_j] = calcResidual(r__j, A_j, Q_1)
-%CALCRESIDUAL Calculates the left null space residual
+function [r_j] = calcResidual(p_f_G, camStates, measurements)
+%CALCRESIDUAL Calculates the residual for a feature position
 
-r_n_j = Q_1'*A_j'*r__j;
 
 end
 
