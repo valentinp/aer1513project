@@ -2,8 +2,8 @@ addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-k1 = 1215;
-k2 = 1714;
+kStart = 1215;
+kEnd = 1714;
 
 %Set up the camera parameters
 camera.c_u      = cu;
@@ -86,6 +86,7 @@ for f_i = 1:length(featuresToResidualize)
     [p_f_G] = calcGNPosEst(camStates, observations)
     [r_j] = calcResidual(p_f_G, camStates, observations)
     [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
+    
 end
 
 
@@ -95,7 +96,7 @@ end
 %Call for every feature
 
 [T_H, Q_1] = calcTH(H_o)
-r_n = Q_1'*A_j'*r__j;
+r_n_j = Q_1'*A_j'*r__j;
 
 
 
