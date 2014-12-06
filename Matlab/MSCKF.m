@@ -93,17 +93,15 @@ for f_i = 1:length(featuresToResidualize)
     iEnd = iStart+2;
     H_o(iStart:iEnd, :) = H_o_j;
 
-    r_stacked(end+1,:) = r_j;
+    r_stacked(end+1,:) = r_j; 
 end
-
-
 
 
 %Compute rh, Th
 %Call for every feature
 
 [T_H, Q_1] = calcTH(H_o)
-r_n_j = Q_1'*A_j'*r__j;
+r_n_j = Q_1'*A'*r_stacked;
 
 
 
