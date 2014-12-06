@@ -70,6 +70,7 @@ msckfState = augmentState(msckfState, camera);
 featuresToResidualize = []; %1xN matrix of feature ids (this is just the column of y_k_j) 
 featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
 
+H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
 
 for f_i = 1:length(featuresToResidualize)
     k1 = featureTracksStartEnd(1, f_i);
@@ -86,6 +87,10 @@ for f_i = 1:length(featuresToResidualize)
     [p_f_G] = calcGNPosEst(camStates, observations)
     [r_j] = calcResidual(p_f_G, camStates, observations)
     [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
+    
+    iStart = 2*(f_i-1)+1;
+    iEnd = iStart+2;
+    H_o(iStart:iEnd, :) = H_o_j;
 end
 
 
