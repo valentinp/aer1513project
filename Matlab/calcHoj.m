@@ -1,4 +1,4 @@
-function [H_o_j, A] = calcHoj(p_f_G, msckfState, camStateIndex)
+function [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
 %CALCHOJ Calculates H_o_j according to Mourikis 2007
 % Inputs: p_f_G: feature location in the Global frame
 %         msckfState: the current window of states
@@ -24,7 +24,7 @@ H_x_j(:,12+6*(camStateIndex-1) + 1:15+6*(camStateIndex-1) + 3) = J_i*crossMat(p_
 H_x_j(:,(12+6*(camStateIndex-1) + 4):(15+6*(camStateIndex-1) + 6)) = -J_i*quatToRotMat(camState.q_CG);
 
 
-A = null(H_x_j);
+A_j = null(H_x_j);
 H_o_j = A'*H_x_j;
 end
 

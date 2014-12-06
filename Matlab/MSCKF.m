@@ -67,8 +67,11 @@ msckfState = augmentState(msckfState, camera);
 [p_f_G] = calcGNPosEst(camStates, observations)
 
 %Compute rh, Th
-[H_o_j, A] = calcHoj(p_f_G, msckfState, camStateIndex)
+%Call for every 
+[H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex)
+
 [T_H, Q_1] = calcTH(H_o)
+
 [r_n_j] = calcResidual(r__j, A_j, Q_1)
 
 %Calculate Kalman gain
