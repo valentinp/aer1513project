@@ -92,6 +92,8 @@ for f_i = 1:length(featuresToResidualize)
     iEnd = iStart+2;
     H_o(iStart:iEnd, :) = H_o_j;
     
+
+    r_stacked(end+1,:) = r_j;
 end
 
 
