@@ -559,6 +559,10 @@ where the Jacobian (not quite sure if I took out the right columns)...
 \Vec{H}^{(j)}_{\Vec{x}_i} &= \bbm \Vec{0}_{2\times12} & \Vec{0}_{2\times6} & \hdots & \Vec{J}^{\left(j\right)}_i \left(\hat{\Vec{X}}^{C_i}_{f_j}\right)^\times & -\Vec{J}^{\left(j\right)}_i \hat{\Vec{C}}_{C_i G} & \hdots & \Vec{0}_{2\times6} \ebm \text{ is } 2\times\left(12 + 6N\right)
 \end{align}
 
+\begin{align}
+\hat{\Vec{P}}_k &= \left(\Vec{1}_{12+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)\hat{\Vec{P}}^-_k\left(\Vec{1}_{12+6N} - \Vec{K}_k\Vec{T}_{H,k} \right)^T + \Vec{K}_k\Vec{R}_{n,k}\Vec{K}_k^T
+\end{align}
+
 % ---------------------------------------------------------------
 
 %\newpage
