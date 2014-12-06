@@ -71,6 +71,7 @@ featuresToResidualize = []; %1xN matrix of feature ids (this is just the column 
 featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
 
 H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
+r_stacked = [];
 
 for f_i = 1:length(featuresToResidualize)
     k1 = featureTracksStartEnd(1, f_i);
@@ -91,7 +92,6 @@ for f_i = 1:length(featuresToResidualize)
     iStart = 2*(f_i-1)+1;
     iEnd = iStart+2;
     H_o(iStart:iEnd, :) = H_o_j;
-    
 
     r_stacked(end+1,:) = r_j;
 end
