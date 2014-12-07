@@ -57,11 +57,12 @@ imageVariance = mean(y_var);
 
 %Struct used to keep track of features
 featureTracks = {};
+trackedFeatureIds = [];
 % featureTrack = {track1, track2, ...}
 % track.featureId 
+% track.observations
 % track.k1
 % track.k2
-% track.observations
 
 %==========================Initial State========================%
 %Use ground truth for first state and initialize feature tracks with
@@ -85,7 +86,28 @@ for state_k = kStart:kEnd
     % If an observation is -1, add the track to featureTracksToResidualize
     featureTracksToResidualize = {};
     for featureId = 1:20
-        measurements{state_k}.y() 
+        meas_k = measurements{state_k}.y(:, featureId);
+        if ismember(featureId, trackedFeatureIds)
+            if meas_k(1,1) == -1
+                %Add to residualize queue and remove from the original
+                %struct
+                featureTracksToResidualize{end+1} = featureTracks{trackedFeatureIds == featureId};
+                featureTracks = featureTracks(trackedFeatureIds ~= featureId);
+                trackedFeatureIds(trackedFeatureIds == featureId) = [];
+            else
+                %Append observation and increase k2
+                featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
+                featureTracks{trackedFeatureIds == featureId}.k2 = featureTracks{trackedFeatureIds == featureId}.k2 + 1;
+            end
+        else
+            %Track new feature
+            track.featureId = featureId;
+            track.observations = meas_k;
+            track.k1 = state_k;
+            track.k2 = state_k;
+            featureTracks{end+1} = track;
+            trackedFeatureIds(end+1) = featureId;
+        end
     end
     
     %==========================FEATURE RESIDUAL CORRECTIONS========================%
