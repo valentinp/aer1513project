@@ -55,16 +55,38 @@ end
 Nmax = 50;
 imageVariance = mean(y_var);
 
+%Struct used to keep track of features
+featureTracks = {};
+% featureTrack = {track1, track2, ...}
+% track.featureId 
+% track.k1
+% track.k2
+% track.observations
+
+%==========================Initial State========================%
+%Use ground truth for first state and initialize feature tracks with
+%feature observations
+
+
 for state_k = kStart:kEnd
+
     
     %==========================STATE PROPAGATION========================%
 
     %Propagate state and covariance
-    msckfState = propagateMsckfCovar(msckfState, measurements_k, noiseParams);
+    msckfState = propagateMsckfCovar(msckfState, measurements{state_k}, noiseParams);
 
     %Add camera pose to msckfState
     msckfState = augmentState(msckfState, camera);
-
+    
+    
+    %==========================FEATURE TRACKING========================%
+    % Add observations to the feature tracks, or initialize a new one
+    % If an observation is -1, add the track to featureTracksToResidualize
+    featureTracksToResidualize = {};
+    for featureId = 1:20
+        measurements{state_k}.y() 
+    end
     
     %==========================FEATURE RESIDUAL CORRECTIONS========================%
     
@@ -81,6 +103,8 @@ for state_k = kStart:kEnd
         k2 = featureTracksStartEnd(2, f_i);
         featureId = featuresToResidualize(f_i);
 
+        %TODO: REPLACE THIS WITH featureTracksToResidualize which contains
+        %observations
         observations = NaN(2, k2 - k1 + 1);
 
         for k = k1:k2
