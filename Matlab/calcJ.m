@@ -1,4 +1,6 @@
 function J = calcJ(camera, imuState_k, camStates_k)
+% Jacobian of feature observations w.r.t. feature locations
+
     C_CI = quatToRotMat(camera.q_CI);
     C_IG = quatToRotMat(imuState_k.q_IG);
 

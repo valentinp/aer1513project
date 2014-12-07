@@ -1,4 +1,7 @@
 function F = calcF(imuState_k, measurements_k)
+% Multiplies the error state in the linearized continuous-time
+% error state model
+
     F = zeros(12,12);
     
     omegaHat = measurements_k.omega - imuState_k.b_g;
