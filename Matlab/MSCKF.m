@@ -142,10 +142,15 @@ for state_k = kStart:kEnd
 
     % State correction
     deltaX = K * r_n;
+    msckfState = updateState(msckfState, deltaX);
 
     % Covariance correction
     tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
     P_corrected = tempMat * P * tempMat' + K * R_n * K';
+    
+    msckfState.imuCovar = P_corrected(1:12,1:12);
+    msckfState.camCovar = P_corrected(13:end,13:end);
+    msckfState.imuCamCovar = P_corrected(1:12, 13:end);
 
     %==========================STATE PRUNING========================%
     %Remove any camera states with no tracked features
