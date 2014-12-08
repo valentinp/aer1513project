@@ -1,3 +1,10 @@
+%% ============================Notation============================ %%
+% X_sub_super
+% q_FromTo
+% p_ofWhat_expressedInWhatFrame
+
+
+%% =============================Setup============================== %%
 addpath('utils');
 load('dataset3.mat')
 
@@ -14,13 +21,11 @@ camera.b        = b;
 camera.q_CI     = rotMatToQuat(C_c_v);
 camera.p_C_I    = rho_v_c_v;
 
-% Notation: X_sub_super, q_FromTo, p_ofWhat_expressedInWhatFrame
-
 %Set up the noise parameters
 noiseParams.z_1 = 1;
 noiseParams.z_2 = 1;
 
-
+% IMU state for plotting etc. Structures indexed in a cell array
 imuState = cell{1,numel(t)};
 imuState{1}.q_IG  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
 imuState{1}.p_I_G = zeros(3,1);         %IMU Position in the Global frame
@@ -28,9 +33,10 @@ imuState{1}.b_g   = zeros(3,1);         %Gyro bias
 imuState{1}.b_v   = zeros(3,1);         %Velocity bias
 imuState{1}.covar = zeros(12,12);       %IMU state covariance
 
-camState = cell{1,numel(t)};
-camStates{1}.q_CG  = [zeros(3,1); 1];
-camStates{1}.p_C_G = zeros(3,1);
+% We don't really need these outside of msckfState, do we?
+% camState = cell{1,numel(t)};
+% camStates{1}.q_CG  = [zeros(3,1); 1];
+% camStates{1}.p_C_G = zeros(3,1);
 
 %msckfState.imuState
 %msckfState.imuCovar
@@ -38,10 +44,10 @@ camStates{1}.p_C_G = zeros(3,1);
 %msckfState.imuCamCovar
 %msckfState.camStates
 
-% Measurements as cells
+% Measurements as structures all indexed in a cell array
 dT = [0, diff(t)];
 measurements = cell{1,numel(t)};
-for k = k1:k2 
+for k = kStart:kEnd 
     measurements{k}.dT    = dT(k);           % sampling times
     measurements{k}.y     = y_k_j(1:2,k,:);  % left camera only
     validMeas = (measurements{k}.y(1,:) ~= -1);
@@ -52,8 +58,8 @@ for k = k1:k2
 end
 
 % Other constants
-Nmax = 50;
-imageVariance = mean(y_var);
+Nmax = 50;                      % max number of poses before triggering an update
+imageVariance = mean(y_var);    % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %Struct used to keep track of features
 featureTracks = {};
@@ -64,15 +70,17 @@ trackedFeatureIds = [];
 % track.k1
 % track.k2
 
-%==========================Initial State========================%
+
+%% ==========================Initial State======================== %%
 %Use ground truth for first state and initialize feature tracks with
 %feature observations
 
 
-for state_k = kStart:kEnd
 
-    
-    %==========================STATE PROPAGATION========================%
+%% ============================MAIN LOOP========================== %%
+
+for state_k = kStart:kEnd
+    %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
     msckfState = propagateMsckfCovar(msckfState, measurements{state_k}, noiseParams);
@@ -81,7 +89,7 @@ for state_k = kStart:kEnd
     msckfState = augmentState(msckfState, camera);
     
     
-    %==========================FEATURE TRACKING========================%
+    %% ==========================FEATURE TRACKING======================== %%
     % Add observations to the feature tracks, or initialize a new one
     % If an observation is -1, add the track to featureTracksToResidualize
     featureTracksToResidualize = {};
@@ -110,7 +118,7 @@ for state_k = kStart:kEnd
         end
     end
     
-    %==========================FEATURE RESIDUAL CORRECTIONS========================%
+    %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     
     featuresToResidualize = []; %1xN matrix of feature ids (this is just the column of y_k_j) 
     featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
@@ -174,7 +182,7 @@ for state_k = kStart:kEnd
     msckfState.camCovar = P_corrected(13:end,13:end);
     msckfState.imuCamCovar = P_corrected(1:12, 13:end);
 
-    %==========================STATE PRUNING========================%
+    %% ==========================STATE PRUNING======================== %%
     %Remove any camera states with no tracked features
     
 end %for state_K = ...
