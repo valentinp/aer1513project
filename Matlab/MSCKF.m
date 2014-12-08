@@ -122,35 +122,21 @@ for state_k = kStart:kEnd
     end
     
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
-    
-    featuresToResidualize = []; %1xN matrix of feature ids (this is just the column of y_k_j) 
-    featureTracksStartEnd = []; %2xN matrix of k1_j and k2_j for the jth feature track
-
-    
     H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
     r_stacked = [];
     A = [];
 
-    for f_i = 1:length(featuresToResidualize)
-        k1 = featureTracksStartEnd(1, f_i);
-        k2 = featureTracksStartEnd(2, f_i);
-        featureId = featuresToResidualize(f_i);
-
-        %TODO: REPLACE THIS WITH featureTracksToResidualize which contains
-        %observations
-        observations = NaN(2, k2 - k1 + 1);
-
-        for state_k = k1:k2
-            observations(:, state_k-k1+1) =  measurements{state_k}.y(:, featureId);
-        end
+    for f_i = 1:length(featureTracksToResidualize)
+        
+        track = featureTracksToResidualize{f_i};
 
         %Estimate feature 3D location through Gauss Newton inverse depth
         %optimization
-        [p_f_G] = calcGNPosEst(camStates, observations);
+        [p_f_G] = calcGNPosEst(camStates, track.observations);
         
         %Calculate residual and Hoj 
         [r_j] = calcResidual(p_f_G, camStates, observations);
-        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex);
+        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndices);
 
         % Stacked residuals and friends
         iStart = 2*(f_i-1)+1;
