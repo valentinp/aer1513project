@@ -13,30 +13,30 @@ kStart = 1215;
 kEnd = 1714;
 
 %Set up the camera parameters
-camera.c_u      = cu;
-camera.c_v      = cv;
-camera.f_u      = fu;
-camera.f_v      = fv;
-camera.b        = b;
-camera.q_CI     = rotMatToQuat(C_c_v);
-camera.p_C_I    = rho_v_c_v;
+camera.c_u      = cu;                   % Principal point [pixels]
+camera.c_v      = cv;                   % |
+camera.f_u      = fu;                   % Focal length [u pixels]
+camera.f_v      = fv;                   % Focal length [v pixels]
+camera.b        = b;                    % Stereo baseline [m]
+camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
+camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
 noiseParams.z_1 = 1;
 noiseParams.z_2 = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
-imuState = cell{1,numel(t)};
-imuState{1}.q_IG  = [zeros(3,1); 1];    %Global to IMU rotation quaternion
-imuState{1}.p_I_G = zeros(3,1);         %IMU Position in the Global frame
-imuState{1}.b_g   = zeros(3,1);         %Gyro bias
-imuState{1}.b_v   = zeros(3,1);         %Velocity bias
-imuState{1}.covar = zeros(12,12);       %IMU state covariance
+imuState = cell(1,numel(t));
+% imuState{k}.q_IG         4x1 Global to IMU rotation quaternion
+% imuState{k}.p_I_G        3x1 IMU Position in the Global frame
+% imuState{k}.b_g          3x1 Gyro bias
+% imuState{k}.b_v          3x1 Velocity bias
+% imuState{k}.covar        12x12 IMU state covariance
 
 % We don't really need these outside of msckfState, do we?
-% camState = cell{1,numel(t)};
-% camStates{1}.q_CG  = [zeros(3,1); 1];
-% camStates{1}.p_C_G = zeros(3,1);
+% camState = cell(1,numel(t));
+% camStates{k}.q_CG        4x1 Global to camera rotation quaternion
+% camStates{k}.p_C_G       3x1 Camera Position in the Global frame
 
 %msckfState.imuState
 %msckfState.imuCovar
@@ -46,15 +46,16 @@ imuState{1}.covar = zeros(12,12);       %IMU state covariance
 
 % Measurements as structures all indexed in a cell array
 dT = [0, diff(t)];
-measurements = cell{1,numel(t)};
-for k = kStart:kEnd 
-    measurements{k}.dT    = dT(k);           % sampling times
-    measurements{k}.y     = y_k_j(1:2,k,:);  % left camera only
-    validMeas = (measurements{k}.y(1,:) ~= -1);
-    measurements{k}.y(1,validMeas) = (measurements{k}.y(1,validMeas) - camera.c_u)/f_u; %Idealize measurements
-    measurements{k}.y(2,validMeas) = (measurements{k}.y(2,validMeas) - camera.c_v)/f_v;
-    measurements{k}.omega = w_vk_vk_i(:,k);  % ang vel
-    measurements{k}.v     = v_vk_vk_i(:,k);  % lin vel
+measurements = cell(1,numel(t));
+
+for state_k = kStart:kEnd 
+    measurements{state_k}.dT    = dT(state_k);                      % sampling times
+    measurements{state_k}.y     = squeeze(y_k_j(1:2,state_k,:));    % left camera only
+    validMeas = (measurements{state_k}.y(1,:) ~= -1);
+    measurements{state_k}.y(1,validMeas) = (measurements{state_k}.y(1,validMeas) - camera.c_u)/camera.f_u; %Idealize measurements
+    measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
+    measurements{state_k}.omega = w_vk_vk_i(:,state_k);  % ang vel
+    measurements{state_k}.v     = v_vk_vk_i(:,state_k);  % lin vel
 end
 
 % Other constants
@@ -137,8 +138,8 @@ for state_k = kStart:kEnd
         %observations
         observations = NaN(2, k2 - k1 + 1);
 
-        for k = k1:k2
-            observations(:, k-k1+1) =  measurements{k}.y(:, featureId);
+        for state_k = k1:k2
+            observations(:, state_k-k1+1) =  measurements{state_k}.y(:, featureId);
         end
 
         %Estimate feature 3D location through Gauss Newton inverse depth
