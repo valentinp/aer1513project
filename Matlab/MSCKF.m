@@ -24,6 +24,7 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.z_1 = 1;
 noiseParams.z_2 = 1;
+noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuState = cell(1,numel(t));
@@ -51,16 +52,17 @@ measurements = cell(1,numel(t));
 for state_k = kStart:kEnd 
     measurements{state_k}.dT    = dT(state_k);                      % sampling times
     measurements{state_k}.y     = squeeze(y_k_j(1:2,state_k,:));    % left camera only
+    measurements{state_k}.omega = w_vk_vk_i(:,state_k);             % ang vel
+    measurements{state_k}.v     = v_vk_vk_i(:,state_k);             % lin vel
+    
+    %Idealize measurements
     validMeas = (measurements{state_k}.y(1,:) ~= -1);
-    measurements{state_k}.y(1,validMeas) = (measurements{state_k}.y(1,validMeas) - camera.c_u)/camera.f_u; %Idealize measurements
+    measurements{state_k}.y(1,validMeas) = (measurements{state_k}.y(1,validMeas) - camera.c_u)/camera.f_u;
     measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
-    measurements{state_k}.omega = w_vk_vk_i(:,state_k);  % ang vel
-    measurements{state_k}.v     = v_vk_vk_i(:,state_k);  % lin vel
 end
 
 % Other constants
 Nmax = 50;                      % max number of poses before triggering an update
-imageVariance = mean(y_var);    % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %Struct used to keep track of features
 featureTracks = {};
