@@ -134,7 +134,7 @@ for state_k = kStart:kEnd
         
         %Calculate residual and Hoj 
         [r_j] = calcResidual(p_f_G, camStates, observations);
-        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndex);
+        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndices);
 
         % Stacked residuals and friends
         iStart = 2*(f_i-1)+1;
