@@ -25,6 +25,7 @@ function msckfState_aug = augmentState(msckfState, camera)
     msckfState_aug = msckfState;
     msckfState_aug.camStates{N+1}.p_C_G = p_C_G;
     msckfState_aug.camStates{N+1}.q_CG = q_CG;
+    msckfState_aug.camStates{N+1}.trackedFeatureIds = [];
     msckfState_aug.imuCovar = P_aug(1:12,1:12);
     msckfState_aug.camCovar = P_aug(13:end,13:end);
     msckfState_aug.imuCamCovar = P_aug(1:12, 13:end);

@@ -64,13 +64,14 @@ for state_k = kStart:kEnd
 end
 
 % Other constants
+% Currently not used
 Nmax = 50;                      % max number of poses before triggering an update
 
 %Struct used to keep track of features
 featureTracks = {};
 trackedFeatureIds = [];
 
-% featureTrack = {track1, track2, ...}
+% featureTracks = {track1, track2, ...}
 % track.featureId 
 % track.observations
 
@@ -102,26 +103,39 @@ for state_k = kStart:kEnd
         meas_k = measurements{state_k}.y(:, featureId);
         if ismember(featureId, trackedFeatureIds)
             if meas_k(1,1) == -1
-                %Add to residualize queue and remove from the original
-                %struct
-                featureTracksToResidualize{end+1} = featureTracks{trackedFeatureIds == featureId};
+                %Feature is not in view, remove from the tracked features
+                [msckfState, camStates, camStateIndices] = removeTrackedFeature(msckfState, featureId);
+                
+                %Add the track, with all of its camStates, to the
+                %residualized list
+                track = featureTracks{trackedFeatureIds == featureId};
+                track.camStates = camStates;
+                track.camStateIndices = camStateIndices;
+                featureTracksToResidualize{end+1} = track;
+               
+                %Remove the track
                 featureTracks = featureTracks(trackedFeatureIds ~= featureId);
                 trackedFeatureIds(trackedFeatureIds == featureId) = [];
+                
             else
-                %Append observation and increase k2
+                %Append observation and append id to cam states
                 featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
-                featureTracks{trackedFeatureIds == featureId}.k2 = featureTracks{trackedFeatureIds == featureId}.k2 + 1;
+                %Add observation to current camera
+                msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
             end
         else
-            %Track new feature
-            track.featureId = featureId;
-            track.observations = meas_k;
-            track.cameraIndices = [length(msckfState.camStates)];
-            featureTracks{end+1} = track;
-            trackedFeatureIds(end+1) = featureId;
+            if meas_k(1,1) ~= -1
+                %Track new feature
+                track.featureId = featureId;
+                track.observations = meas_k;
+                featureTracks{end+1} = track;
+                trackedFeatureIds(end+1) = featureId;
+
+                %Add observation to current camera
+                msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
+            end
         end
-    end
-    
+     end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
     r_stacked = [];
@@ -133,11 +147,11 @@ for state_k = kStart:kEnd
 
         %Estimate feature 3D location through Gauss Newton inverse depth
         %optimization
-        [p_f_G] = calcGNPosEst(camStates, track.observations);
+        [p_f_G] = calcGNPosEst(track.camStates, track.observations);
         
         %Calculate residual and Hoj 
-        [r_j] = calcResidual(p_f_G, camStates, observations);
-        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndices);
+        [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
+        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
         % Stacked residuals and friends
         iStart = 2*(f_i-1)+1;
@@ -174,5 +188,6 @@ for state_k = kStart:kEnd
 
     %% ==========================STATE PRUNING======================== %%
     %Remove any camera states with no tracked features
+    msckfState = pruneStates(msckfState);
     
 end %for state_K = ...
