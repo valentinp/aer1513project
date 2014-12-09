@@ -24,6 +24,7 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.z_1 = 1;
 noiseParams.z_2 = 1;
+noiseParams.Q_imu = eye(12);
 noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 % IMU state for plotting etc. Structures indexed in a cell array
