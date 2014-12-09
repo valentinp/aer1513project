@@ -15,10 +15,12 @@ function [p_f_G] = calcGNPosEst(camStates, observations, noiseParams)
 
 %Get initial estimate through intersection
 %Use the first 2 camStates
-C_12 = quatToRotMat(camStates{1}.q_CG)*quatToRotMat(camStates{2}.q_CG)';
-t_21_1 = quatToRotMat(camStates{1}.q_CG)*(camStates{2}.p_C_G - camStates{1}.p_C_G);
+secondViewIdx = length(camStates);
 
-p_f1_1_bar = triangulate(observations(:,1),observations(:,2),C_12, t_21_1);
+C_12 = quatToRotMat(camStates{1}.q_CG)*quatToRotMat(camStates{secondViewIdx}.q_CG)';
+t_21_1 = quatToRotMat(camStates{1}.q_CG)*(camStates{secondViewIdx}.p_C_G - camStates{1}.p_C_G);
+
+p_f1_1_bar = triangulate(observations(:,1), observations(:,secondViewIdx),C_12, t_21_1)
 
 xBar = p_f1_1_bar(1);
 yBar = p_f1_1_bar(2);
@@ -37,7 +39,7 @@ maxIter = 10;
 Jprev = Inf;
 
 for optI = 1:maxIter
-
+    optI
     E = zeros(2*Cnum, 3);
     W = zeros(2*Cnum, 2*Cnum);
     errorVec = zeros(2*Cnum, 1);
@@ -46,7 +48,7 @@ for optI = 1:maxIter
         %Form the weight matrix
         W((2*iState - 1):(2*iState),(2*iState - 1):(2*iState)) = diag([noiseParams.z_1^2 noiseParams.z_2^2]);
 
-        C_i1 = quatToRotMat(camStates{iState}.q_CG)*quatToRotMat(camStates{1}.q_CG)';
+        C_i1 = quatToRotMat(camStates{iState}.q_CG)*(quatToRotMat(camStates{1}.q_CG)');
         t_1i_i = quatToRotMat(camStates{iState}.q_CG)*(camStates{1}.p_C_G - camStates{iState}.p_C_G);
         
 
@@ -72,8 +74,7 @@ for optI = 1:maxIter
     end
     
     %Calculate the cost function
-    Jnew = 0.5*errorVec'*(W\errorVec);
-    Jprev = Jnew;
+    Jnew = 0.5*errorVec'*(W\errorVec)
     %Solve!
     dx_star =  (E'*(W\E))\(-E'*(W\errorVec)); 
     
@@ -81,17 +82,16 @@ for optI = 1:maxIter
     
     Jderiv = abs((Jnew - Jprev)/Jnew);
     
+    Jprev = Jnew;
+
     if Jderiv < 0.01
         break;
     else
         alphaBar = xEst(1);
         betaBar = xEst(2);
         rhoBar = xEst(3);
-        
-        zBar = 1/rhoBar;
-        yBar = betaBar*zBar;
-        xBar = alphaBar*zBar;
     end
+    
 end
 
 p_f_G = 1/xEst(3)*quatToRotMat(camStates{1}.q_CG)'*[xEst(1:2); 1] + camStates{1}.p_C_G; 
@@ -110,8 +110,8 @@ p_f_G = 1/xEst(3)*quatToRotMat(camStates{1}.q_CG)'*[xEst(1:2); 1] + camStates{1}
            A = [v_1 -C_12*v_2];
            b = t_21_1;
 
-           scalar_consts = abs(A\b);
-           p_f1_1 = (scalar_consts(1)*v_1 + scalar_consts(2)*C_12*v_2 + t_21_1)/2;
+           scalar_consts = A\b;
+           p_f1_1 = scalar_consts(1)*v_1;
     end
 
 end

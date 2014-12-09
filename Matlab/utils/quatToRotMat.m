@@ -8,7 +8,8 @@ function C = quatToRotMat(quat)
     end
     
     if( abs(norm(quat) - 1) > eps )
-        error('Input quaternion must be unit-length');
+        warning(sprintf('Input quaternion is not unit-length. norm(q) = %f. Re-normalizing.', norm(quat)));
+        quat = quat/norm(quat);
     end
     
     R = quatRightComp(quat)' * quatLeftComp(quat);

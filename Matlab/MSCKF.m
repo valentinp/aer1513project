@@ -5,11 +5,14 @@
 
 
 %% =============================Setup============================== %%
+clear;
+close all;
+clc
 addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 600;
+kStart = 200;
 kEnd = 1714;
 
 %Set up the camera parameters
@@ -26,6 +29,8 @@ noiseParams.z_1 = 1;
 noiseParams.z_2 = 1;
 noiseParams.Q_imu = eye(12);
 noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
+
+
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuState = cell(1,numel(t));
@@ -51,6 +56,8 @@ imuState = cell(1,numel(t));
 % Measurements as structures all indexed in a cell array
 dT = [0, diff(t)];
 measurements = cell(1,numel(t));
+groundTruthStates = cell(1,numel(t));
+groundTruthMap = rho_i_pj_i;
 
 for state_k = kStart:kEnd 
     measurements{state_k}.dT    = dT(state_k);                      % sampling times
@@ -62,6 +69,22 @@ for state_k = kStart:kEnd
     validMeas = (measurements{state_k}.y(1,:) ~= -1);
     measurements{state_k}.y(1,validMeas) = (measurements{state_k}.y(1,validMeas) - camera.c_u)/camera.f_u;
     measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
+    
+    %Ground Truth
+    q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,state_k)));
+    p_I_G = r_i_vk_i(:,state_k);
+    
+    groundTruthStates{state_k}.imuState.q_IG = q_IG;
+    groundTruthStates{state_k}.imuState.p_I_G =p_I_G ;
+    
+    % Compute camera pose from current IMU pose
+    C_IG = quatToRotMat(q_IG);
+    q_CG = quatLeftComp(camera.q_CI) * q_IG;
+    p_C_G = p_I_G + C_IG' * camera.p_C_I;
+    
+    groundTruthStates{state_k}.camState.q_CG = q_CG;
+    groundTruthStates{state_k}.camState.p_C_G = p_C_G;
+    
 end
 
 % Other constants
@@ -83,21 +106,21 @@ trackedFeatureIds = [];
 %feature observations
 %Use ground truth for the first state
 
-firstImuState.q_IG = rotMatToQuat(rotMatFromPsi(theta_vk_i(:,kStart)));
+firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
 firstImuState.p_I_G = r_i_vk_i(:,kStart);
 
-[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera);
+[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart);
 
 %% ============================MAIN LOOP========================== %%
 
-for state_k = (kStart+1):kEnd
+for state_k = kStart:kEnd
     %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
     msckfState = propagateMsckfStateAndCovar(msckfState, measurements{state_k}, noiseParams);
 
     %Add camera pose to msckfState
-    msckfState = augmentState(msckfState, camera);
+    msckfState = augmentState(msckfState, camera, state_k+1);
     
     
     %% ==========================FEATURE TRACKING======================== %%
@@ -105,7 +128,8 @@ for state_k = (kStart+1):kEnd
     % If an observation is -1, add the track to featureTracksToResidualize
     featureTracksToResidualize = {};
     for featureId = 1:20
-        meas_k = measurements{state_k}.y(:, featureId);
+        %IMPORTANT: state_k + 1 not state_k
+        meas_k = measurements{state_k+1}.y(:, featureId);
         if ismember(featureId, trackedFeatureIds)
             if meas_k(1,1) == -1
                 %Feature is not in view, remove from the tracked features
@@ -125,6 +149,7 @@ for state_k = (kStart+1):kEnd
             else
                 %Append observation and append id to cam states
                 featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
+                
                 %Add observation to current camera
                 msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
             end
@@ -153,6 +178,13 @@ for state_k = (kStart+1):kEnd
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
+            
+            camStatesGT = {};
+            
+            for c_i_temp = 1:length(track.camStates)
+                camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
+            end
+            
             [p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
             %Calculate residual and Hoj 

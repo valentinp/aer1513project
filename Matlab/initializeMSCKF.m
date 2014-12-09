@@ -1,4 +1,4 @@
-function [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, firstMeasurements, camera)
+function [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, firstMeasurements, camera, state_k)
 %INITIALIZEMSCKF Initialize the MSCKF with tracked features and ground
 %truth
 
@@ -17,6 +17,7 @@ C_IG = quatToRotMat(msckfState.imuState.q_IG);
 camState.q_CG = quatLeftComp(camera.q_CI) * msckfState.imuState.q_IG;
 camState.p_C_G = msckfState.imuState.p_I_G + C_IG' * camera.p_C_I;
 camState.trackedFeatureIds = [];
+camState.state_k = state_k;
 
 msckfState.camStates = {};
 msckfState.camStates{1} = camState;

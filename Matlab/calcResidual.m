@@ -6,6 +6,7 @@ function [r_j] = calcResidual(p_f_G, camStates, measurements)
 %   included in measurements
     r_j = NaN(2*size(camStates,2), 1);
     for i = 1:size(camStates,2)
+        
         C_CG = quatToRotMat(camStates{i}.q_CG);
         p_f_C = C_CG * (p_f_G - camStates{i}.p_C_G);
         

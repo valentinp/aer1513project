@@ -5,7 +5,7 @@ function imuState_prop = propagateImuState(imuState_k, measurements_k)
 
     % Rotation state
     arg = measurements_k.omega - imuState_k.b_g;
-    imuState_prop.q_IG = 0.5 * omegaMat(arg) * imuState_k.q_IG * measurements_k.dT;
+    imuState_prop.q_IG = 0.5 * omegaMat(arg) * imuState_k.q_IG * measurements_k.dT + imuState_k.q_IG;
     
     %Unit length quaternion
     imuState_prop.q_IG = imuState_prop.q_IG/norm(imuState_prop.q_IG);
@@ -15,6 +15,6 @@ function imuState_prop = propagateImuState(imuState_k, measurements_k)
     imuState_prop.b_v = imuState_k.b_v;
     
     % Translation state
-    imuState_prop.p_I_G = C_IG' * (measurements_k.v - imuState_k.b_v) * measurements_k.dT;
+    imuState_prop.p_I_G = C_IG' * (measurements_k.v - imuState_k.b_v) * measurements_k.dT + imuState_k.p_I_G;
     
 end
