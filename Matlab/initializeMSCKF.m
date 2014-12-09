@@ -22,7 +22,7 @@ msckfState.camStates = {};
 msckfState.camStates{1} = camState;
 
 msckfState.camCovar = eye(6);
-msckfState.imuCamCovar = zeros(6, 12);
+msckfState.imuCamCovar = zeros(12, 6);
 
 %Compute all of the relevant feature tracks
 featureTracks = {};
