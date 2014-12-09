@@ -82,24 +82,14 @@ trackedFeatureIds = [];
 %feature observations
 %Use ground truth for the first state
 
-firstImuState.q_IG = Cfrompsi(theta_vk_i(:,kStart));
+firstImuState.q_IG = quatFromRot(rotMatFromPsi(theta_vk_i(:,kStart)));
 firstImuState.p_I_G = r_i_vk_i(:,kStart);
-firstImuState.b_g = zeros(3,1);
-firstImuState.b_v = zeros(3,1);
-firstImuState.covar = eye(12);
 
-
-msckfState.imuState = firstImuState;
-msckfState.imuState = firstImuState;
-msckfState.imuCovar = eye(12);
-msckfState.camCovar = eye(12);
-msckfState.imuCamCovar = eye(12);
-
-
+[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{startK}, camera);
 
 %% ============================MAIN LOOP========================== %%
 
-for state_k = kStart:kEnd
+for state_k = (kStart+1):kEnd
     %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
