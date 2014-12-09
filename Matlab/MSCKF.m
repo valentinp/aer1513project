@@ -142,57 +142,58 @@ for state_k = (kStart+1):kEnd
         end
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
-    H_o = zeros( 2*length(featuresToResidualize) , 12 + size(msckfState.camStates,2) );
-    r_stacked = [];
-    A = [];
+    if ~isempty(featureTracksToResidualize)
+        H_o = zeros( 2*length(featureTracksToResidualize) , 12 + size(msckfState.camStates,2) );
+        r_stacked = [];
+        A = [];
 
-    for f_i = 1:length(featureTracksToResidualize)
-        
-        track = featureTracksToResidualize{f_i};
+        for f_i = 1:length(featureTracksToResidualize)
 
-        %Estimate feature 3D location through Gauss Newton inverse depth
-        %optimization
-        [p_f_G] = calcGNPosEst(track.camStates, track.observations);
-        
-        %Calculate residual and Hoj 
-        [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
-        [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
+            track = featureTracksToResidualize{f_i};
 
-        % Stacked residuals and friends
-        iStart = 2*(f_i-1)+1;
-        iEnd = iStart+2;
+            %Estimate feature 3D location through Gauss Newton inverse depth
+            %optimization
+            [p_f_G] = calcGNPosEst(track.camStates, track.observations);
 
-        H_o(iStart:iEnd, :) = H_o_j;
-        r_stacked(end+1,:) = r_j;
-        A(:, end+1) = A_j;
+            %Calculate residual and Hoj 
+            [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
+            [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
+
+            % Stacked residuals and friends
+            iStart = 2*(f_i-1)+1;
+            iEnd = iStart+2;
+
+            H_o(iStart:iEnd, :) = H_o_j;
+            r_stacked(end+1,:) = r_j;
+            A(:, end+1) = A_j;
+        end
+
+        [T_H, Q_1] = calcTH(H_o);
+        r_n_j = Q_1'*A'*r_stacked;
+
+        % Build MSCKF covariance matrix
+        P = [msckfState.imuCovar, msckfState.imuCamCovar;
+               msckfState.imuCamCovar', msckfState.camCovar];
+
+        R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
+
+        % Calculate Kalman gain
+        K = P*T_H' / ( T_H*P*T_H' + R_n );
+
+        % State correction
+        deltaX = K * r_n;
+        msckfState = updateState(msckfState, deltaX);
+
+        % Covariance correction
+        tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
+        P_corrected = tempMat * P * tempMat' + K * R_n * K';
+
+        msckfState.imuCovar = P_corrected(1:12,1:12);
+        msckfState.camCovar = P_corrected(13:end,13:end);
+        msckfState.imuCamCovar = P_corrected(1:12, 13:end);
+
+        %% ==========================STATE PRUNING======================== %%
+        %Remove any camera states with no tracked features
+        msckfState = pruneStates(msckfState);
     end
-
-    [T_H, Q_1] = calcTH(H_o);
-    r_n_j = Q_1'*A'*r_stacked;
-
-    % Build MSCKF covariance matrix
-    P = [msckfState.imuCovar, msckfState.imuCamCovar;
-           msckfState.imuCamCovar', msckfState.camCovar];
-
-    R_n = imageVariance*eye( size(Q_1, 2) );
-
-    % Calculate Kalman gain
-    K = P*T_H' / ( T_H*P*T_H' + R_n );
-
-    % State correction
-    deltaX = K * r_n;
-    msckfState = updateState(msckfState, deltaX);
-
-    % Covariance correction
-    tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
-    P_corrected = tempMat * P * tempMat' + K * R_n * K';
-    
-    msckfState.imuCovar = P_corrected(1:12,1:12);
-    msckfState.camCovar = P_corrected(13:end,13:end);
-    msckfState.imuCamCovar = P_corrected(1:12, 13:end);
-
-    %% ==========================STATE PRUNING======================== %%
-    %Remove any camera states with no tracked features
-    msckfState = pruneStates(msckfState);
-    
 end %for state_K = ...
