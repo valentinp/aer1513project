@@ -94,7 +94,7 @@ for state_k = (kStart+1):kEnd
     %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
-    msckfState = propagateMsckfCovar(msckfState, measurements{state_k}, noiseParams);
+    msckfState = propagateMsckfStateAndCovar(msckfState, measurements{state_k}, noiseParams);
 
     %Add camera pose to msckfState
     msckfState = augmentState(msckfState, camera);
