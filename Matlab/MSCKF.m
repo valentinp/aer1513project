@@ -9,7 +9,7 @@ addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 1215;
+kStart = 600;
 kEnd = 1714;
 
 %Set up the camera parameters
