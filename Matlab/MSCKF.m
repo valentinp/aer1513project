@@ -153,7 +153,7 @@ for state_k = (kStart+1):kEnd
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
-            [p_f_G] = calcGNPosEst(track.camStates, track.observations);
+            [p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
             %Calculate residual and Hoj 
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
