@@ -23,7 +23,5 @@ function msckfState_prop = propagateMsckfStateAndCovar(msckfState, measurements_
     
     % IMU-Camera Covariance
     msckfState_prop.imuCamCovar = Phi * msckfState.imuCamCovar;
-    
     msckfState_prop.camStates = msckfState.camStates;
-    msckfState_prop.imuState = msckfState.imuState;    
 end
