@@ -80,6 +80,20 @@ trackedFeatureIds = [];
 %% ==========================Initial State======================== %%
 %Use ground truth for first state and initialize feature tracks with
 %feature observations
+%Use ground truth for the first state
+
+firstImuState.q_IG = Cfrompsi(theta_vk_i(:,kStart));
+firstImuState.p_I_G = r_i_vk_i(:,kStart);
+firstImuState.b_g = zeros(3,1);
+firstImuState.b_v = zeros(3,1);
+firstImuState.covar = eye(12);
+
+
+msckfState.imuState = firstImuState;
+msckfState.imuState = firstImuState;
+msckfState.imuCovar = eye(12);
+msckfState.camCovar = eye(12);
+msckfState.imuCamCovar = eye(12);
 
 
 
