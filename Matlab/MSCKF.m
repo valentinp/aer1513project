@@ -163,6 +163,7 @@ for state_k = (kStart+1):kEnd
             iStart = 2*(f_i-1)+1;
             iEnd = iStart+2;
 
+            % TO DO: do we know the dimensions?
             H_o(iStart:iEnd, :) = H_o_j;
             r_stacked(end+1,:) = r_j;
             A(:, end+1) = A_j;
