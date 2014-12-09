@@ -82,10 +82,10 @@ trackedFeatureIds = [];
 %feature observations
 %Use ground truth for the first state
 
-firstImuState.q_IG = quatFromRot(rotMatFromPsi(theta_vk_i(:,kStart)));
+firstImuState.q_IG = rotMatToQuat(rotMatFromPsi(theta_vk_i(:,kStart)));
 firstImuState.p_I_G = r_i_vk_i(:,kStart);
 
-[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{startK}, camera);
+[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera);
 
 %% ============================MAIN LOOP========================== %%
 

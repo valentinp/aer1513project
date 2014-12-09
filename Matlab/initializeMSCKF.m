@@ -1,4 +1,4 @@
-function [firstMsckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, firstMeasurements, camera)
+function [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, firstMeasurements, camera)
 %INITIALIZEMSCKF Initialize the MSCKF with tracked features and ground
 %truth
 
