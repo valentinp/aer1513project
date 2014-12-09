@@ -37,12 +37,14 @@ imuState = cell(1,numel(t));
 % camState = cell(1,numel(t));
 % camStates{k}.q_CG        4x1 Global to camera rotation quaternion
 % camStates{k}.p_C_G       3x1 Camera Position in the Global frame
+% camStates{k}.trackedFeatureIds  1xM List of feature ids that are currently being tracked from that camera state
 
 %msckfState.imuState
 %msckfState.imuCovar
 %msckfState.camCovar
 %msckfState.imuCamCovar
 %msckfState.camStates
+
 
 % Measurements as structures all indexed in a cell array
 dT = [0, diff(t)];
@@ -65,11 +67,11 @@ imageVariance = mean(y_var);    % Slightly hacky. Used to compute the Kalman gai
 %Struct used to keep track of features
 featureTracks = {};
 trackedFeatureIds = [];
+
 % featureTrack = {track1, track2, ...}
 % track.featureId 
 % track.observations
-% track.k1
-% track.k2
+
 
 
 %% ==========================Initial State======================== %%
@@ -112,8 +114,7 @@ for state_k = kStart:kEnd
             %Track new feature
             track.featureId = featureId;
             track.observations = meas_k;
-            track.k1 = state_k;
-            track.k2 = state_k;
+            track.cameraIndices = [length(msckfState.camStates)];
             featureTracks{end+1} = track;
             trackedFeatureIds(end+1) = featureId;
         end
