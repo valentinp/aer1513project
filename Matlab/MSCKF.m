@@ -192,8 +192,9 @@ for state_k = kStart:kEnd
                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
             end
             
-            [p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
-
+            %[p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            p_f_G = groundTruthMap(:, track.featureId);
+            
             %Calculate residual and Hoj 
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
