@@ -33,12 +33,12 @@ noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightl
 
 
 % IMU state for plotting etc. Structures indexed in a cell array
-imuState = cell(1,numel(t));
-% imuState{k}.q_IG         4x1 Global to IMU rotation quaternion
-% imuState{k}.p_I_G        3x1 IMU Position in the Global frame
-% imuState{k}.b_g          3x1 Gyro bias
-% imuState{k}.b_v          3x1 Velocity bias
-% imuState{k}.covar        12x12 IMU state covariance
+imuStates = cell(1,numel(t));
+% imuStates{k}.q_IG         4x1 Global to IMU rotation quaternion
+% imuStates{k}.p_I_G        3x1 IMU Position in the Global frame
+% imuStates{k}.b_g          3x1 Gyro bias
+% imuStates{k}.b_v          3x1 Velocity bias
+% imuStates{k}.covar        12x12 IMU state covariance
 
 % We don't really need these outside of msckfState, do we?
 % camState = cell(1,numel(t));
@@ -225,6 +225,9 @@ for state_k = kStart:kEnd
         msckfState.camCovar = P_corrected(13:end,13:end);
         msckfState.imuCamCovar = P_corrected(1:12, 13:end);
 
+        %% ==========================STATE HISTORY======================== %% 
+        imuStates = updateStateHistory(imuStates, msckfState, camera, state_k);
+        
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
         msckfState = pruneStates(msckfState);
