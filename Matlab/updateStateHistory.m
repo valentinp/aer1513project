@@ -23,7 +23,8 @@ function imuStates_up = updateStateHistory(imuStates, msckfState, camera, state_
     % Update IMU states corresponding to active camera poses
     
     % Camera to IMU transformation
-    C_CI = quatToRotMat(q_CI);
+    C_CI = quatToRotMat(camera.q_CI);
+    q_IC = rotMatToQuat(C_CI');
     p_I_C = - C_CI' * camera.p_C_I;
     
     for camIdx = 1:size(msckfState.camStates, 2)      
@@ -31,7 +32,7 @@ function imuStates_up = updateStateHistory(imuStates, msckfState, camera, state_
         
         C_IG = quatToRotMat(q_IG);
         
-        p_C_G = msckf.camStates{camIdx}.p_C_G;
+        p_C_G = msckfState.camStates{camIdx}.p_C_G;
         p_I_G = p_C_G + C_IG'*C_CI'*p_I_C;
         
         cam_state_k = msckfState.camStates{camIdx}.state_k;

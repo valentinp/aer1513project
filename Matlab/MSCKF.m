@@ -30,6 +30,8 @@ noiseParams.z_2 = 1;
 noiseParams.Q_imu = eye(12);
 noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
+%MSCKF parameters
+MSCKFParams.minTrackLength = 5;
 
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -138,9 +140,11 @@ for state_k = kStart:kEnd
                 %Add the track, with all of its camStates, to the
                 %residualized list
                 track = featureTracks{trackedFeatureIds == featureId};
-                track.camStates = camStates;
-                track.camStateIndices = camStateIndices;
-                featureTracksToResidualize{end+1} = track;
+                if length(camStates) > MSCKFParams.minTrackLength
+                    track.camStates = camStates;
+                    track.camStateIndices = camStateIndices;
+                    featureTracksToResidualize{end+1} = track;
+                end
                
                 %Remove the track
                 featureTracks = featureTracks(trackedFeatureIds ~= featureId);
@@ -168,9 +172,13 @@ for state_k = kStart:kEnd
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     if ~isempty(featureTracksToResidualize)
-        H_o = zeros( 2*length(featureTracksToResidualize) , 12 + size(msckfState.camStates,2) );
+        %H_o has more than 1 row, but it will be grown in our for loop like
+        %a pet
+        H_o = zeros(0, 12 + 6*length(msckfState.camStates));
+        
         r_stacked = [];
         A = [];
+        A_index = [1,1]; %Helper for building the A matrix
 
         for f_i = 1:length(featureTracksToResidualize)
 
@@ -191,17 +199,18 @@ for state_k = kStart:kEnd
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
             % Stacked residuals and friends
-            iStart = 2*(f_i-1)+1;
-            iEnd = iStart+2;
+            iStart = size(H_o,1)+1;
+            iEnd = iStart+size(H_o_j, 1) - 1;
 
-            % TO DO: do we know the dimensions?
-            H(iStart:iEnd, :) = H_o_j;
-            r_stacked(end+1,:) = r_j;
-            A(:, end+1) = A_j;
+            H_o(iStart:iEnd, :) = H_o_j;
+            r_stacked((end+1):(end+size(r_j,1)),1) = r_j;
+            
+            A(A_index(1):(A_index(1)+size(A_j,1)-1),A_index(2):(A_index(2)+size(A_j,2)-1)) = A_j;
+            A_index = A_index + size(A_j);
         end
 
         [T_H, Q_1] = calcTH(H_o);
-        r_n_j = Q_1'*A'*r_stacked;
+        r_n = Q_1'*A'*r_stacked;
 
         % Build MSCKF covariance matrix
         P = [msckfState.imuCovar, msckfState.imuCamCovar;
