@@ -94,7 +94,7 @@ for optI = 1:maxIter
     
 end
 
-p_f_G = 1/xEst(3)*quatToRotMat(camStates{1}.q_CG)'*[xEst(1:2); 1] + camStates{1}.p_C_G; 
+p_f_G = (1/xEst(3))*quatToRotMat(camStates{1}.q_CG)'*[xEst(1:2); 1] + camStates{1}.p_C_G; 
 
 
     function [p_f1_1] = triangulate(obs1, obs2, C_12, t_21_1)

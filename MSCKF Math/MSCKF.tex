@@ -449,11 +449,11 @@ The feature position in the $i^{th}$ camera frame can be expressed as:
 \end{align}
 With our state parameters, we can use this equation to define three functions:
 \begin{align}
-\bbm h_1 (\alpha, \beta, \rho) \\ h_2 (\alpha, \beta, \rho) \\ h_3 (\alpha, \beta, \rho) \ebm = \mbf C_{in} \bbm \alpha \\ \beta \\ 1 \ebm + \rho  \mbf p^{C_i}_{C_1}
+\bbm h_1 (\alpha, \beta, \rho) \\ h_2 (\alpha, \beta, \rho) \\ h_3 (\alpha, \beta, \rho) \ebm = \bbm h_1 (\mbf x) \\ h_2 (\mbf x) \\ h_3 (\mbf x) \ebm = \mbf C_{i1} \bbm \alpha \\ \beta \\ 1 \ebm + \rho  \mbf p^{C_i}_{C_1} = \bbm C_{11} \alpha + C_{12} \beta + C_{13} + \rho x^{C_i}_{C_1} \\ C_{21} \alpha + C_{22} \beta + C_{23} + \rho y^{C_i}_{C_1} \\ C_{31} \alpha + C_{32} \beta + C_{33} + \rho z^{C_i}_{C_1}   \ebm 
 \end{align}
 The camera measurement error can then be written as:
 \begin{align}
-\mbf e = \hat{\mbf z} - \frac{1}{h_3 } \bbm h_1 \\ h_2 \ebm
+\mbf e(\mbf x) = \hat{\mbf z} - \frac{1}{h_3 (\mbf x) } \bbm h_1 (\mbf x) \\ h_2 (\mbf x) \ebm
 \end{align}
 The least squares linear system then becomes:
 \begin{align}
@@ -461,8 +461,17 @@ The least squares linear system then becomes:
 \end{align}
 where
 \begin{align}
-\mbf E := \frac{\partial \mbf e}{\partial \mbf x} \in \Real^{2 N \times 3 }, \quad \mbf W := \bbm \mbf R^{-1} & & \\ & \ddots & \\ & & \mbf R^{-1} \ebm \in \Real^{2 N \times 2 N}
+\mbf{\bar{x}} := \bbm \bar{\alpha} \\ \bar{\beta} \\ \bar{\rho} \ebm = \mbf, \quad \mbf E := \frac{\partial \mbf e}{\partial \mbf x} \in \Real^{2 N \times 3 }, \quad \mbf W := \bbm \mbf R^{-1} & & \\ & \ddots & \\ & & \mbf R^{-1} \ebm \in \Real^{2 N \times 2 N}
 \end{align}
+The Jacobian elements are given by:
+\begin{align}
+\frac{\partial \mbf e}{\partial \alpha} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \alpha} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \alpha} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_2 \ebm, \quad
+\frac{\partial \mbf e}{\partial \beta} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \beta} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \beta} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_2 \ebm, \quad
+\frac{\partial \mbf e}{\partial \rho} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \rho} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \rho} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_2 \ebm
+\end{align}
+with
+
+
 
 
 
