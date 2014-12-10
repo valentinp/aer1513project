@@ -56,7 +56,7 @@ for optI = 1:maxIter
         zHat = observations(:, iState);
         h = C_i1*[alphaBar; betaBar; 1] + rhoBar*t_1i_i;
 
-        errorVec((2*iState - 1):(2*iState),1) = zHat - 1/h(3)*[h(1); h(2)];
+        errorVec((2*iState - 1):(2*iState),1) = zHat - [h(1); h(2)]/h(3);
 
 
         %Form the Jacobian
