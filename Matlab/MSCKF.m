@@ -180,7 +180,6 @@ for state_k = kStart:kEnd
             %optimization
             
             camStatesGT = {};
-            
             for c_i_temp = 1:length(track.camStates)
                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
             end
@@ -196,7 +195,7 @@ for state_k = kStart:kEnd
             iEnd = iStart+2;
 
             % TO DO: do we know the dimensions?
-            H_o(iStart:iEnd, :) = H_o_j;
+            H(iStart:iEnd, :) = H_o_j;
             r_stacked(end+1,:) = r_j;
             A(:, end+1) = A_j;
         end

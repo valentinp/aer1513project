@@ -6,13 +6,13 @@ clc
 i = 1;
 T_wCam_GT = [];
 for t = 0:0.2:2
-    T_wCam_GT(:,:,i) = [eye(3) [t 0 1]'; 0 0 0 1];
+    T_wCam_GT(:,:,i) = [eye(3) [t 0 2]'; 0 0 0 1];
     i=i+1;
 end
 %Generate the true location
 landmarks_w = [1 0 3]';
 simSetup.pixelNoiseStd = 5; %pixels
-simSetup.cameraResolution = [1280, 960]; %pixels
+simSetup.cameraResolution = [640, 480]; %pixels
 
 %Set the camera intrinsics
 focalLength = 600; 
@@ -23,9 +23,14 @@ K  = [focalLength 0 c_u;
     0 focalLength c_v;
     0 0 1];
 
-imageMeasurements = genFeatureMeasurements(T_wCam_GT, landmarks_w, K, simSetup);
 
-observations = imageMeasurements;
+imageMeasurements = genFeatureMeasurements(T_wCam_GT, landmarks_w, K, simSetup);
+validMeasurements = (imageMeasurements(1,:) ~= -1);
+
+
+observations = imageMeasurements(:, validMeasurements);
+T_wCam_GT = T_wCam_GT(:,:, validMeasurements);
+
 observations(1,:) = (observations(1,:) - c_u)/focalLength;
 observations(2,:) = (observations(2,:) - c_v)/focalLength; 
 

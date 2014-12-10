@@ -20,7 +20,10 @@ secondViewIdx = length(camStates);
 C_12 = quatToRotMat(camStates{1}.q_CG)*quatToRotMat(camStates{secondViewIdx}.q_CG)';
 t_21_1 = quatToRotMat(camStates{1}.q_CG)*(camStates{secondViewIdx}.p_C_G - camStates{1}.p_C_G);
 
-p_f1_1_bar = triangulate(observations(:,1), observations(:,secondViewIdx),C_12, t_21_1)
+p_f1_1_bar = triangulate(observations(:,1), observations(:,secondViewIdx),C_12, t_21_1);
+
+initialEst = quatToRotMat(camStates{1}.q_CG)'*p_f1_1_bar + camStates{1}.p_C_G
+
 
 xBar = p_f1_1_bar(1);
 yBar = p_f1_1_bar(2);
