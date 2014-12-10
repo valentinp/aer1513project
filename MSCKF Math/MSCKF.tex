@@ -457,19 +457,27 @@ The camera measurement error can then be written as:
 \end{align}
 The least squares linear system then becomes:
 \begin{align}
-(\mbf  E \mbf W ^{-1} \mbf E ) \delta \mbf{x}^*  = - \mbf{E}^T\mbf{W}^{-1}\mbf{e}(\bar{\mbf{x}})
+(\mbf  E^T \mbf W ^{-1} \mbf E ) \delta \mbf{x}^*  = - \mbf{E}^T\mbf{W}^{-1}\mbf{e}(\bar{\mbf{x}})
 \end{align}
 where
 \begin{align}
-\mbf{\bar{x}} := \bbm \bar{\alpha} \\ \bar{\beta} \\ \bar{\rho} \ebm = \mbf, \quad \mbf E := \frac{\partial \mbf e}{\partial \mbf x} \in \Real^{2 N \times 3 }, \quad \mbf W := \bbm \mbf R^{-1} & & \\ & \ddots & \\ & & \mbf R^{-1} \ebm \in \Real^{2 N \times 2 N}
+\mbf{\bar{x}} := \bbm \bar{\alpha} \\ \bar{\beta} \\ \bar{\rho} \ebm = \mbf, \quad \mbf E := \frac{\partial \mbf e}{\partial \mbf x} \in \Real^{2 N \times 3 }, \quad \mbf W := \bbm \mbf R & & \\ & \ddots & \\ & & \mbf R \ebm \in \Real^{2 N \times 2 N}
 \end{align}
 The Jacobian elements are given by:
 \begin{align}
-\frac{\partial \mbf e}{\partial \alpha} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \alpha} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \alpha} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_2 \ebm, \quad
-\frac{\partial \mbf e}{\partial \beta} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \beta} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \beta} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_2 \ebm, \quad
-\frac{\partial \mbf e}{\partial \rho} = \bbm \frac{1}{h_3} \frac{\partial h_1}{\partial \rho} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_1 \\ \frac{1}{h_3} \frac{\partial h_2}{\partial \rho} - \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_2 \ebm
+\frac{\partial \mbf e}{\partial \alpha} = \bbm -\frac{1}{h_3} \frac{\partial h_1}{\partial \alpha} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_1 \\ -\frac{1}{h_3} \frac{\partial h_2}{\partial \alpha} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \alpha} h_2 \ebm, \quad
+\frac{\partial \mbf e}{\partial \beta} = \bbm -\frac{1}{h_3} \frac{\partial h_1}{\partial \beta} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_1 \\ -\frac{1}{h_3} \frac{\partial h_2}{\partial \beta} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \beta} h_2 \ebm, \quad
+\frac{\partial \mbf e}{\partial \rho} = \bbm -\frac{1}{h_3} \frac{\partial h_1}{\partial \rho} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_1 \\ -\frac{1}{h_3} \frac{\partial h_2}{\partial \rho} + \frac{1}{h_3^2} \frac{\partial h_3}{\partial \rho} h_2 \ebm
 \end{align}
 with
+\begin{align}
+\frac{\partial h_1}{\partial \alpha} = C_{11}, \quad \frac{\partial h_1}{\partial \beta} = C_{12}, \quad \frac{\partial h_1}{\partial \rho} = x^{C_i}_{C_1}\end{align}
+\begin{align*}
+\frac{\partial h_2}{\partial \alpha} = C_{21}, \quad \frac{\partial h_2}{\partial \beta} = C_{22}, \quad \frac{\partial h_2}{\partial \rho} = y^{C_i}_{C_1}\end{align*}
+\begin{align*}
+\frac{\partial h_3}{\partial \alpha} = C_{31}, \quad \frac{\partial h_3}{\partial \beta} = C_{32}, \quad \frac{\partial h_3}{\partial \rho} = z^{C_i}_{C_1}\end{align*}
+
+
 
 
 
