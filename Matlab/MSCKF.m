@@ -12,8 +12,8 @@ addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 600;
-kEnd = 1714;
+kStart = 1;
+kEnd = numel(t);
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -25,9 +25,9 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-noiseParams.z_1 = 1;
-noiseParams.z_2 = 1;
-noiseParams.Q_imu = eye(12);
+noiseParams.z_1 = 1/camera.f_u^2;
+noiseParams.z_2 = 1/camera.f_v^2;
+noiseParams.Q_imu = 0.01*eye(12);
 noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
@@ -115,7 +115,7 @@ firstImuState.p_I_G = r_i_vk_i(:,kStart);
 
 %% ============================MAIN LOOP========================== %%
 
-for state_k = kStart:kEnd
+for state_k = kStart:(kEnd-1)
     %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
@@ -171,7 +171,7 @@ for state_k = kStart:kEnd
         end
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
-    if ~isempty(featureTracksToResidualize)
+    if false %~isempty(featureTracksToResidualize)
         %H_o has more than 1 row, but it will be grown in our for loop like
         %a pet
         H_o = zeros(0, 12 + 6*length(msckfState.camStates));
@@ -187,10 +187,10 @@ for state_k = kStart:kEnd
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
             
-            camStatesGT = {};
-            for c_i_temp = 1:length(track.camStates)
-                camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
-            end
+%             camStatesGT = {};
+%             for c_i_temp = 1:length(track.camStates)
+%                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
+%             end
             
             %[p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             p_f_G = groundTruthMap(:, track.featureId);
@@ -224,7 +224,12 @@ for state_k = kStart:kEnd
 
         % State correction
         deltaX = K * r_n;
+        
+        norm(msckfState.camStates{end}.p_C_G - groundTruthStates{state_k+1}.camState.p_C_G)
+        
         msckfState = updateState(msckfState, deltaX);
+        
+        norm(msckfState.camStates{end}.p_C_G - groundTruthStates{state_k+1}.camState.p_C_G)
 
         % Covariance correction
         tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
@@ -233,12 +238,13 @@ for state_k = kStart:kEnd
         msckfState.imuCovar = P_corrected(1:12,1:12);
         msckfState.camCovar = P_corrected(13:end,13:end);
         msckfState.imuCamCovar = P_corrected(1:12, 13:end);
-
+    end
         %% ==========================STATE HISTORY======================== %% 
         imuStates = updateStateHistory(imuStates, msckfState, camera, state_k);
         
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
         msckfState = pruneStates(msckfState);
-    end
+        state_k
+        
 end %for state_K = ...

@@ -17,8 +17,9 @@ c_i = 1;
 for camStateIndex = camStateIndices
     camState = msckfState.camStates{camStateIndex};
 
+    C_CG = quatToRotMat(camState.q_CG);
     %The feature position in the camera frame
-    p_f_C = quatToRotMat(camState.q_CG)*(p_f_G - camState.p_C_G);
+    p_f_C = C_CG*(p_f_G - camState.p_C_G);
 
     X = p_f_C(1);
     Y = p_f_C(2);
@@ -26,10 +27,10 @@ for camStateIndex = camStateIndices
 
     J_i = (1/Z)*[1 0 -X/Z; 0 1 -Y/Z];
 
-    H_f_j((2*c_i - 1):2*c_i, :) = J_i*quatToRotMat(camState.q_CG);
+    H_f_j((2*c_i - 1):2*c_i, :) = J_i*C_CG;
 
     H_x_j((2*c_i - 1):2*c_i,12+6*(camStateIndex-1) + 1:12+6*(camStateIndex-1) + 3) = J_i*crossMat(p_f_C);
-    H_x_j((2*c_i - 1):2*c_i,(12+6*(camStateIndex-1) + 4):(12+6*(camStateIndex-1) + 6)) = -J_i*quatToRotMat(camState.q_CG);
+    H_x_j((2*c_i - 1):2*c_i,(12+6*(camStateIndex-1) + 4):(12+6*(camStateIndex-1) + 6)) = -J_i*C_CG;
 
     c_i = c_i + 1;
 end
