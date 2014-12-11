@@ -78,13 +78,67 @@ Monkey Style Chinese Kung Fu
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{INTRODUCTION}
+\section{INTRODUCTION} \label{sec:introduction}
+\cite{Li:2012:ICRA} \cite{Li:2013:IJRR}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{MAPLESS VISION-AIDED INERTIAL NAVIGATION}
+The combination of visual and inertial sensors is a powerful tool for autonomous navigation.
+Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
+Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
+However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
+The addition of a camera is an excellent way to bound this cumulative drift error since the camera's signal-to-noise ratio is highest when the camera is stationary.
+On the other hand, cameras are not robust to motion blur induced by large accelerations.
+In these cases, the strength of the IMU's signal far exceeds its baseline noise and can be relied upon more heavily in estimating pose changes.
 
+The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
+A complicating factor in this problem is the absence of a known map of landmarks from which the camera can generate measurements.
+Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
+What follows is a discussion of two common techniques, the Extended Kalman Filter (EKF) and the sliding window filter (SWF), and a third hybrid approach, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The Extended Kalman Filter} \label{subsec:ekf}
+In the Extended Kalman Filter (EKF) solution, vehicle poses and landmark positions are simultaneously estimated at each time step by augmenting the filter state with landmark positions.
+This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of landmarks by recursively updating the state as new measurements become available.
+
+[EKF EQUATIONS HERE?]
+
+Although the recursive nature of EKF-SLAM allows it to operate online, the computational cost of the filter grows cubically with map size.
+This behavior is due to the fact that the length of the state grows linearly with the number of landmarks, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
+Consequently, the spatial extent over which EKF-SLAM can be used online is limited by the necessarily finite compute envelope available to it.
+
+Another limitation of EKF-SLAM is that it is forgetful.
+Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later landmark measurements ought to constrain them.
+By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and landmark positions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Sliding Window Bundle Adjustment} \label{subsec:slidingwindow}
+Another solution to vision-aided inertial navigation is to optimize a sliding window of vehicle poses and landmark positions to obtain locally optimal estimates of both.
+The optimization problem in the sliding window formulation is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
+
+[BATCH MATH GOES HERE?]
+
+An important advantage of the sliding window solution is that its computational cost depends only on the number of landmarks in the current window, and not the number of landmarks in the entire map.
+By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary spatial or temporal extent.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The Multi-State Constraint Kalman Filter} \label{subsec:msckf}
+The MSCKF \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of sliding-window bundle adjustment and traditional EKF-SLAM.
+The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose using batch-optimized estimates of landmarks that are visible across the entire window.
+
+[MSCKF MATH SOMEWHERE]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EXPERIMENTS} \label{sec:experiments}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\section*{ACKNOWLEDGMENT}
 %\vspace{8pt}
@@ -92,6 +146,6 @@ Monkey Style Chinese Kung Fu
 
 \def\url#1{} % Get rid of url in citations -- also had to modify IEEEtran.bst
 \bibliographystyle{IEEEtran}
-%\bibliography{msckf_bib}
+\bibliography{project_bib.bib}
 
 \end{document}
