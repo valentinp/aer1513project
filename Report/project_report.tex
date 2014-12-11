@@ -84,7 +84,7 @@ Monkey Style Chinese Kung Fu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{MAPLESS VISION-AIDED INERTIAL NAVIGATION}
-The combination of visual and inertial sensors is a powerful tool for autonomous navigation.
+The combination of visual and inertial sensors is a powerful tool for autonomous navigation in unknown environments.
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
 Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
 However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
@@ -95,10 +95,10 @@ In these cases, the strength of the IMU's signal far exceeds its baseline noise 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 A complicating factor in this problem is the absence of a known map of landmarks from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
-What follows is a discussion of two common techniques, the Extended Kalman Filter (EKF) and the sliding window filter (SWF), and a third hybrid approach, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+What follows is a discussion of two common techniques, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid approach, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Extended Kalman Filter} \label{subsec:ekf}
+\subsection{The Extended Kalman Filter (EKF)} \label{subsec:ekf}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and landmark positions are simultaneously estimated at each time step by augmenting the filter state with landmark positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of landmarks by recursively updating the state as new measurements become available.
 
@@ -113,30 +113,52 @@ Because the filter state includes only the most recent vehicle pose, a given upd
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and landmark positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Sliding Window Bundle Adjustment} \label{subsec:slidingwindow}
-Another solution to vision-aided inertial navigation is to optimize a sliding window of vehicle poses and landmark positions to obtain locally optimal estimates of both.
-The optimization problem in the sliding window formulation is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
+\subsection{The Sliding Window Filter (SWF)} \label{subsec:slidingwindow}
+In contrast to EKF-SLAM, the aim of the SWF is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and landmark positions.
+The optimization problem in the Sliding Window Filter (SWF) is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
 [BATCH MATH GOES HERE?]
 
-An important advantage of the sliding window solution is that its computational cost depends only on the number of landmarks in the current window, and not the number of landmarks in the entire map.
+An important advantage of the SWF is that its computational cost depends on the number of landmarks in the current window rather than the number of landmarks in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary spatial or temporal extent.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Multi-State Constraint Kalman Filter} \label{subsec:msckf}
-The MSCKF \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of sliding-window bundle adjustment and traditional EKF-SLAM.
-The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose using batch-optimized estimates of landmarks that are visible across the entire window.
+\subsection{The Multi-State Constraint Kalman Filter (MSCKF)} \label{subsec:msckf}
+The MSCKF \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
+The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of landmarks that are visible across the entire window.
+This update step typically occurs when a tracked landmark goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
 
 [MSCKF MATH SOMEWHERE]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
+We conducted a comparative study of the MSCKF and SWF algorithms using the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
+The dataset consists of a rigidly attached stereo camera and IMU observing a set of 20 landmarks as they move along an arbitrary 3D path (Figure \ref{fig:sensorhead}).
+The dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the landmark positions (Figure \ref{fig:trajectory_groundtruth}).
+Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.45\textwidth]{figs/sensorhead}
+    \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point landmarks. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
+    \label{fig:sensorhead}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth}
+    \caption{Vicon ground truth for sensor head motion (blue) and landmark positions (red) in the ``Starry Night'' dataset.}
+    \label{fig:trajectory_groundtruth}
+\end{figure}
+
+Things quickly got out of hand when Matlab achieved sentience. 
+We were forced to abandon our lab and have been surviving in the harsh environment of the MarsDome for weeks.
+If this ever gets published, please send help!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
