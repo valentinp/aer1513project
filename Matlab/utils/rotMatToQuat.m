@@ -1,6 +1,8 @@
 function [q] = rotMatToQuat(R)
 
 [r,c] = size( R );
+R=R';
+
 if( r ~= 3 | c ~= 3 )
     fprintf( 'R must be a 3x3 matrix\n\r' );
     return;

@@ -6,5 +6,7 @@ for plotting_k = kStart:kEnd
     q_IG(:,plotting_k - kStart + 1) = imuStates{plotting_k}.q_IG;
 end
 
+close all;
 figure(1); clf;
-plot(p_I_G(1,:), p_I_G(2,:), p_I_G(3,:));
+plot3(p_I_G(1,:), p_I_G(2,:), p_I_G(3,:));
+grid on;

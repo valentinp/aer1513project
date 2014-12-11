@@ -12,7 +12,7 @@ addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 1;
+kStart = 400;
 kEnd = numel(t);
 
 %Set up the camera parameters
@@ -171,7 +171,7 @@ for state_k = kStart:(kEnd-1)
         end
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
-    if false %~isempty(featureTracksToResidualize)
+    if ~isempty(featureTracksToResidualize)
         %H_o has more than 1 row, but it will be grown in our for loop like
         %a pet
         H_o = zeros(0, 12 + 6*length(msckfState.camStates));
@@ -187,15 +187,21 @@ for state_k = kStart:(kEnd-1)
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
             
-%             camStatesGT = {};
-%             for c_i_temp = 1:length(track.camStates)
-%                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
-%             end
+             camStatesGT = {};
+             for c_i_temp = 1:length(track.camStates)
+                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
+             end
             
             %[p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             p_f_G = groundTruthMap(:, track.featureId);
             
             %Calculate residual and Hoj 
+            
+            %CHECK THIS!
+%             r_vi_i = groundTruthStates{406}.imuState.p_I_G;
+%             C_vi = quatToRotMat(groundTruthStates{406}.imuState.q_IG);
+%             p_pc_c = C_c_v*(C_vi*(p_f_G - r_vi_i) - rho_v_c_v)
+            
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
