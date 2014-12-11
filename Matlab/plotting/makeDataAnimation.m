@@ -1,6 +1,5 @@
-addpath('plotting');
-addpath('utils');
-load('dataset3');
+addpath('../utils');
+load('../dataset3');
 
 fontSize = 16;
 markerSize = 100;

@@ -9,4 +9,3 @@ end
 close all;
 figure(1); clf;
 plot3(p_I_G(1,:), p_I_G(2,:), p_I_G(3,:));
-grid on;
