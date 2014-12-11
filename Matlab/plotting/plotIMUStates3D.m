@@ -7,4 +7,4 @@ for plotting_k = kStart:kEnd
 end
 
 figure(1); clf;
-plot(p_I_G(1,:), p_I_G(2,:), p_I_G(3,:));
+plot3(p_I_G(1,:), p_I_G(2,:), p_I_G(3,:));
