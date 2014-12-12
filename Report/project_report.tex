@@ -93,9 +93,6 @@ A complicating factor in the general form of this problem is the absence of a kn
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXTENDED KALMAN FILTER} \label{sec:ekf}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and landmark positions are simultaneously estimated at each time step by augmenting the filter state with landmark positions.
@@ -113,9 +110,6 @@ Another limitation of EKF-SLAM is that it is forgetful.
 Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later landmark measurements ought to constrain them.
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and landmark positions.
 
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{SLIDING WINDOW FILTER} \label{sec:slidingwindow}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and landmark positions.
@@ -126,29 +120,72 @@ The optimization problem in the Sliding Window Filter (SWF) is typically solved 
 An important advantage of the SWF is that its computational cost depends on the number of landmarks in the current window rather than the number of landmarks in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:msckf}
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of landmarks that are visible across the entire window.
 This update step typically occurs when a tracked landmark goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
 
-\subsection{State Parametrization}
-As described in Section \ref{sec:experiments}, we evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations.
+\subsection{MSCKF State Parametrization}
+We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations(see Section \ref{sec:experiments}).
 In order to accommodate this alternative state parametrization, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
-    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k} & \Vec{b}_{\boldsymbol{\omega},k} & \Vec{b}_{\Vec{v},k} & \Vec{p}_{G,k}^{IG} \ebm^T
+    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k}^T & \Vec{b}_{\boldsymbol{\omega},k}^T & \Vec{b}_{\Vec{v},k}^T & \Vec{p}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
 \end{align}
 where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{\boldsymbol{\omega},k}$ is the bias on the gyro measurements $\boldsymbol{\omega}_m$, $\Vec{b}_{\Vec{v},k}$ is the bias on the velocity measurements $\Vec{v}_m$, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
 
 At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ past camera poses in which active feature tracks were visible:
 \begin{align}
-    \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k} & \hat{\Vec{q}}_{C_1 G} & \hat{\Vec{p}}_G^{C_1 G} & \hdots & \hat{\Vec{q}}_{C_N G} & \hat{\Vec{p}}_G^{C_N G} \ebm ^T
-\end{align}.
+    \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
+\end{align}
+
+We can also define the MSCKF ``error state'' at time $k$:
+\begin{align}
+    \tilde{\Vec{x}}_k &= \bbm \tilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \tilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \tilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
+\end{align}
+where
+\begin{align}
+    \tilde{\Vec{x}}_{I,k} &= \bbm \boldsymbol{\delta\theta}_I^T & \tilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \tilde{\Vec{b}}_{\Vec{v},k}^T & \tilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
+\end{align}
+is the 12-dimensional IMU error state.
+In the above, $\tilde{x}$ denotes the difference between the true value and the estimated value of the quantity $x$.
+The rotational errors $\boldsymbol{\delta\theta}$ are defined according to
+\begin{align*}
+    \boldsymbol{\delta}\Vec{q} &= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T.
+\end{align*}
+
+Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12+6N)$ matrix that may be partitioned as
+\begin{align}
+    \hat{\Vec{P}}_k &= \bbm \hat{\Vec{P}}_{II,k} & \hat{\Vec{P}}_{IC,k} \\ \hat{\Vec{P}}_{IC,k}^T & \hat{\Vec{P}}_{CC,k} \ebm
+\end{align}
+where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-correlation between the current IMU state and the camera poses.
+
+\subsection{MSCKF State Augmentation}
+When a new camera image becomes available, the MSCKF state must be augmented with the current camera state.
+We obtain the camera state by applying the known transformation $\left(\Vec{q}_{CI}, \Vec{p}_I^{CI}\right)$ to a copy of the current IMU state:
+\begin{align}
+    \hat{\Vec{q}}_{C_{N+1} G} &= \Vec{q}_{CI} \otimes \hat{\Vec{q}}_{IG,k} \\
+    \hat{\Vec{p}}_G^{C_{N+1}G} &= \hat{\Vec{p}}_G^{IG} + \hat{\Vec{C}}_{IG,k} \hat{\Vec{p}}_I^{CI}
+\end{align}
+where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG,k}$ and $\otimes$ denotes quaternion multiplication.
+
+Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state as follows:
+\begin{align}
+    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \left(\hat{\Vec{p}}_G^{C_{N+1}G}\right)^T \ebm^T
+\end{align}
+
+We must also augment the MSCKF state covariance:
+\begin{align}
+    \hat{\Vec{P}}_k &\leftarrow \bbm \Vec{1}_{12+6N} \\ \Vec{J}_k \ebm \hat{\Vec{P}}_k \bbm \Vec{1}_{12+6N} \\ \Vec{J}_k \ebm^T
+\end{align}
+where the Jacobian $\Vec{J}_k$ is given by
+\begin{align}
+\Vec{J}_k &= \bbm \hat{\Vec{C}}_{C I, k} & \Vec{0}_{3\times6} & \Vec{0}_{3\times3} & \Vec{0}_{3\times6N} \\
+                            \left(\hat{\Vec{C}}_{I G, k}^T \Vec{p}_{I,k}^{CI}\right)^\times & \Vec{0}_{3\times6} & \Vec{1}_3 & \Vec{0}_{3\times6N}
+                \ebm
+\end{align}
 
 \subsection{IMU State Estimate Propagation}
 The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is described by the following differential equations:
@@ -178,7 +215,7 @@ and
 
 In our implementation we use a simple forward Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
 
-
+\subsection{MSCKF State Covariance Propagation}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,10 +242,6 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
 Things quickly got out of hand when Matlab achieved sentience. 
 We were forced to abandon our lab and have been surviving in the harsh environment of the MarsDome for weeks.
 If this ever gets published, please send help!
-
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
