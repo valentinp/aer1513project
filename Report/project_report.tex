@@ -173,7 +173,7 @@ where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{
 
 Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state as follows:
 \begin{align}
-    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \left(\hat{\Vec{p}}_G^{C_{N+1}G}\right)^T \ebm^T
+    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T
 \end{align}
 
 We must also augment the MSCKF state covariance:
