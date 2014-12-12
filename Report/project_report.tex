@@ -127,7 +127,7 @@ The key idea of the MSCKF is to maintain a sliding window of vehicle poses and t
 This update step typically occurs when a tracked landmark goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
 
 \subsection{MSCKF State Parametrization}
-We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations(see Section \ref{sec:experiments}).
+We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
 In order to accommodate this alternative state parametrization, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
@@ -143,21 +143,21 @@ At time $k$, the full state of the MSCKF consists of the current IMU state estim
 
 We can also define the MSCKF ``error state'' at time $k$:
 \begin{align}
-    \tilde{\Vec{x}}_k &= \bbm \tilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \tilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \tilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
+    \widetilde{\Vec{x}}_k &= \bbm \widetilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \widetilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \widetilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
 \end{align}
 where
 \begin{align}
-    \tilde{\Vec{x}}_{I,k} &= \bbm \boldsymbol{\delta\theta}_I^T & \tilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \tilde{\Vec{b}}_{\Vec{v},k}^T & \tilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
+    \widetilde{\Vec{x}}_{I,k} &= \bbm \boldsymbol{\delta\theta}_I^T & \widetilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \widetilde{\Vec{b}}_{\Vec{v},k}^T & \widetilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
 \end{align}
 is the 12-dimensional IMU error state.
-In the above, $\tilde{x}$ denotes the difference between the true value and the estimated value of the quantity $x$.
+In the above, $\widetilde{x}$ denotes the difference between the true value and the estimated value of the quantity $x$.
 The rotational errors $\boldsymbol{\delta\theta}$ are defined according to
-\begin{align*}
+\begin{align}
     \boldsymbol{\delta}\Vec{q} &= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T.
-\end{align*}
+\end{align}
 
 Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12+6N)$ matrix that may be partitioned as
-\begin{align}
+\begin{align} \label{eq:covariance}
     \hat{\Vec{P}}_k &= \bbm \hat{\Vec{P}}_{II,k} & \hat{\Vec{P}}_{IC,k} \\ \hat{\Vec{P}}_{IC,k}^T & \hat{\Vec{P}}_{CC,k} \ebm
 \end{align}
 where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-correlation between the current IMU state and the camera poses.
@@ -216,7 +216,44 @@ and
 In our implementation we use a simple forward Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Covariance Propagation}
+With reference to the partitions defined in Equation \ref{eq:covariance}, we compute the predicted camera-camera and IMU-camera state covariances as follows:
+\begin{align}
+    \hat{\Vec{P}}^-_{CC,k+1} &= \hat{\Vec{P}}_{CC,k} \\
+    \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + T, t_k \right) \hat{\Vec{P}}_{IC,k}
+\end{align}
+where $T$ is the IMU sampling period, and the state transition matrix $\boldsymbol{\Phi}\left(t_k + T, t_k \right)$ is obtained by integrating
+\begin{align} \label{eq:statetransition}
+    \dot{\boldsymbol{\Phi}}\left(t_k + \tau, t_k \right) &= \Vec{F} \boldsymbol{\Phi}\left(t_k + \tau, t_k \right), \tau\in\left[0,T\right]
+\end{align}
+with the initial condition $\boldsymbol{\Phi}\left(t_k, t_k \right) = \Vec{1}_{12}$.
 
+We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
+\begin{align} \label{eq:imucovar}
+    \dot{\hat{\Vec{P}}}_{II}\left(t_k, t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k, t_k  + \tau \right) \notag \\ 
+                & + \hat{\Vec{P}}_{II}\left(t_k, t_k  + \tau \right) \Vec{F}^T \notag \\ 
+                & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
+\end{align}
+with the initial condition $\hat{\Vec{P}}_{II}\left(t_k, t_k\right) = \hat{\Vec{P}}_{II,k}$. 
+$\Vec{Q}_I$ is the covariance of the IMU measurement noise.
+
+The Jacobians $\Vec{F}$, $\Vec{G}$ in Equations \ref{eq:statetransition} and \ref{eq:imucovar} are given by
+\begin{align}
+\Vec{F} &= \bbm -\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T \\
+                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+            \ebm
+\end{align}
+\begin{align}
+\Vec{G} &=  \bbm    -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                                \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \\
+                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3}
+            \ebm .
+\end{align}
+
+\subsection{MSCKF State Correction Equations}
+[NULL SPACE TRICK, KALMAN GAIN, ETC.]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
