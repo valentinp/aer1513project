@@ -79,11 +79,7 @@ Monkey Style Chinese Kung Fu
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION} \label{sec:introduction}
-\cite{Li:2012:ICRA} \cite{Li:2013:IJRR}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{MAPLESS VISION-AIDED INERTIAL NAVIGATION}
 The combination of visual and inertial sensors is a powerful tool for autonomous navigation in unknown environments.
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
 Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
@@ -97,10 +93,15 @@ A complicating factor in this problem is the absence of a known map of landmarks
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 What follows is a discussion of two common techniques, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid approach, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Extended Kalman Filter (EKF)} \label{subsec:ekf}
+\section{EXTENDED KALMAN FILTER} \label{sec:ekf}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and landmark positions are simultaneously estimated at each time step by augmenting the filter state with landmark positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of landmarks by recursively updating the state as new measurements become available.
+%Landmarks are commonly parametrized as three-dimensional vectors and are initialized using two-view geometry, but alternative parametrization and initialization schemes exist \cite{Sola:2011:IJCV}.
+%In this paper we consider only the three-dimensional parametrization and two-view initialization scheme.
 
 [EKF EQUATIONS HERE?]
 
@@ -112,9 +113,12 @@ Another limitation of EKF-SLAM is that it is forgetful.
 Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later landmark measurements ought to constrain them.
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and landmark positions.
 
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Sliding Window Filter (SWF)} \label{subsec:slidingwindow}
-In contrast to EKF-SLAM, the aim of the SWF is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and landmark positions.
+\section{SLIDING WINDOW FILTER} \label{sec:slidingwindow}
+In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and landmark positions.
 The optimization problem in the Sliding Window Filter (SWF) is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
 [BATCH MATH GOES HERE?]
@@ -122,15 +126,61 @@ The optimization problem in the Sliding Window Filter (SWF) is typically solved 
 An important advantage of the SWF is that its computational cost depends on the number of landmarks in the current window rather than the number of landmarks in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary spatial or temporal extent.
 
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Multi-State Constraint Kalman Filter (MSCKF)} \label{subsec:msckf}
-The MSCKF \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
+\section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:msckf}
+The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of landmarks that are visible across the entire window.
 This update step typically occurs when a tracked landmark goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
 
-[MSCKF MATH SOMEWHERE]
+\subsection{State Parametrization}
+As described in Section \ref{sec:experiments}, we evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations.
+In order to accommodate this alternative state parametrization, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We parametrize the IMU state at time $k$ as the 13-dimensional vector
+\begin{align}
+    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k} & \Vec{b}_{g,k} & \Vec{b}_{v,k} & \Vec{p}_{G,k}^{IG} \ebm^T
+\end{align}
+where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{g,k}$ is the bias on the gyro measurements, $\Vec{b}_{v,k}$ is the bias on the velocity measurements, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
+
+At time $k$, the state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ past camera poses in which active feature tracks were visible:
+\begin{align}
+    \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k} & \hat{\Vec{q}}_{C_1 G} & \hat{\Vec{p}}_G^{C_1 G} & \hdots & \hat{\Vec{q}}_{C_N G} & \hat{\Vec{p}}_G^{C_N G} \ebm ^T
+\end{align}.
+
+\subsection{IMU State Estimate Propagation}
+The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is described by the following differential equations:
+\begin{align}
+    \dot{\hat{\Vec{q}}}_{IG} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right)\hat{\Vec{q}}_{IG} \\
+    \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \\
+    \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \\
+    \dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)
+\end{align}
+where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG}$ and
+\begin{align*}
+    \boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right) &= \bbm -\hat{\boldsymbol{\omega}}^\times & \hat{\boldsymbol{\omega}} \\
+                                                                -\hat{\boldsymbol{\omega}}^T & 0
+                                                            \ebm 
+\end{align*}
+with
+\begin{align*}
+    \hat{\boldsymbol{\omega}} = \boldsymbol{\omega}_m - \hat{\Vec{b}}_g
+\end{align*}
+and
+\begin{align*}
+    \hat{\boldsymbol{\omega}}^\times &=   \bbm    0 & -\hat{\omega}_3 & \hat{\omega}_2 \\
+                                                \hat{\omega}_3 & 0 & -\hat{\omega}_1 \\
+                                                -\hat{\omega}_2 & \hat{\omega}_1 & 0
+                                            \ebm .
+\end{align*}
+
+In our implementation we use a simple forward Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
 We conducted a comparative study of the MSCKF and SWF algorithms using the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
@@ -156,7 +206,10 @@ Things quickly got out of hand when Matlab achieved sentience.
 We were forced to abandon our lab and have been surviving in the harsh environment of the MarsDome for weeks.
 If this ever gets published, please send help!
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 
