@@ -6,14 +6,14 @@
 
 %% =============================Setup============================== %%
 clear all;
-close all;
+%close all;
 clc
 addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 1214;
-kEnd = 1715;
+kStart = 500;
+kEnd = 800;
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -35,11 +35,13 @@ noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_pri
 
 %MSCKF parameters
 MSCKFParams.minTrackLength = 2;
-MSCKFParams.maxTrackLength = 4;
+MSCKFParams.maxTrackLength = 10;
 MSCKFParams.maxGNCost = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
+prunedStates = {};
+
 % imuStates{k}.q_IG         4x1 Global to IMU rotation quaternion
 % imuStates{k}.p_I_G        3x1 IMU Position in the Global frame
 % imuStates{k}.b_g          3x1 Gyro bias
@@ -265,29 +267,40 @@ for state_k = kStart:(kEnd-1)
         
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
-        msckfState = pruneStates(msckfState);
+        [msckfState, deletedCamStates] = pruneStates(msckfState);
+        
+        if ~isempty(deletedCamStates)
+         prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
+        end
         state_k
         
 end %for state_K = ...
 
+
+
+
 %% ==========================PLOT ERRORS======================== %%
-kNum = kEnd - kStart + 1;
-p_I_G_est = NaN(3, kNum);
-q_IG_est = NaN(4, kNum);
-p_I_G_GT = NaN(3, kNum);
-q_IG_GT = NaN(4, kNum);
+kNum = length(prunedStates);
+p_C_G_est = NaN(3, kNum);
+q_CG_est = NaN(4, kNum);
+p_C_G_GT = NaN(3, kNum);
+q_CG_GT = NaN(4, kNum);
+tPlot = NaN(1, kNum);
 
-for state_k = kStart:kEnd
-    q_IG_GT(:,state_k - kStart + 1)  = groundTruthStates{state_k}.imuState.q_IG;
-    p_I_G_GT(:,state_k - kStart + 1) = groundTruthStates{state_k}.imuState.p_I_G;
+for k = 1:kNum
+    state_k = prunedStates{k}.state_k;
+    q_CG_GT(:,k)  = groundTruthStates{state_k}.camState.q_CG;
+    p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
 
-    q_IG_est(:,state_k - kStart + 1)  = imuStates{state_k}.q_IG;
-    p_I_G_est(:,state_k - kStart + 1) = imuStates{state_k}.p_I_G;
+    q_CG_est(:,k)  = prunedStates{k}.q_CG;
+    p_C_G_est(:,k) = prunedStates{k}.p_C_G;
+    
+    tPlot(k) = t(state_k);
 end
 
 figure
 subplot(3,1,1)
-plot(t(kStart:kEnd), p_I_G_est(1,:) - p_I_G_GT(1,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
@@ -298,7 +311,7 @@ ylabel('\delta r_x')
 
 
 subplot(3,1,2)
-plot(t(kStart:kEnd), p_I_G_est(2,:) - p_I_G_GT(2,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
@@ -307,7 +320,7 @@ xlim([t(kStart) t(kEnd)])
 ylabel('\delta r_y')
 
 subplot(3,1,3)
-plot(t(kStart:kEnd), p_I_G_est(3,:) - p_I_G_GT(3,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
@@ -315,4 +328,7 @@ ylim([-0.5 0.5])
 xlim([t(kStart) t(kEnd)])
 ylabel('\delta r_z')
 xlabel('t_k')
+
+
+
 

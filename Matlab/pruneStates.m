@@ -1,4 +1,4 @@
-function [ prunedMsckfState ] = pruneStates( msckfState )
+function [ prunedMsckfState, deletedCamStates ] = pruneStates( msckfState )
 %PRUNESTATES Prunes any states that have no tracked features and updates
 %covariances
     
@@ -15,7 +15,7 @@ function [ prunedMsckfState ] = pruneStates( msckfState )
     
     %Prune the damn states!
     
-    
+    deletedCamStates = msckfState.camStates(deleteIdx);
     prunedMsckfState.camStates = removeCells(msckfState.camStates, deleteIdx);
     
     
@@ -24,7 +24,7 @@ function [ prunedMsckfState ] = pruneStates( msckfState )
         keepStatesIdx(6*dIdx - 5:6*dIdx) = zeros(6,1);
     end
     
-    keepStatesIdx = keepStatesIdx == 1;
+    keepStatesIdx = (keepStatesIdx == 1);
     
     
     prunedMsckfState.camCovar = msckfState.camCovar(keepStatesIdx, keepStatesIdx);
