@@ -84,14 +84,14 @@ The combination of visual and inertial sensors is a powerful tool for autonomous
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
 Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
 However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
-The addition of a camera is an excellent way to bound this cumulative drift error since the camera's signal-to-noise ratio is highest when the camera is stationary.
+The addition of a camera is an excellent way to bound this cumulative drift error since the camera's signal-to-noise ratio is highest when the camera is moving slowly.
 On the other hand, cameras are not robust to motion blur induced by large accelerations.
 In these cases, the strength of the IMU's signal far exceeds its baseline noise and can be relied upon more heavily in estimating pose changes.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 A complicating factor in the general form of this problem is the absence of a known map of landmarks from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
-What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), as well as a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXTENDED KALMAN FILTER} \label{sec:ekf}
@@ -113,12 +113,15 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{SLIDING WINDOW FILTER} \label{sec:slidingwindow}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and landmark positions.
-The optimization problem in the Sliding Window Filter (SWF) is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
+The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
 [BATCH MATH GOES HERE?]
 
 An important advantage of the SWF is that its computational cost depends on the number of landmarks in the current window rather than the number of landmarks in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
+
+However, the hard cut-off of the SWF may result in only some measurements of a particular feature contributing to the optimization.
+As a result, the filter may not maximally constrain some vehicle poses, and hence localization may be less accurate than we could expect from the full batch solution.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:msckf}
@@ -136,7 +139,7 @@ In our implementation, we parametrize the IMU state at time $k$ as the 13-dimens
 \end{align}
 where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{\boldsymbol{\omega},k}$ is the bias on the gyro measurements $\boldsymbol{\omega}_m$, $\Vec{b}_{\Vec{v},k}$ is the bias on the velocity measurements $\Vec{v}_m$, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
 
-At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ past camera poses in which active feature tracks were visible:
+At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ 7-dimensional past camera poses in which active feature tracks were visible:
 \begin{align}
     \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
 \end{align}
@@ -160,20 +163,20 @@ Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12
 \begin{align} \label{eq:covariance}
     \hat{\Vec{P}}_k &= \bbm \hat{\Vec{P}}_{II,k} & \hat{\Vec{P}}_{IC,k} \\ \hat{\Vec{P}}_{IC,k}^T & \hat{\Vec{P}}_{CC,k} \ebm
 \end{align}
-where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-correlation between the current IMU state and the camera poses.
+where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-correlation between the current IMU state and the past camera poses.
 
 \subsection{MSCKF State Augmentation}
-When a new camera image becomes available, the MSCKF state must be augmented with the current camera state.
-We obtain the camera state by applying the known transformation $\left(\Vec{q}_{CI}, \Vec{p}_I^{CI}\right)$ to a copy of the current IMU state:
+When a new camera image becomes available, the MSCKF state must be augmented with the current camera pose.
+We obtain the camera pose by applying the known transformation $\left(\Vec{q}_{CI}, \Vec{p}_I^{CI}\right)$ to a copy of the current IMU pose:
 \begin{align}
     \hat{\Vec{q}}_{C_{N+1} G} &= \Vec{q}_{CI} \otimes \hat{\Vec{q}}_{IG,k} \\
-    \hat{\Vec{p}}_G^{C_{N+1}G} &= \hat{\Vec{p}}_G^{IG} + \hat{\Vec{C}}_{IG,k} \hat{\Vec{p}}_I^{CI}
+    \hat{\Vec{p}}_G^{C_{N+1}G} &= \hat{\Vec{p}}_G^{IG} + \hat{\Vec{C}}_{IG,k}^T \hat{\Vec{p}}_I^{CI}
 \end{align}
 where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG,k}$ and $\otimes$ denotes quaternion multiplication.
 
 Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state as follows:
 \begin{align}
-    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T
+    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T .
 \end{align}
 
 We must also augment the MSCKF state covariance:
@@ -184,7 +187,7 @@ where the Jacobian $\Vec{J}_k$ is given by
 \begin{align}
 \Vec{J}_k &= \bbm \hat{\Vec{C}}_{C I, k} & \Vec{0}_{3\times6} & \Vec{0}_{3\times3} & \Vec{0}_{3\times6N} \\
                             \left(\hat{\Vec{C}}_{I G, k}^T \Vec{p}_{I,k}^{CI}\right)^\times & \Vec{0}_{3\times6} & \Vec{1}_3 & \Vec{0}_{3\times6N}
-                \ebm
+                \ebm .
 \end{align}
 
 \subsection{IMU State Estimate Propagation}
@@ -213,7 +216,7 @@ and
                                             \ebm .
 \end{align*}
 
-In our implementation we use a simple forward Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
+In our implementation we use a simple forward-Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Covariance Propagation}
 With reference to the partitions defined in Equation \ref{eq:covariance}, we compute the predicted camera-camera and IMU-camera state covariances as follows:
