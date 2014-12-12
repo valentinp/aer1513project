@@ -89,9 +89,9 @@ On the other hand, cameras are not robust to motion blur induced by large accele
 In these cases, the strength of the IMU's signal far exceeds its baseline noise and can be relied upon more heavily in estimating pose changes.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
-A complicating factor in this problem is the absence of a known map of landmarks from which the camera can generate measurements.
+A complicating factor in the general form of this problem is the absence of a known map of landmarks from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
-What follows is a discussion of two common techniques, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid approach, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), and a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
 
 
@@ -106,7 +106,7 @@ This technique, sometimes referred to as EKF-SLAM, attempts to track pose change
 [EKF EQUATIONS HERE?]
 
 Although the recursive nature of EKF-SLAM allows it to operate online, the computational cost of the filter grows cubically with map size.
-This behavior is due to the fact that the length of the state grows linearly with the number of landmarks, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
+This behavior is due to the fact that the dimension of the state grows linearly with the number of landmarks, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
 Consequently, the spatial extent over which EKF-SLAM can be used online is limited by the necessarily finite compute envelope available to it.
 
 Another limitation of EKF-SLAM is that it is forgetful.
@@ -124,7 +124,7 @@ The optimization problem in the Sliding Window Filter (SWF) is typically solved 
 [BATCH MATH GOES HERE?]
 
 An important advantage of the SWF is that its computational cost depends on the number of landmarks in the current window rather than the number of landmarks in the entire map.
-By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary spatial or temporal extent.
+By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
 
 
@@ -139,13 +139,13 @@ This update step typically occurs when a tracked landmark goes out of view of th
 As described in Section \ref{sec:experiments}, we evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations.
 In order to accommodate this alternative state parametrization, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
 
-We parametrize the IMU state at time $k$ as the 13-dimensional vector
+In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
-    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k} & \Vec{b}_{g,k} & \Vec{b}_{v,k} & \Vec{p}_{G,k}^{IG} \ebm^T
+    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k} & \Vec{b}_{\boldsymbol{\omega},k} & \Vec{b}_{\Vec{v},k} & \Vec{p}_{G,k}^{IG} \ebm^T
 \end{align}
-where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{g,k}$ is the bias on the gyro measurements, $\Vec{b}_{v,k}$ is the bias on the velocity measurements, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
+where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{\boldsymbol{\omega},k}$ is the bias on the gyro measurements $\boldsymbol{\omega}_m$, $\Vec{b}_{\Vec{v},k}$ is the bias on the velocity measurements $\Vec{v}_m$, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
 
-At time $k$, the state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ past camera poses in which active feature tracks were visible:
+At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ past camera poses in which active feature tracks were visible:
 \begin{align}
     \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k} & \hat{\Vec{q}}_{C_1 G} & \hat{\Vec{p}}_G^{C_1 G} & \hdots & \hat{\Vec{q}}_{C_N G} & \hat{\Vec{p}}_G^{C_N G} \ebm ^T
 \end{align}.
@@ -154,9 +154,9 @@ At time $k$, the state of the MSCKF consists of the current IMU state estimate, 
 The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is described by the following differential equations:
 \begin{align}
     \dot{\hat{\Vec{q}}}_{IG} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right)\hat{\Vec{q}}_{IG} \\
-    \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \\
-    \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \\
-    \dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)
+    \dot{\hat{\Vec{b}}}_{\boldsymbol{\omega}}  &= \Vec{0}_{3\times1} \\
+    \dot{\hat{\Vec{b}}}_{\Vec{v}} &= \Vec{0}_{3\times1} \\
+    \dot{\hat{\Vec{p}}}^{IG}_G &= \hat{\Vec{C}}_{I G}^T\left(\Vec{v}_m - \hat{\Vec{b}}_{\Vec{v}} \right)
 \end{align}
 where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG}$ and
 \begin{align*}
@@ -166,7 +166,7 @@ where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q
 \end{align*}
 with
 \begin{align*}
-    \hat{\boldsymbol{\omega}} = \boldsymbol{\omega}_m - \hat{\Vec{b}}_g
+    \hat{\boldsymbol{\omega}} = \boldsymbol{\omega}_m - \hat{\Vec{b}}_{\boldsymbol{\omega}}
 \end{align*}
 and
 \begin{align*}
@@ -184,7 +184,7 @@ In our implementation we use a simple forward Euler integration rather than the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
 We conducted a comparative study of the MSCKF and SWF algorithms using the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
-The dataset consists of a rigidly attached stereo camera and IMU observing a set of 20 landmarks as they move along an arbitrary 3D path (Figure \ref{fig:sensorhead}).
+The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 landmarks while moving along an arbitrary 3D path.
 The dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the landmark positions (Figure \ref{fig:trajectory_groundtruth}).
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
 
