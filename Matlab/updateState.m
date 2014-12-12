@@ -20,7 +20,7 @@ function msckfState_up = updateState(msckfState, deltaX)
     
     % Update camera states
     for i = 1:size(msckfState.camStates, 2)
-        qStart = 6*(i-1) + 1;
+        qStart = 12 + 6*(i-1) + 1;
         pStart = qStart+3;
         
         deltatheta_CG = deltaX(qStart:qStart+2);

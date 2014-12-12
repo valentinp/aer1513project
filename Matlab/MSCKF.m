@@ -1,11 +1,11 @@
 %% ============================Notation============================ %%
 % X_sub_super
-% q_FromTo
+% q_ToFrom
 % p_ofWhat_expressedInWhatFrame
 
 
 %% =============================Setup============================== %%
-clear all;
+clear;
 %close all;
 clc
 addpath('utils');
@@ -34,9 +34,9 @@ noiseParams.initialCamCovar = 0.01*eye(6);
 noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
-MSCKFParams.minTrackLength = 2;
-MSCKFParams.maxTrackLength = 10;
-MSCKFParams.maxGNCost = 1;
+msckfParams.minTrackLength = 2;
+msckfParams.maxTrackLength = 1000;
+msckfParams.maxGNCost = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -145,13 +145,13 @@ for state_k = kStart:(kEnd-1)
             
             track = featureTracks{trackedFeatureIds == featureId};
             
-            if meas_k(1,1) == -1 || length(track.observations(1,:)) == MSCKFParams.maxTrackLength
+            if meas_k(1,1) == -1 || length(track.observations(1,:)) == msckfParams.maxTrackLength
                 %Feature is not in view, remove from the tracked features
                 [msckfState, camStates, camStateIndices] = removeTrackedFeature(msckfState, featureId);
                 
                 %Add the track, with all of its camStates, to the
                 %residualized list
-                if length(camStates) > MSCKFParams.minTrackLength
+                if length(camStates) > msckfParams.minTrackLength
                     track.camStates = camStates;
                     track.camStateIndices = camStateIndices;
                     featureTracksToResidualize{end+1} = track;
@@ -205,7 +205,7 @@ for state_k = kStart:(kEnd-1)
             
             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             %p_f_G = groundTruthMap(:, track.featureId);
-            if Jcost > MSCKFParams.maxGNCost
+            if Jcost > msckfParams.maxGNCost
                 break;
             else
                 fprintf('Using new feature track.');
@@ -305,7 +305,7 @@ hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
 ylim([-0.5 0.5])
-xlim([t(kStart) t(kEnd)])
+xlim([tPlot(1) tPlot(end)])
 title('Translational Error')
 ylabel('\delta r_x')
 
@@ -316,7 +316,7 @@ hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
 ylim([-0.5 0.5])
-xlim([t(kStart) t(kEnd)])
+xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_y')
 
 subplot(3,1,3)
@@ -325,7 +325,7 @@ hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
 ylim([-0.5 0.5])
-xlim([t(kStart) t(kEnd)])
+xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_z')
 xlabel('t_k')
 
