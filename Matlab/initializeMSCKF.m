@@ -8,7 +8,7 @@ firstImuState.b_g = zeros(3,1);
 firstImuState.b_v = zeros(3,1);
 firstImuState.covar = eye(12);
 msckfState.imuState = firstImuState;
-msckfState.imuCovar = eye(12);
+msckfState.imuCovar = 0.01*eye(12);
 
 
 % Compute camera pose from current IMU pose
@@ -22,7 +22,7 @@ camState.state_k = state_k;
 msckfState.camStates = {};
 msckfState.camStates{1} = camState;
 
-msckfState.camCovar = eye(6);
+msckfState.camCovar = 0.1*eye(6);
 msckfState.imuCamCovar = zeros(12, 6);
 
 %Compute all of the relevant feature tracks

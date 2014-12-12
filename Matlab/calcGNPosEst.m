@@ -22,7 +22,7 @@ t_21_1 = quatToRotMat(camStates{1}.q_CG)*(camStates{secondViewIdx}.p_C_G - camSt
 
 p_f1_1_bar = triangulate(observations(:,1), observations(:,secondViewIdx),C_12, t_21_1);
 
-initialEst = quatToRotMat(camStates{1}.q_CG)'*p_f1_1_bar + camStates{1}.p_C_G
+%initialEst = quatToRotMat(camStates{1}.q_CG)'*p_f1_1_bar + camStates{1}.p_C_G;
 
 
 xBar = p_f1_1_bar(1);
@@ -42,14 +42,14 @@ maxIter = 10;
 Jprev = Inf;
 
 for optI = 1:maxIter
-    optI
+    %optI
     E = zeros(2*Cnum, 3);
     W = zeros(2*Cnum, 2*Cnum);
     errorVec = zeros(2*Cnum, 1);
 
     for iState = 1:Cnum
         %Form the weight matrix
-        W((2*iState - 1):(2*iState),(2*iState - 1):(2*iState)) = diag([noiseParams.z_1^2 noiseParams.z_2^2]);
+        W((2*iState - 1):(2*iState),(2*iState - 1):(2*iState)) = diag([noiseParams.u_var_prime noiseParams.v_var_prime]);
 
         C_i1 = quatToRotMat(camStates{iState}.q_CG)*(quatToRotMat(camStates{1}.q_CG)');
         t_1i_i = quatToRotMat(camStates{iState}.q_CG)*(camStates{1}.p_C_G - camStates{iState}.p_C_G);
@@ -77,7 +77,7 @@ for optI = 1:maxIter
     end
     
     %Calculate the cost function
-    Jnew = 0.5*errorVec'*(W\errorVec)
+    Jnew = 0.5*errorVec'*(W\errorVec);
     %Solve!
     dx_star =  (E'*(W\E))\(-E'*(W\errorVec)); 
     

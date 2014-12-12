@@ -11,6 +11,7 @@ function msckfState_up = updateState(msckfState, deltaX)
     deltap_I_G = deltaX(10:12);
     
     deltaq_IG = [0.5*deltatheta_IG ; 1];
+    deltaq_IG = deltaq_IG/norm(deltaq_IG);
     
     msckfState_up.imuState.q_IG = quatLeftComp(deltaq_IG) * msckfState.imuState.q_IG;
     msckfState_up.imuState.b_g = msckfState.imuState.b_g + deltab_g;
@@ -26,6 +27,7 @@ function msckfState_up = updateState(msckfState, deltaX)
         deltap_C_G = deltaX(pStart:pStart+2);
         
         deltaq_CG = [0.5*deltatheta_CG ; 1];
+        deltaq_CG = deltaq_CG/norm(deltaq_CG);
         
         msckfState_up.camStates{i}.q_CG = quatLeftComp(deltaq_CG) * msckfState.camStates{i}.q_CG;
         msckfState_up.camStates{i}.p_C_G = msckfState.camStates{i}.p_C_G + deltap_C_G;

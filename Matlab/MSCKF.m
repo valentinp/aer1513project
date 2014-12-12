@@ -5,15 +5,15 @@
 
 
 %% =============================Setup============================== %%
-clear;
+clear all;
 close all;
 clc
 addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 400;
-kEnd = numel(t);
+kStart = 1214;
+kEnd = 1715;
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -25,14 +25,17 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-noiseParams.z_1 = 1/camera.f_u^2;
-noiseParams.z_2 = 1/camera.f_v^2;
-noiseParams.Q_imu = 0.01*eye(12);
-noiseParams.imageVariance = mean([noiseParams.z_1, noiseParams.z_2]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
+noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
+noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
+noiseParams.Q_imu = diag([v_var; w_var; 1e-12*ones(6,1)]);
+
+Q = diag([v_var; w_var]);
+
+noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
-MSCKFParams.minTrackLength = 5;
-
+MSCKFParams.minTrackLength = 2;
+MSCKFParams.maxTrackLength = 4;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -112,6 +115,8 @@ firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
 firstImuState.p_I_G = r_i_vk_i(:,kStart);
 
 [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart);
+imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
+
 
 %% ============================MAIN LOOP========================== %%
 
@@ -129,17 +134,20 @@ for state_k = kStart:(kEnd-1)
     % Add observations to the feature tracks, or initialize a new one
     % If an observation is -1, add the track to featureTracksToResidualize
     featureTracksToResidualize = {};
+    
     for featureId = 1:20
         %IMPORTANT: state_k + 1 not state_k
         meas_k = measurements{state_k+1}.y(:, featureId);
         if ismember(featureId, trackedFeatureIds)
-            if meas_k(1,1) == -1
+            
+            track = featureTracks{trackedFeatureIds == featureId};
+            
+            if meas_k(1,1) == -1 || length(track.observations(1,:)) == MSCKFParams.maxTrackLength
                 %Feature is not in view, remove from the tracked features
                 [msckfState, camStates, camStateIndices] = removeTrackedFeature(msckfState, featureId);
                 
                 %Add the track, with all of its camStates, to the
                 %residualized list
-                track = featureTracks{trackedFeatureIds == featureId};
                 if length(camStates) > MSCKFParams.minTrackLength
                     track.camStates = camStates;
                     track.camStateIndices = camStateIndices;
@@ -172,6 +180,7 @@ for state_k = kStart:(kEnd-1)
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     if ~isempty(featureTracksToResidualize)
+        fprintf('Using %d new feature tracks.', length(featureTracksToResidualize));
         %H_o has more than 1 row, but it will be grown in our for loop like
         %a pet
         H_o = zeros(0, 12 + 6*length(msckfState.camStates));
@@ -192,15 +201,10 @@ for state_k = kStart:(kEnd-1)
                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
              end
             
-            %[p_f_G] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            [p_f_G_est] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             p_f_G = groundTruthMap(:, track.featureId);
             
             %Calculate residual and Hoj 
-            
-            %CHECK THIS!
-%             r_vi_i = groundTruthStates{406}.imuState.p_I_G;
-%             C_vi = quatToRotMat(groundTruthStates{406}.imuState.q_IG);
-%             p_pc_c = C_c_v*(C_vi*(p_f_G - r_vi_i) - rho_v_c_v)
             
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
@@ -219,26 +223,30 @@ for state_k = kStart:(kEnd-1)
         [T_H, Q_1] = calcTH(H_o);
         r_n = Q_1'*A'*r_stacked;
 
+        %r_n = A'*r_stacked;
+        
         % Build MSCKF covariance matrix
         P = [msckfState.imuCovar, msckfState.imuCamCovar;
                msckfState.imuCamCovar', msckfState.camCovar];
 
         R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
+        
+        %R_n = noiseParams.imageVariance*eye( size(H_o, 1) );
 
         % Calculate Kalman gain
-        K = P*T_H' / ( T_H*P*T_H' + R_n );
-
+        K = (P*T_H') / ( T_H*P*T_H' + R_n );
+        %K = (P*H_o') / ( H_o*P*H_o' + R_n );
         % State correction
         deltaX = K * r_n;
         
-        norm(msckfState.camStates{end}.p_C_G - groundTruthStates{state_k+1}.camState.p_C_G)
         
         msckfState = updateState(msckfState, deltaX);
         
-        norm(msckfState.camStates{end}.p_C_G - groundTruthStates{state_k+1}.camState.p_C_G)
 
         % Covariance correction
         tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
+        %tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*H_o);
+        
         P_corrected = tempMat * P * tempMat' + K * R_n * K';
 
         msckfState.imuCovar = P_corrected(1:12,1:12);
@@ -246,7 +254,7 @@ for state_k = kStart:(kEnd-1)
         msckfState.imuCamCovar = P_corrected(1:12, 13:end);
     end
         %% ==========================STATE HISTORY======================== %% 
-        imuStates = updateStateHistory(imuStates, msckfState, camera, state_k);
+        imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
         
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
@@ -254,3 +262,50 @@ for state_k = kStart:(kEnd-1)
         state_k
         
 end %for state_K = ...
+
+%% ==========================PLOT ERRORS======================== %%
+kNum = kEnd - kStart + 1;
+p_I_G_est = NaN(3, kNum);
+q_IG_est = NaN(4, kNum);
+p_I_G_GT = NaN(3, kNum);
+q_IG_GT = NaN(4, kNum);
+
+for state_k = kStart:kEnd
+    q_IG_GT(:,state_k - kStart + 1)  = groundTruthStates{state_k}.imuState.q_IG;
+    p_I_G_GT(:,state_k - kStart + 1) = groundTruthStates{state_k}.imuState.p_I_G;
+
+    q_IG_est(:,state_k - kStart + 1)  = imuStates{state_k}.q_IG;
+    p_I_G_est(:,state_k - kStart + 1) = imuStates{state_k}.p_I_G;
+end
+
+figure
+subplot(3,1,1)
+plot(t(kStart:kEnd), p_I_G_est(1,:) - p_I_G_GT(1,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_x, '--r')
+%plot(t(k1:k2), -3*sigma_x, '--r')
+ylim([-0.2 0.2])
+xlim([t(kStart) t(kEnd)])
+title('Translational Error')
+ylabel('\delta r_x')
+
+
+subplot(3,1,2)
+plot(t(kStart:kEnd), p_I_G_est(2,:) - p_I_G_GT(2,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_y, '--r')
+%plot(t(k1:k2), -3*sigma_y, '--r')
+ylim([-0.2 0.2])
+xlim([t(kStart) t(kEnd)])
+ylabel('\delta r_y')
+
+subplot(3,1,3)
+plot(t(kStart:kEnd), p_I_G_est(3,:) - p_I_G_GT(3,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_z, '--r')
+%plot(t(k1:k2), -3*sigma_z, '--r')
+ylim([-0.2 0.2])
+xlim([t(kStart) t(kEnd)])
+ylabel('\delta r_z')
+xlabel('t_k')
+
