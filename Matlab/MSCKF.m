@@ -28,14 +28,15 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 noiseParams.Q_imu = diag([v_var; w_var; 1e-12*ones(6,1)]);
-
-Q = diag([v_var; w_var]);
+noiseParams.initialIMUCovar = 0.01*eye(12);
+noiseParams.initialCamCovar = 0.01*eye(6);
 
 noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
 MSCKFParams.minTrackLength = 2;
 MSCKFParams.maxTrackLength = 4;
+MSCKFParams.maxGNCost = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -114,7 +115,7 @@ trackedFeatureIds = [];
 firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
 firstImuState.p_I_G = r_i_vk_i(:,kStart);
 
-[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart);
+[msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart, noiseParams);
 imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
 
 
@@ -180,7 +181,6 @@ for state_k = kStart:(kEnd-1)
      end
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     if ~isempty(featureTracksToResidualize)
-        fprintf('Using %d new feature tracks.', length(featureTracksToResidualize));
         %H_o has more than 1 row, but it will be grown in our for loop like
         %a pet
         H_o = zeros(0, 12 + 6*length(msckfState.camStates));
@@ -196,13 +196,18 @@ for state_k = kStart:(kEnd-1)
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
             
-             camStatesGT = {};
-             for c_i_temp = 1:length(track.camStates)
-                 camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
-             end
+%              camStatesGT = {};
+%              for c_i_temp = 1:length(track.camStates)
+%                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
+%              end
             
-            [p_f_G_est] = calcGNPosEst(track.camStates, track.observations, noiseParams);
-            p_f_G = groundTruthMap(:, track.featureId);
+            [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            %p_f_G = groundTruthMap(:, track.featureId);
+            if Jcost > MSCKFParams.maxGNCost
+                break;
+            else
+                fprintf('Using new feature track.');
+            end
             
             %Calculate residual and Hoj 
             
@@ -219,39 +224,41 @@ for state_k = kStart:(kEnd-1)
             A(A_index(1):(A_index(1)+size(A_j,1)-1),A_index(2):(A_index(2)+size(A_j,2)-1)) = A_j;
             A_index = A_index + size(A_j);
         end
-
-        [T_H, Q_1] = calcTH(H_o);
-        r_n = Q_1'*A'*r_stacked;
-
-        %r_n = A'*r_stacked;
         
-        % Build MSCKF covariance matrix
-        P = [msckfState.imuCovar, msckfState.imuCamCovar;
-               msckfState.imuCamCovar', msckfState.camCovar];
+        if ~isempty(A)
+            [T_H, Q_1] = calcTH(H_o);
+            r_n = Q_1'*A'*r_stacked;
 
-        R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
-        
-        %R_n = noiseParams.imageVariance*eye( size(H_o, 1) );
+            %r_n = A'*r_stacked;
 
-        % Calculate Kalman gain
-        K = (P*T_H') / ( T_H*P*T_H' + R_n );
-        %K = (P*H_o') / ( H_o*P*H_o' + R_n );
-        % State correction
-        deltaX = K * r_n;
-        
-        
-        msckfState = updateState(msckfState, deltaX);
-        
+            % Build MSCKF covariance matrix
+            P = [msckfState.imuCovar, msckfState.imuCamCovar;
+                   msckfState.imuCamCovar', msckfState.camCovar];
 
-        % Covariance correction
-        tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
-        %tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*H_o);
-        
-        P_corrected = tempMat * P * tempMat' + K * R_n * K';
+            R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
 
-        msckfState.imuCovar = P_corrected(1:12,1:12);
-        msckfState.camCovar = P_corrected(13:end,13:end);
-        msckfState.imuCamCovar = P_corrected(1:12, 13:end);
+            %R_n = noiseParams.imageVariance*eye( size(H_o, 1) );
+
+            % Calculate Kalman gain
+            K = (P*T_H') / ( T_H*P*T_H' + R_n );
+            %K = (P*H_o') / ( H_o*P*H_o' + R_n );
+            % State correction
+            deltaX = K * r_n;
+
+
+            msckfState = updateState(msckfState, deltaX);
+
+
+            % Covariance correction
+            tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
+            %tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*H_o);
+
+            P_corrected = tempMat * P * tempMat' + K * R_n * K';
+
+            msckfState.imuCovar = P_corrected(1:12,1:12);
+            msckfState.camCovar = P_corrected(13:end,13:end);
+            msckfState.imuCamCovar = P_corrected(1:12, 13:end);
+        end
     end
         %% ==========================STATE HISTORY======================== %% 
         imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
@@ -284,7 +291,7 @@ plot(t(kStart:kEnd), p_I_G_est(1,:) - p_I_G_GT(1,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
-ylim([-0.2 0.2])
+ylim([-0.5 0.5])
 xlim([t(kStart) t(kEnd)])
 title('Translational Error')
 ylabel('\delta r_x')
@@ -295,7 +302,7 @@ plot(t(kStart:kEnd), p_I_G_est(2,:) - p_I_G_GT(2,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
-ylim([-0.2 0.2])
+ylim([-0.5 0.5])
 xlim([t(kStart) t(kEnd)])
 ylabel('\delta r_y')
 
@@ -304,7 +311,7 @@ plot(t(kStart:kEnd), p_I_G_est(3,:) - p_I_G_GT(3,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
-ylim([-0.2 0.2])
+ylim([-0.5 0.5])
 xlim([t(kStart) t(kEnd)])
 ylabel('\delta r_z')
 xlabel('t_k')

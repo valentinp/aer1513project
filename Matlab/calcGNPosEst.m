@@ -1,4 +1,4 @@
-function [p_f_G] = calcGNPosEst(camStates, observations, noiseParams)
+function [p_f_G, Jnew] = calcGNPosEst(camStates, observations, noiseParams)
 %CALCGNPOSEST Calculate the position estimate of the feature using Gauss
 %Newton optimization
 %   INPUT:
