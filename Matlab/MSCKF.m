@@ -13,7 +13,7 @@ load('dataset3.mat')
 
 %Dataset window bounds
 kStart = 500;
-kEnd = 800;
+kEnd = 600;
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -300,13 +300,14 @@ for k = 1:kNum
     tPlot(k) = t(state_k);
 end
 
+% Translation Errors
 figure
 subplot(3,1,1)
 plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
-ylim([-0.5 0.5])
+% ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 title('Translational Error')
 ylabel('\delta r_x')
@@ -317,7 +318,7 @@ plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
-ylim([-0.5 0.5])
+% ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_y')
 
@@ -326,11 +327,48 @@ plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
-ylim([-0.5 0.5])
+% ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_z')
 xlabel('t_k')
 
+% Rotation Errors
+figure
+subplot(4,1,1)
+plot(tPlot, q_CG_est(1,:) - q_CG_GT(1,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_x, '--r')
+%plot(t(k1:k2), -3*sigma_x, '--r')
+% ylim([-0.5 0.5])
+xlim([tPlot(1) tPlot(end)])
+title('Rotational Error')
+ylabel('\delta q_1')
 
 
+subplot(4,1,2)
+plot(tPlot, q_CG_est(2,:) - q_CG_GT(2,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_y, '--r')
+%plot(t(k1:k2), -3*sigma_y, '--r')
+% ylim([-0.5 0.5])
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta q_2')
 
+subplot(4,1,3)
+plot(tPlot, q_CG_est(3,:) - q_CG_GT(3,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_z, '--r')
+%plot(t(k1:k2), -3*sigma_z, '--r')
+% ylim([-0.5 0.5])
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta q_3')
+
+subplot(4,1,4)
+plot(tPlot, q_CG_est(4,:) - q_CG_GT(4,:), 'LineWidth', 1.2)
+hold on
+%plot(t(k1:k2), 3*sigma_z, '--r')
+%plot(t(k1:k2), -3*sigma_z, '--r')
+% ylim([-0.5 0.5])
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta q_3')
+xlabel('t_k')
