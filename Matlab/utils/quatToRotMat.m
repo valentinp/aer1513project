@@ -15,5 +15,6 @@ function C = quatToRotMat(quat)
     end
     
     R = quatRightComp(quat)' * quatLeftComp(quat);
-    C = R(1:3,1:3);
+    C = renormalizeRotMat( R(1:3,1:3) );
+      
 end

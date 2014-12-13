@@ -9,6 +9,6 @@ function F = calcF(imuState_k, measurements_k)
     
     F(1:3,1:3) = -crossMat(omegaHat);
     F(1:3,4:6) = -eye(3);
-    F(4:6,10:12) = -C_IG;
+    F(4:6,10:12) = -C_IG';
   
 end

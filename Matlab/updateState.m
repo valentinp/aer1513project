@@ -5,10 +5,10 @@ function msckfState_up = updateState(msckfState, deltaX)
     msckfState_up = msckfState;
 
     % Update IMU State
-    deltatheta_IG = deltaX(1:3);
-    deltab_g = deltaX(4:6);
-    deltab_v = deltaX(7:9);
-    deltap_I_G = deltaX(10:12);
+    deltatheta_IG = deltaX(1:3)
+    deltab_g = deltaX(4:6)
+    deltab_v = deltaX(7:9)
+    deltap_I_G = deltaX(10:12)
     
     deltaq_IG = [0.5*deltatheta_IG ; 1];
     deltaq_IG = deltaq_IG/norm(deltaq_IG);
