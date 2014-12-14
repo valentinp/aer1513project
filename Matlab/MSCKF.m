@@ -27,7 +27,8 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
-noiseParams.Q_imu = diag([v_var; w_var; 1e-12*ones(6,1)]);
+% noiseParams.Q_imu = diag([v_var; w_var; 1e-12*ones(6,1)]);
+noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]);
 noiseParams.initialIMUCovar = 0.01*eye(12);
 noiseParams.initialCamCovar = 0.01*eye(6);
 
