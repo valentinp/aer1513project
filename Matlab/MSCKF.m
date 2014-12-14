@@ -13,7 +13,7 @@ load('dataset3.mat')
 
 %Dataset window bounds
 kStart = 500;
-kEnd = 600;
+kEnd = 1000;
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -28,14 +28,13 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]);
-noiseParams.initialIMUCovar = 0.01*eye(12);
-noiseParams.initialCamCovar = 0.01*eye(6);
+noiseParams.initialIMUCovar = 1e-12*eye(12);
 
 noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
 msckfParams.minTrackLength = 2;
-msckfParams.maxTrackLength = 10;
+msckfParams.maxTrackLength = 2000;
 msckfParams.maxGNCost = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -229,11 +228,7 @@ for state_k = kStart:(kEnd-1)
             A_index = A_index + size(A_j);
         end
         
-        if ~isempty(A)
-            if length(featureTracksToResidualize) > 1
-                disp('here');
-            end
-            
+        if ~isempty(A)            
             [T_H, Q_1] = calcTH(H_o);
             r_n = Q_1'*A'*r_stacked;
 %             r_n = A'*r_stacked;
