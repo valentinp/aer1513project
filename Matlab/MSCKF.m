@@ -12,8 +12,8 @@ addpath('utils');
 load('dataset3.mat')
 
 %Dataset window bounds
-kStart = 500;
-kEnd = 600;
+kStart = 1200;
+kEnd = 1700;
 
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [pixels]
@@ -35,7 +35,7 @@ noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_pri
 
 %MSCKF parameters
 msckfParams.minTrackLength = 2;
-msckfParams.maxTrackLength = 10;
+msckfParams.maxTrackLength = 5;
 msckfParams.maxGNCost = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -201,11 +201,11 @@ for state_k = kStart:(kEnd-1)
 %              end
             
             
-%             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
             % Uncomment to use ground truth map instead
-            p_f_G = groundTruthMap(:, track.featureId);
-            Jcost = 0;
+            %p_f_G = groundTruthMap(:, track.featureId);
+            %Jcost = 0;
             
             if Jcost > msckfParams.maxGNCost
                 break;
