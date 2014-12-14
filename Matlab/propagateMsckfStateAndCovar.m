@@ -3,25 +3,17 @@ function msckfState_prop = propagateMsckfStateAndCovar(msckfState, measurements_
     % Jacobians
     Q_imu = noiseParams.Q_imu*measurements_k.dT;
     F = calcF(msckfState.imuState, measurements_k);
-    G = calcG();
+    G = calcG(msckfState.imuState);
 
     %Propagate State
     msckfState_prop.imuState = propagateImuState(msckfState.imuState, measurements_k);
 
     % IMU-IMU Covariance
-    
-    % Continuous Lyapunov equation
     msckfState_prop.imuCovar = msckfState.imuCovar + ...
                                 ( F * msckfState.imuCovar ...
                                 + msckfState.imuCovar * F' ...
                                 + G * Q_imu * G' ) ...
                                         * measurements_k.dT;
-    % Discrete Lyapunov equation
-%     msckfState_prop.imuCovar = msckfState.imuCovar + ...
-%                                ( F * msckfState.imuCovar * F' ...
-%                                 - msckfState.imuCovar ...
-%                                 + G * Q_imu * G' ) ...
-%                                     * measurements_k.dT;
                      
     % Camera-Camera Covariance
     msckfState_prop.camCovar = msckfState.camCovar;
