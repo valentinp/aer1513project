@@ -16,8 +16,8 @@ kStart = 500;
 kEnd = 1000;
 
 %Set up the camera parameters
-camera.c_u      = cu;                   % Principal point [pixels]
-camera.c_v      = cv;                   % |
+camera.c_u      = cu;                   % Principal point [u pixels]
+camera.c_v      = cv;                   % Principal point [v pixels]
 camera.f_u      = fu;                   % Focal length [u pixels]
 camera.f_v      = fv;                   % Focal length [v pixels]
 camera.b        = b;                    % Stereo baseline [m]
@@ -126,6 +126,8 @@ numFeatureTracksResidualized = 0;
 
 for state_k = kStart:(kEnd-1)
     fprintf('state_k = %4d\n', state_k);
+    
+    
     %% ==========================STATE PROPAGATION======================== %%
 
     %Propagate state and covariance
@@ -181,7 +183,9 @@ for state_k = kStart:(kEnd-1)
             %Add observation to current camera
             msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
         end
-     end
+    end
+     
+    
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     if ~isempty(featureTracksToResidualize)
         %H_o has more than 1 row, but it will be grown in our for loop like
@@ -219,7 +223,6 @@ for state_k = kStart:(kEnd-1)
             end
             
             %Calculate residual and Hoj 
-            
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
@@ -265,8 +268,12 @@ for state_k = kStart:(kEnd-1)
             msckfState.imuCamCovar = P_corrected(1:12, 13:end);
         end
     end
+    
+    
         %% ==========================STATE HISTORY======================== %% 
         imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
+        
+        
         
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
