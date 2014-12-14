@@ -34,8 +34,11 @@ noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_pri
 
 %MSCKF parameters
 msckfParams.minTrackLength = 2;
-msckfParams.maxTrackLength = inf; %10;
-msckfParams.maxGNCost = inf; %1;
+msckfParams.maxTrackLength = 10;
+msckfParams.maxGNCost = 1;
+% msckfParams.minTrackLength = inf;     % Uncomment to dead-reckon only
+msckfParams.maxTrackLength = inf;     % Uncomment to wait for features to go out of view
+msckfParams.maxGNCost = inf;          % Uncomment to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -118,6 +121,8 @@ imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
 
 
 %% ============================MAIN LOOP========================== %%
+
+numFeatureTracksResidualized = 0;
 
 for state_k = kStart:(kEnd-1)
     fprintf('state_k = %4d\n', state_k);
@@ -209,7 +214,8 @@ for state_k = kStart:(kEnd-1)
             if Jcost > msckfParams.maxGNCost
                 break;
             else
-                fprintf('Using new feature track.\n');
+                numFeatureTracksResidualized = numFeatureTracksResidualized + 1;
+                fprintf('Using new feature track. Total = %d.\n', numFeatureTracksResidualized);
             end
             
             %Calculate residual and Hoj 
