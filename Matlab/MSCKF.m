@@ -15,7 +15,6 @@ load('dataset3.mat')
 kStart = 1200;
 kEnd = 1700;
 
-
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [u pixels]
 camera.c_v      = cv;                   % Principal point [v pixels]
@@ -37,7 +36,7 @@ noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_pri
 msckfParams.minTrackLength = 2;
 msckfParams.maxTrackLength = 5;
 msckfParams.maxGNCost = 1;
-% msckfParams.minTrackLength = inf;     % Uncomment to dead-reckon only
+msckfParams.minTrackLength = inf;     % Uncomment to dead-reckon only
 msckfParams.maxTrackLength = inf;     % Uncomment to wait for features to go out of view
 msckfParams.maxGNCost = inf;          % Uncomment to allow any triangulation, no matter how bad
 
@@ -292,19 +291,22 @@ end %for state_K = ...
 %% ==========================PLOT ERRORS======================== %%
 kNum = length(prunedStates);
 p_C_G_est = NaN(3, kNum);
-q_CG_est = NaN(4, kNum);
 p_C_G_GT = NaN(3, kNum);
-q_CG_GT = NaN(4, kNum);
+theta_CG_err = NaN(3,kNum);
+
 tPlot = NaN(1, kNum);
 
 for k = 1:kNum
     state_k = prunedStates{k}.state_k;
-    q_CG_GT(:,k)  = groundTruthStates{state_k}.camState.q_CG;
-    p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
-
-    q_CG_est(:,k)  = prunedStates{k}.q_CG;
-    p_C_G_est(:,k) = prunedStates{k}.p_C_G;
     
+    p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
+    p_C_G_est(:,k) = prunedStates{k}.p_C_G;
+    q_CG_est  = prunedStates{k}.q_CG;    
+    
+    theta_CG_err(:,k) = crossMatToVec( eye(3) ...
+                    - quatToRotMat(q_CG_est) ...
+                        * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
+        
     tPlot(k) = t(state_k);
 end
 
@@ -342,41 +344,32 @@ xlabel('t_k')
 
 % Rotation Errors
 figure
-subplot(4,1,1)
-plot(tPlot, q_CG_est(1,:) - q_CG_GT(1,:), 'LineWidth', 1.2)
+subplot(3,1,1)
+plot(tPlot, theta_CG_err(1,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
 ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 title('Rotational Error')
-ylabel('\delta q_1')
+ylabel('\delta \theta_x')
 
 
-subplot(4,1,2)
-plot(tPlot, q_CG_est(2,:) - q_CG_GT(2,:), 'LineWidth', 1.2)
+subplot(3,1,2)
+plot(tPlot, theta_CG_err(2,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
 ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
-ylabel('\delta q_2')
+ylabel('\delta \theta_y')
 
-subplot(4,1,3)
-plot(tPlot, q_CG_est(3,:) - q_CG_GT(3,:), 'LineWidth', 1.2)
+subplot(3,1,3)
+plot(tPlot, theta_CG_err(3,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
 ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
-ylabel('\delta q_3')
-
-subplot(4,1,4)
-plot(tPlot, q_CG_est(4,:) - q_CG_GT(4,:), 'LineWidth', 1.2)
-hold on
-%plot(t(k1:k2), 3*sigma_z, '--r')
-%plot(t(k1:k2), -3*sigma_z, '--r')
-ylim([-0.5 0.5])
-xlim([tPlot(1) tPlot(end)])
-ylabel('\delta q_4')
+ylabel('\delta \theta_z')
 xlabel('t_k')
