@@ -27,7 +27,6 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
-% noiseParams.Q_imu = diag([v_var; w_var; 1e-12*ones(6,1)]);
 noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]);
 noiseParams.initialIMUCovar = 0.01*eye(12);
 noiseParams.initialCamCovar = 0.01*eye(6);
@@ -340,7 +339,7 @@ plot(tPlot, q_CG_est(1,:) - q_CG_GT(1,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
-% ylim([-0.5 0.5])
+ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 title('Rotational Error')
 ylabel('\delta q_1')
@@ -351,7 +350,7 @@ plot(tPlot, q_CG_est(2,:) - q_CG_GT(2,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
-% ylim([-0.5 0.5])
+ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta q_2')
 
@@ -360,7 +359,7 @@ plot(tPlot, q_CG_est(3,:) - q_CG_GT(3,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
-% ylim([-0.5 0.5])
+ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta q_3')
 
@@ -369,7 +368,7 @@ plot(tPlot, q_CG_est(4,:) - q_CG_GT(4,:), 'LineWidth', 1.2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
-% ylim([-0.5 0.5])
+ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta q_3')
 xlabel('t_k')
