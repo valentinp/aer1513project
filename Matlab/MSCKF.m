@@ -27,15 +27,15 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
-noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]);
-noiseParams.initialIMUCovar = 1e-12*eye(12);
+noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w; w bias; v; v bias]
+noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
 noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
 msckfParams.minTrackLength = 2;
-msckfParams.maxTrackLength = 2000;
-msckfParams.maxGNCost = 1;
+msckfParams.maxTrackLength = inf; %10;
+msckfParams.maxGNCost = inf; %1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -199,12 +199,12 @@ for state_k = kStart:(kEnd-1)
 %                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
 %              end
             
-            
-%             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            % Optimize feature location estimate via GN
+            [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
-            % Uncomment to use ground truth map instead
-            p_f_G = groundTruthMap(:, track.featureId);
-            Jcost = 0;
+%             % Uncomment to use ground truth map instead
+%             p_f_G = groundTruthMap(:, track.featureId);
+%             Jcost = 0;
             
             if Jcost > msckfParams.maxGNCost
                 break;
@@ -365,5 +365,5 @@ hold on
 %plot(t(k1:k2), -3*sigma_z, '--r')
 ylim([-0.5 0.5])
 xlim([tPlot(1) tPlot(end)])
-ylabel('\delta q_3')
+ylabel('\delta q_4')
 xlabel('t_k')
