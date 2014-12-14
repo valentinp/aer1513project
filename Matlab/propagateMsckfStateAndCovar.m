@@ -3,7 +3,7 @@ function msckfState_prop = propagateMsckfStateAndCovar(msckfState, measurements_
     % Jacobians
     Q_imu = noiseParams.Q_imu*measurements_k.dT;
     F = calcF(msckfState.imuState, measurements_k);
-    G = calcG();
+    G = calcG(msckfState.imuState);
 
     %Propagate State
     msckfState_prop.imuState = propagateImuState(msckfState.imuState, measurements_k);
