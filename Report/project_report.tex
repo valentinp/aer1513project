@@ -135,28 +135,28 @@ In order to accommodate this alternative state parametrization, the mathematical
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
-    \Vec{x}_{I,k} &= \bbm \Vec{q}_{IG,k}^T & \Vec{b}_{\boldsymbol{\omega},k}^T & \Vec{b}_{\Vec{v},k}^T & \Vec{p}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
+    \Vec{x}_{I,k} &:= \bbm \Vec{q}_{IG,k}^T & \Vec{b}_{\boldsymbol{\omega},k}^T & \Vec{b}_{\Vec{v},k}^T & \Vec{p}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
 \end{align}
 where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{\boldsymbol{\omega},k}$ is the bias on the gyro measurements $\boldsymbol{\omega}_m$, $\Vec{b}_{\Vec{v},k}$ is the bias on the velocity measurements $\Vec{v}_m$, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
 
 At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ 7-dimensional past camera poses in which active feature tracks were visible:
 \begin{align}
-    \hat{\Vec{x}}_k &= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
+    \hat{\Vec{x}}_k &:= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
 \end{align}
 
 We can also define the MSCKF ``error state'' at time $k$:
 \begin{align}
-    \widetilde{\Vec{x}}_k &= \bbm \widetilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \widetilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \widetilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
+    \widetilde{\Vec{x}}_k &:= \bbm \widetilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \widetilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \widetilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
 \end{align}
 where
 \begin{align}
-    \widetilde{\Vec{x}}_{I,k} &= \bbm \boldsymbol{\delta\theta}_I^T & \widetilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \widetilde{\Vec{b}}_{\Vec{v},k}^T & \widetilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
+    \widetilde{\Vec{x}}_{I,k} &:= \bbm \boldsymbol{\delta\theta}_I^T & \widetilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \widetilde{\Vec{b}}_{\Vec{v},k}^T & \widetilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
 \end{align}
 is the 12-dimensional IMU error state.
 In the above, $\widetilde{x}$ denotes the difference between the true value and the estimated value of the quantity $x$.
 The rotational errors $\boldsymbol{\delta\theta}$ are defined according to
 \begin{align}
-    \boldsymbol{\delta}\Vec{q} &= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T.
+    \boldsymbol{\delta}\Vec{q} &:= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T.
 \end{align}
 
 Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12+6N)$ matrix that may be partitioned as
@@ -237,9 +237,7 @@ We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by i
                 & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
 \end{align}
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k, t_k\right) = \hat{\Vec{P}}_{II,k}$. 
-$\Vec{Q}_I$ is the covariance of the IMU measurement noise.
-
-The Jacobians $\Vec{F}$, $\Vec{G}$ in Equations \ref{eq:statetransition} and \ref{eq:imucovar} are given by
+The Jacobians $\Vec{F}$, $\Vec{G}$ are given by
 \begin{align}
 \Vec{F} &= \bbm -\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
                     \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
@@ -252,15 +250,16 @@ The Jacobians $\Vec{F}$, $\Vec{G}$ in Equations \ref{eq:statetransition} and \re
                                 \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
                                 \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \\
                                 \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3}
-            \ebm .
+            \ebm ,
 \end{align}
+and $\Vec{Q}_I$ is the covariance of the IMU measurement noise.
 
 \subsection{Feature Position Estimation}
 When a feature $f_j$ goes out of view of the camera, the MSCKF generates a batch-optimized estimate $\hat{\Vec{p}}_G^{f_j G}$ of the feature's position in the global frame.
 
 \subsection{MSCKF State Correction Equations}
 Now that we have estimated the positions of any features that have gone out of view, we can apply the corresponding motion constraints to the window of poses from which each feature was observed.
-We begin by forming the exteroceptive measurement error corresponding to an observation $\Vec{z}_i^{(j)}$ of feature $f_j$ from the $i^\text{th}$ camera pose in the window $C_i$:
+We begin by forming the exteroceptive measurement error corresponding to an observation $\Vec{z}_i^{(j)}$ of feature $f_j$ from the $i^\text{th}$ camera pose $C_i$ in the window:
 \begin{align} \label{eq:residual_def}
     \Vec{r}_i^{(j)} &:= \Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}
 \end{align}
@@ -270,22 +269,71 @@ where
 \end{align}
 with 
 \begin{align}
-\bbm \hat{X}^{(j)}_{C_i} & \hat{Y}^{(j)}_{C_i} & \hat{Z}^{(j)}_{C_i} \ebm ^T &= \hat{\Vec{C}}_{C_i G} \left( \hat{\Vec{p}}_G^{f_j G} - \hat{\Vec{p}}_G^{C_i G} \right).
+    \hat{\Vec{p}}_{C_i}^{f_j C_i} &= \bbm \hat{X}^{(j)}_{C_i} & \hat{Y}^{(j)}_{C_i} & \hat{Z}^{(j)}_{C_i} \ebm ^T = \hat{\Vec{C}}_{C_i G} \left( \hat{\Vec{p}}_G^{f_j G} - \hat{\Vec{p}}_G^{C_i G} \right).
 \end{align}
 
 If we linearize Equation \ref{eq:residual_def} about the estimates for the camera pose and feature position, we obtain an estimate of the exteroceptive measurement error
 \begin{align}
-    \Vec{r}_i^{(j)} &\simeq \Vec{H}_{\Vec{x}, i}^{(j)} \widetilde{\Vec{x}_i} + \Vec{H}_{f, i}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}_i^{(j)}
+    \Vec{r}_i^{(j)} &\simeq \Vec{H}_{\Vec{x}, i}^{(j)} \widetilde{\Vec{x}}_i + \Vec{H}_{f, i}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}_i^{(j)}
 \end{align}
 where $\Vec{H}_{\Vec{x}, i}^{(j)}$ and $\Vec{H}_{f, i}^{(j)}$ are the Jacobians of the measurement of feature $f_j$ from camera pose $i$ with respect to the filter state and the position of the feature, respectively.
 These are given by
 \begin{align}
-    \Vec{H}_{\Vec{x}, i}^{(j)} &=   \\
-    \Vec{H}_{f, i}^{(j)} &= 
+    \Vec{H}_{\Vec{x}, i}^{(j)} &= \bbm \Vec{0} & \Vec{J}^{\left(j\right)}_i \left(\hat{\Vec{p}}_{C_i}^{f_j C_i}\right)^\times & -\Vec{J}^{\left(j\right)}_i \hat{\Vec{C}}_{C_i G} & \Vec{0} \ebm \\
+    \Vec{H}_{f, i}^{(j)} &= \Vec{J}^{\left(j\right)}_i \hat{\Vec{C}}_{C_i G}
+\end{align}
+where the left $\Vec{0}$ in $\Vec{H}_{\Vec{x}, i}^{(j)}$ has dimension $2\times\left(12+6\left(i-1\right)\right)$, the right $\Vec{0}$ has dimension $2\times6\left(N-i\right)$, and
+\begin{align}
+    \Vec{J}^{\left(j\right)}_i &= \frac{1}{\left(\hat{Z}^{(j)}_{C_i}\right)^2}
+    \bbm \hat{Z}^{(j)}_{C_i} & 0 & -\hat{X}^{(j)}_{C_i} \vspace{0.5em} \\
+             0 & \hat{Z}^{(j)}_{C_i} & -\hat{Y}^{(j)}_{C_i}
+    \ebm .
 \end{align}
 $\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Vec{R}_i^{(j)} = \sigma^2_{\text{im}} \Vec{1}_{2}$.
 
-[NULL SPACE TRICK, KALMAN GAIN, ETC.]
+By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M_j \times 1$ measurement error vector of feature $f_j$ over the entire window of camera poses, where $M_j$ is the number of camera poses from which feature $f_j$ was observed:
+\begin{align} \label{eq:residual_stacked}
+    \Vec{r}^{(j)} &\simeq \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}^{(j)}
+\end{align}
+However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
+Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly. [TALK HERE ABOUT WHAT HAPPENS IF YOU LEAVE IT IN]
+
+In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form:
+\begin{align}
+    \Vec{r}_o^{(j)} &:= \Vec{A}^T \left(\Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}\right) \\
+                    &\simeq \Vec{A}^T \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{0} + \Vec{A}^T \Vec{n}^{(j)} \\
+                    &=: \Vec{H}_{o}^{(j)} \widetilde{\Vec{x}} + \Vec{n}_o^{(j)}
+\end{align}
+
+Since $\Vec{H}_{f}^{(j)}$ has full column rank, $\Vec{A}$ has dimension $\left(2M_j - 3\right) \times 3$ and $\Vec{r}_o^{(j)}$ has dimension $\left(2M_j - 3\right) \times 1$.
+Furthermore, because $\Vec{A}$ is semi-unitary, the covariance matrix of $\Vec{n}_o^{(j)}$ is given by $\Vec{R}_o = \sigma^2_{\text{im}}\Vec{A}^T\Vec{A} = \sigma^2_{\text{im}}\Vec{1}_{2M_j - 3}$.
+
+We can now stack all the errors $\Vec{r}_o^{(j)}$ for all the features in the current batch to arrive at
+\begin{align} \label{eq:residual_nullspace_stacked}
+    \Vec{r}_o &= \Vec{H}_o \widetilde{\Vec{x}} + \Vec{n}_o .
+\end{align}
+The dimension of this vector can be quite large in practice, so we use the QR-decomposition of $\Vec{H}_o$ to reduce the computational complexity of the EKF update:
+\begin{align}
+    \Vec{H}_o = \bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm \bbm \Vec{T}_\Vec{H} \\ \Vec{0} \ebm
+\end{align}
+where $\Vec{Q}_1, \Vec{Q}_2$ are unitary matrices and $\Vec{T}_\Vec{H}$ is an upper-triangular matrix.
+Substituting this result into Equation \ref{eq:residual_nullspace_stacked} and pre-multiplying by $\bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm ^T$, we obtain
+\begin{align}
+    \bbm \Vec{Q}_1^T \Vec{r}_o \\ \Vec{Q}_2^T \Vec{r}_o \ebm &= \bbm \Vec{T}_\Vec{H} \\ \Vec{0} \ebm \widetilde{\Vec{x}} + \bbm \Vec{Q}_1^T \Vec{n}_o \\ \Vec{Q}_2^T \Vec{n}_o \ebm .
+\end{align}
+Noting that the quantity $\Vec{Q}_2^T \Vec{r}_o$ is only noise, we discard it and define a new error term that we use in the EKF update:
+\begin{align}
+    \Vec{r}_n &:= \Vec{Q}_1^T \Vec{r}_o = \Vec{T}_\Vec{H} \widetilde{\Vec{x}} + \Vec{Q}_1^T \Vec{n}_o =: \Vec{T}_\Vec{H} \widetilde{\Vec{x}} + \Vec{n}_n
+\end{align} 
+The covariance matrix of $\Vec{n}_n$ is given by $\Vec{R}_n = \Vec{Q}_1^T \Vec{R}_o \Vec{Q}_1 = \sigma^2_\text{im} \Vec{1}_r$ where $r$ is the number of columns in $\Vec{Q}_1$.
+
+Finally, we can formulate the Kalman gain and correction equations to arrive at the updated estimates for the filter state and covariance:
+\begin{align}
+    \Vec{K} &= \hat{\Vec{P}}^-_{k+1}\Vec{T}_{H}^T\left(\Vec{T}_{H}\hat{\Vec{P}}^-_{k+1}\Vec{T}_{H}^T + \Vec{R}_{n} \right)^{-1} \\
+    \Delta\Vec{x}_{k+1} &= \Vec{K}\Vec{r}_{n} \\
+    \hat{\Vec{P}}_{k+1} &= \left(\Vec{1}_{12+6N} - \Vec{K}\Vec{T}_{H} \right)\hat{\Vec{P}}^-_{k+1}\left(\Vec{1}_{12+6N} - \Vec{K}\Vec{T}_{H} \right)^T \notag \\ 
+                        &+ \Vec{K}\Vec{R}_{n}\Vec{K}^T .
+\end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
