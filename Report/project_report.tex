@@ -219,7 +219,7 @@ and
 In our implementation we propagate the motion model using a simple forward-Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Covariance Propagation}
-With reference to the partitions defined in Equation \ref{eq:covariance}, we compute the predicted camera-camera and IMU-camera state covariances as follows:
+With reference to the partitions defined in (\ref{eq:covariance}), we compute the predicted camera-camera and IMU-camera state covariances as follows:
 \begin{align}
     \hat{\Vec{P}}^-_{CC,k+1} &= \hat{\Vec{P}}_{CC,k} \\
     \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + T, t_k \right) \hat{\Vec{P}}_{IC,k}
@@ -272,7 +272,7 @@ with
     \hat{\Vec{p}}_{C_i}^{f_j C_i} &= \bbm \hat{X}^{(j)}_{C_i} & \hat{Y}^{(j)}_{C_i} & \hat{Z}^{(j)}_{C_i} \ebm ^T = \hat{\Vec{C}}_{C_i G} \left( \hat{\Vec{p}}_G^{f_j G} - \hat{\Vec{p}}_G^{C_i G} \right).
 \end{align}
 
-If we linearize Equation \ref{eq:residual_def} about the estimates for the camera pose and feature position, we obtain an estimate of the exteroceptive measurement error
+If we linearize (\ref{eq:residual_def}) about the estimates for the camera pose and feature position, we obtain an estimate of the exteroceptive measurement error
 \begin{align}
     \Vec{r}_i^{(j)} &\simeq \Vec{H}_{\Vec{x}, i}^{(j)} \widetilde{\Vec{x}}_i + \Vec{H}_{f, i}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}_i^{(j)}
 \end{align}
@@ -317,7 +317,7 @@ The dimension of this vector can be quite large in practice, so we use the QR-de
     \Vec{H}_o = \bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm \bbm \Vec{T}_\Vec{H} \\ \Vec{0} \ebm
 \end{align}
 where $\Vec{Q}_1, \Vec{Q}_2$ are unitary matrices and $\Vec{T}_\Vec{H}$ is an upper-triangular matrix.
-Substituting this result into Equation \ref{eq:residual_nullspace_stacked} and pre-multiplying by $\bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm ^T$, we obtain
+Substituting this result into (\ref{eq:residual_nullspace_stacked}) and pre-multiplying by $\bbm \Vec{Q}_1 & \Vec{Q}_2 \ebm ^T$, we obtain
 \begin{align}
     \bbm \Vec{Q}_1^T \Vec{r}_o \\ \Vec{Q}_2^T \Vec{r}_o \ebm &= \bbm \Vec{T}_\Vec{H} \\ \Vec{0} \ebm \widetilde{\Vec{x}} + \bbm \Vec{Q}_1^T \Vec{n}_o \\ \Vec{Q}_2^T \Vec{n}_o \ebm .
 \end{align}
