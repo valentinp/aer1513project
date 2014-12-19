@@ -5,7 +5,7 @@
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc
-clear all
+clear
 close all
 addpath('utils')
 load('../dataset3.mat')
@@ -61,7 +61,9 @@ stateVecHistStruct = {};
 stateSigmaHistMat = [];
 
 %Keep track of triangulated landmarks
-rho_i_pj_i_est = -1*ones(3, 20);
+% rho_i_pj_i_est = nan(3, 20);
+rho_i_pj_i_est = initializeMap(initialStateStruct, y_k_j, y_var, ...
+    calibParams, vehicleCamTransform, k1, k2);
 
 
 for k1 = kStart:kEnd    
