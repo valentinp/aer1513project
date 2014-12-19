@@ -13,7 +13,7 @@ calibParams.f_v = fv;
 calibParams.b = b;
 
 %Generate new landmarks
-newLmNum = 200;
+newLmNum = 40;
 % xRange = linspace(min(rho_i_pj_i(1,:)), max(rho_i_pj_i(1,:)), newLmNum);
 % yRange = linspace(min(rho_i_pj_i(2,:)), max(rho_i_pj_i(2,:)), newLmNum);
 % zRange = linspace(min(rho_i_pj_i(3,:)), max(rho_i_pj_i(3,:)), newLmNum);
