@@ -147,14 +147,14 @@ for kIdx = 1:K
             %Find the ground truth position of the observed landmark
             %rho_pi_i_check = rho_i_pj_i(:, lmId);
             
-            if (rho_i_pj_i_est(1, lmId) == -1)
+            %if (rho_i_pj_i_est(1, lmId) == -1)
                  %Use triangulation to find the position of the landmark
                 rho_pc_c = triangulate(yMeas, calibParams);
                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                rho_i_pj_i_est(:, lmId) = rho_pi_i;
-            else
-                rho_pi_i = rho_i_pj_i_est(:, lmId);
-            end
+             %   rho_i_pj_i_est(:, lmId) = rho_pi_i;
+            %else
+                %rho_pi_i = rho_i_pj_i_est(:, lmId);
+            %end
            
             extErrorVec(idx:idx+3, 1) = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
             G_x_k(idx:idx+3, :) = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams );

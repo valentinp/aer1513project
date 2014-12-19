@@ -15,6 +15,9 @@ load('dataset3.mat')
 kStart = 1215;
 kEnd = 1714;
 
+%Set constant
+numLandmarks = size(y_k_j,3);
+
 %Set up the camera parameters
 camera.c_u      = cu;                   % Principal point [u pixels]
 camera.c_v      = cv;                   % Principal point [v pixels]
@@ -142,7 +145,7 @@ for state_k = kStart:(kEnd-1)
     % If an observation is -1, add the track to featureTracksToResidualize
     featureTracksToResidualize = {};
     
-    for featureId = 1:20
+    for featureId = 1:numLandmarks
         %IMPORTANT: state_k + 1 not state_k
         meas_k = measurements{state_k+1}.y(:, featureId);
         if ismember(featureId, trackedFeatureIds)
