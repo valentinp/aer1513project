@@ -9,7 +9,7 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../dataset3_augmented.mat')
+load('dataset3_augmented.mat')
 
 %Dataset window bounds
 kStart = 1215;
