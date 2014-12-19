@@ -12,8 +12,8 @@ addpath('utils');
 load('../dataset3_augmented.mat')
 
 %Dataset window bounds
-kStart = 1215;
-kEnd = 1714;
+kStart = 500;
+kEnd = 1000;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
