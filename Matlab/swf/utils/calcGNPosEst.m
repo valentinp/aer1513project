@@ -2,7 +2,7 @@ function [p_f_G, Jnew] = calcGNPosEst(camStates, observations, noiseParams)
 %CALCGNPOSEST Calculate the position estimate of the feature using Gauss
 %Newton optimization
 %   INPUT:
-%   observations: 2xM matrix of pixel values
+%   observations: 2xM matrix of pixel values of the current landmark
 %   camStates: Cell array of M structs of camera poses
 %   camera: intrinsic calibration
 %   OUTPUT:
