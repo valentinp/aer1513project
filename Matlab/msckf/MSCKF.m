@@ -9,11 +9,11 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../dataset3_augmented.mat')
+load('../dataset3_fresh.mat')
 
 %Dataset window bounds
-kStart = 1214;
-kEnd = 1715;
+kStart = 500;
+kEnd = 1000;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -39,7 +39,7 @@ noiseParams.imageVariance = 2*mean([noiseParams.u_var_prime, noiseParams.v_var_p
 msckfParams.maxGNCost = 1;
 msckfParams.minTrackLength = 2;     % Uncomment to dead-reckon only
 msckfParams.maxTrackLength = 5;     % Uncomment to wait for features to go out of view
-msckfParams.maxGNCost = 0.5;          % Uncomment to allow any triangulation, no matter how bad
+msckfParams.maxGNCost = inf;          % Uncomment to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -209,11 +209,11 @@ for state_k = kStart:(kEnd-1)
 %                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
 %              end
             
-           %[p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+           [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
             % Uncomment to use ground truth map instead
-           p_f_G = groundTruthMap(:, track.featureId);
-           Jcost = 0;
+           %p_f_G = groundTruthMap(:, track.featureId);
+           %cost = 0;
             
             if Jcost > msckfParams.maxGNCost
                 break;
