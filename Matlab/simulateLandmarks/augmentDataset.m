@@ -11,16 +11,14 @@ calibParams.f_v = fv;
 calibParams.b = b;
 
 %Generate new landmarks
-newLmNum = 40;
-xRange = [min(rho_i_pj_i(1,:)) max(rho_i_pj_i(1,:))];
-yRange = [min(rho_i_pj_i(2,:)) max(rho_i_pj_i(2,:))];
-zRange = [min(rho_i_pj_i(3,:)) max(rho_i_pj_i(3,:))];
+newLmNum = 5;
+xRange = linspace(min(rho_i_pj_i(1,:)), max(rho_i_pj_i(1,:)), newLmNum);
+yRange = linspace(min(rho_i_pj_i(2,:)), max(rho_i_pj_i(2,:)), newLmNum);
+zRange = linspace(min(rho_i_pj_i(3,:)), max(rho_i_pj_i(3,:)), newLmNum);
 
-newLmPosX = range(xRange)*rand(1,newLmNum) + xRange(1);
-newLmPosY = range(yRange)*rand(1,newLmNum) + yRange(1);
-newLmPosZ = range(zRange)*rand(1,newLmNum) + zRange(1);
+[newLmPosX, newLmPosY, newLmPosZ ] = meshgrid(xRange, yRange, zRange);
 
-newLMPos = [newLmPosX; newLmPosY; newLmPosZ];
+newLMPos = [newLmPosX(:)'; newLmPosY(:)'; newLmPosZ(:)'];
 
 rho_i_pj_i = [rho_i_pj_i newLMPos];
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
@@ -36,7 +34,7 @@ for k = 1:length(t)
         p_lc_c = homo2cart(T_ci*cart2homo(p_li_i));
         [yMeas] = stereoCamProject(p_lc_c, calibParams);
         if all(yMeas > 0) && all(yMeas([1,3]) < 700) && all(yMeas([2,4]) < 500)
-                y_k_j(:,k, 20+lm_i) = yMeas + randn(4,1);
+                y_k_j(:,k, 20+lm_i) = yMeas;
         else
                 y_k_j(:,k, 20+lm_i) = -1*ones(4,1);
         end

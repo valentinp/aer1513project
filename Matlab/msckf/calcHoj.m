@@ -35,8 +35,12 @@ for camStateIndex = camStateIndices
     c_i = c_i + 1;
 end
 
-A_j = null(H_f_j');
-H_o_j = A_j'*H_x_j;
+if all(~isnan(H_f_j(:)))
+    A_j = null(H_f_j');
+    H_o_j = A_j'*H_x_j;
+else
+    a =2;
+end
 
 end
 

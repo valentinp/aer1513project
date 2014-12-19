@@ -12,8 +12,8 @@ addpath('utils');
 load('../dataset3_augmented.mat')
 
 %Dataset window bounds
-kStart = 500;
-kEnd = 1000;
+kStart = 1214;
+kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -33,15 +33,13 @@ noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w; w bias; v; v bias]
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
-noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
+noiseParams.imageVariance = 2*mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
-msckfParams.minTrackLength = 2;
-msckfParams.maxTrackLength = 5;
 msckfParams.maxGNCost = 1;
 msckfParams.minTrackLength = 2;     % Uncomment to dead-reckon only
-msckfParams.maxTrackLength = 10;     % Uncomment to wait for features to go out of view
-msckfParams.maxGNCost = inf;          % Uncomment to allow any triangulation, no matter how bad
+msckfParams.maxTrackLength = 5;     % Uncomment to wait for features to go out of view
+msckfParams.maxGNCost = 0.5;          % Uncomment to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -211,11 +209,11 @@ for state_k = kStart:(kEnd-1)
 %                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
 %              end
             
-           [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+           %[p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
             % Uncomment to use ground truth map instead
-            %p_f_G = groundTruthMap(:, track.featureId);
-            %Jcost = 0;
+           p_f_G = groundTruthMap(:, track.featureId);
+           Jcost = 0;
             
             if Jcost > msckfParams.maxGNCost
                 break;
@@ -226,6 +224,7 @@ for state_k = kStart:(kEnd-1)
             
             %Calculate residual and Hoj 
             [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
+  
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
             % Stacked residuals and friends
@@ -238,6 +237,10 @@ for state_k = kStart:(kEnd-1)
             A(A_index(1):(A_index(1)+size(A_j,1)-1),A_index(2):(A_index(2)+size(A_j,2)-1)) = A_j;
             A_index = A_index + size(A_j);
         end
+        
+%         if state_k == 1610
+%             a =2;
+%         end
         
         if ~isempty(A)            
             [T_H, Q_1] = calcTH(H_o);
@@ -273,7 +276,7 @@ for state_k = kStart:(kEnd-1)
     
     
         %% ==========================STATE HISTORY======================== %% 
-        imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
+        %imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
         
         
         
