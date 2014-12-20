@@ -9,11 +9,11 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../dataset3_fresh.mat')
+load('../dataset3_fresh2.mat')
 
 %Dataset window bounds
-kStart = 500;
-kEnd = 1000;
+kStart = 1215;
+kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -33,13 +33,12 @@ noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w; w bias; v; v bias]
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
-noiseParams.imageVariance = 2*mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
+noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
-msckfParams.maxGNCost = 1;
-msckfParams.minTrackLength = 2;     % Uncomment to dead-reckon only
-msckfParams.maxTrackLength = 5;     % Uncomment to wait for features to go out of view
-msckfParams.maxGNCost = inf;          % Uncomment to allow any triangulation, no matter how bad
+msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 30;     % Set to inf to wait for features to go out of view
+msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -130,7 +129,7 @@ for state_k = kStart:(kEnd-1)
     
     
     %% ==========================STATE PROPAGATION======================== %%
-
+    
     %Propagate state and covariance
     msckfState = propagateMsckfStateAndCovar(msckfState, measurements{state_k}, noiseParams);
 
@@ -151,6 +150,7 @@ for state_k = kStart:(kEnd-1)
             track = featureTracks{trackedFeatureIds == featureId};
             
             if meas_k(1,1) == -1 || size(track.observations, 2) >= msckfParams.maxTrackLength
+                                
                 %Feature is not in view, remove from the tracked features
                 [msckfState, camStates, camStateIndices] = removeTrackedFeature(msckfState, featureId);
                 
@@ -174,7 +174,7 @@ for state_k = kStart:(kEnd-1)
                 msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
             end
             
-        elseif meas_k(1,1) ~= -1
+        elseif meas_k(1,1) ~= -1 % && ~ismember(featureId, trackedFeatureIds)
             %Track new feature
             track.featureId = featureId;
             track.observations = meas_k;
@@ -189,13 +189,8 @@ for state_k = kStart:(kEnd-1)
     
     %% ==========================FEATURE RESIDUAL CORRECTIONS======================== %%
     if ~isempty(featureTracksToResidualize)
-        %H_o has more than 1 row, but it will be grown in our for loop like
-        %a pet
-        H_o = zeros(0, 12 + 6*length(msckfState.camStates));
-        
-        r_stacked = [];
-        A = [];
-        A_index = [1,1]; %Helper for building the A matrix
+        H_o = [];
+        r_o = [];
 
         for f_i = 1:length(featureTracksToResidualize)
 
@@ -208,18 +203,18 @@ for state_k = kStart:(kEnd-1)
 %              for c_i_temp = 1:length(track.camStates)
 %                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
 %              end
-            
-           [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
 
+
+%             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
-           %p_f_G = groundTruthMap(:, track.featureId);
-           %cost = 0;
+            p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
             
             if Jcost > msckfParams.maxGNCost
                 break;
             else
                 numFeatureTracksResidualized = numFeatureTracksResidualized + 1;
-                fprintf('Using new feature track. Total = %d.\n', numFeatureTracksResidualized);
+                fprintf('Using new feature track with %d observations. Total track count = %d.\n',...
+                    size(track.observations,2), numFeatureTracksResidualized);
             end
             
             %Calculate residual and Hoj 
@@ -228,24 +223,19 @@ for state_k = kStart:(kEnd-1)
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
             % Stacked residuals and friends
-            iStart = size(H_o,1)+1;
-            iEnd = iStart+size(H_o_j, 1) - 1;
+            H_o = [H_o; H_o_j];
 
-            H_o(iStart:iEnd, :) = H_o_j;
-            r_stacked((end+1):(end+size(r_j,1)),1) = r_j;
-            
-            A(A_index(1):(A_index(1)+size(A_j,1)-1),A_index(2):(A_index(2)+size(A_j,2)-1)) = A_j;
-            A_index = A_index + size(A_j);
+            if ~isempty(A_j)
+                r_o_j = A_j' * r_j;
+                r_o = [r_o ; r_o_j];
+            end
         end
         
-%         if state_k == 1610
-%             a =2;
-%         end
-        
-        if ~isempty(A)            
+%         if ~isempty(A)
+        if ~isempty(r_o)
             [T_H, Q_1] = calcTH(H_o);
-            r_n = Q_1'*A'*r_stacked;
-%             r_n = A'*r_stacked;
+            r_n = Q_1' * r_o;
+%             r_n = r_o;
 
             % Build MSCKF covariance matrix
             P = [msckfState.imuCovar, msckfState.imuCamCovar;
@@ -253,6 +243,8 @@ for state_k = kStart:(kEnd-1)
 
             R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
 %             R_n = noiseParams.imageVariance*eye( size(H_o, 1) );
+
+            figure(1); imagesc(r_n); colorbar; axis equal; drawnow;
 
             % Calculate Kalman gain
             K = (P*T_H') / ( T_H*P*T_H' + R_n );
@@ -271,12 +263,15 @@ for state_k = kStart:(kEnd-1)
             msckfState.imuCovar = P_corrected(1:12,1:12);
             msckfState.camCovar = P_corrected(13:end,13:end);
             msckfState.imuCamCovar = P_corrected(1:12, 13:end);
+            
+            if max(msckfState.imuCovar(:)) > 0.1
+                disp('here');
+            end
         end
     end
     
-    
         %% ==========================STATE HISTORY======================== %% 
-        %imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
+        imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
         
         
         
@@ -285,7 +280,7 @@ for state_k = kStart:(kEnd-1)
         [msckfState, deletedCamStates] = pruneStates(msckfState);
         
         if ~isempty(deletedCamStates)
-         prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
+            prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
         end
         
         

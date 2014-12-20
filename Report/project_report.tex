@@ -305,7 +305,7 @@ In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can def
                     &=: \Vec{H}_{o}^{(j)} \widetilde{\Vec{x}} + \Vec{n}_o^{(j)}
 \end{align}
 
-Since $\Vec{H}_{f}^{(j)}$ has full column rank, $\Vec{A}$ has dimension $\left(2M_j - 3\right) \times 3$ and $\Vec{r}_o^{(j)}$ has dimension $\left(2M_j - 3\right) \times 1$.
+Since $\Vec{H}_{f}^{(j)}$ has full column rank, $\Vec{A}$ has dimension $2M_j \times \left(2M_j - 3\right)$ and $\Vec{r}_o^{(j)}$ has dimension $\left(2M_j - 3\right) \times 1$.
 Furthermore, because $\Vec{A}$ is semi-unitary, the covariance matrix of $\Vec{n}_o^{(j)}$ is given by $\Vec{R}_o = \sigma^2_{\text{im}}\Vec{A}^T\Vec{A} = \sigma^2_{\text{im}}\Vec{1}_{2M_j - 3}$.
 
 We can now stack all the errors $\Vec{r}_o^{(j)}$ for all the features in the current batch to arrive at

@@ -2,7 +2,7 @@ function imuState_prop = propagateImuState(imuState_k, measurements_k)
 % prop == propagated to k+1
 
     C_IG = quatToRotMat(imuState_k.q_IG);
-
+    
     % Rotation state
     psi = (measurements_k.omega - imuState_k.b_g) * measurements_k.dT;
     imuState_prop.q_IG = imuState_k.q_IG + 0.5 * omegaMat(psi) * imuState_k.q_IG;

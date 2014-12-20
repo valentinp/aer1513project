@@ -14,4 +14,6 @@ function updateQuat = buildUpdateQuat(deltaTheta)
     else
         updateQuat = [deltaq; sqrt(1 - checkNorm)];
     end
+    
+    updateQuat = updateQuat / norm(updateQuat);
 end

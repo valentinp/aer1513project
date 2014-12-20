@@ -28,7 +28,7 @@ function imuStates_up = updateStateHistory(imuStates, msckfState, camera, state_
     p_I_C = - C_CI' * camera.p_C_I;
     
     
-    for camIdx = 1:size(msckfState.camStates, 2)      
+    for camIdx = 1:size(msckfState.camStates, 2)             
         q_IG = quatLeftComp(q_IC) * msckfState.camStates{camIdx}.q_CG;
         
         C_IG = quatToRotMat(q_IG);

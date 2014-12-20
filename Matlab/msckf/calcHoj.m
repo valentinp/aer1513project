@@ -7,7 +7,6 @@ function [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndices)
 
 
 N = length(msckfState.camStates);
-
 M = length(camStateIndices);
 H_f_j = zeros(2*M, 3);
 H_x_j = zeros(2*M, 12 + 6*N);
@@ -35,12 +34,9 @@ for camStateIndex = camStateIndices
     c_i = c_i + 1;
 end
 
-if all(~isnan(H_f_j(:)))
-    A_j = null(H_f_j');
-    H_o_j = A_j'*H_x_j;
-else
-    a =2;
-end
+
+A_j = null(H_f_j');
+H_o_j = A_j'*H_x_j;
 
 end
 
