@@ -30,10 +30,9 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 %Set up the noise parameters
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
+
 noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w; w bias; v; v bias]
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
-
-noiseParams.imageVariance = mean([noiseParams.u_var_prime, noiseParams.v_var_prime]);  % Slightly hacky. Used to compute the Kalman gain and corrected covariance in the EKF step
 
 %MSCKF parameters
 msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
@@ -191,6 +190,7 @@ for state_k = kStart:(kEnd-1)
     if ~isempty(featureTracksToResidualize)
         H_o = [];
         r_o = [];
+        R_o = [];
 
         for f_i = 1:length(featureTracksToResidualize)
 
@@ -218,33 +218,36 @@ for state_k = kStart:(kEnd-1)
             end
             
             %Calculate residual and Hoj 
-            [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
-  
+            [r_j] = calcResidual(p_f_G, track.camStates, track.observations);  
             [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
             % Stacked residuals and friends
             H_o = [H_o; H_o_j];
 
             if ~isempty(A_j)
+                if f_i > 1
+                    disp('here');
+                end
                 r_o_j = A_j' * r_j;
                 r_o = [r_o ; r_o_j];
+                
+                R_j = diag(repmat([noiseParams.u_var_prime, noiseParams.v_var_prime], [1, numel(r_j)/2]));
+                R_o_j = A_j' * R_j * A_j;
+                R_o(end+1 : end+size(R_o_j,1), end+1 : end+size(R_o_j,2)) = R_o_j;
             end
         end
         
-%         if ~isempty(A)
         if ~isempty(r_o)
+            % Put residuals into their final update-worthy form
             [T_H, Q_1] = calcTH(H_o);
             r_n = Q_1' * r_o;
 %             r_n = r_o;
 
+            R_n = Q_1' * R_o * Q_1;
+
             % Build MSCKF covariance matrix
             P = [msckfState.imuCovar, msckfState.imuCamCovar;
                    msckfState.imuCamCovar', msckfState.camCovar];
-
-            R_n = noiseParams.imageVariance*eye( size(Q_1, 2) );
-%             R_n = noiseParams.imageVariance*eye( size(H_o, 1) );
-
-            figure(1); imagesc(r_n); colorbar; axis equal; drawnow;
 
             % Calculate Kalman gain
             K = (P*T_H') / ( T_H*P*T_H' + R_n );
@@ -263,11 +266,9 @@ for state_k = kStart:(kEnd-1)
             msckfState.imuCovar = P_corrected(1:12,1:12);
             msckfState.camCovar = P_corrected(13:end,13:end);
             msckfState.imuCamCovar = P_corrected(1:12, 13:end);
-            
-            if max(msckfState.imuCovar(:)) > 0.1
-                disp('here');
-            end
+           
         end
+        
     end
     
         %% ==========================STATE HISTORY======================== %% 
@@ -283,7 +284,7 @@ for state_k = kStart:(kEnd-1)
             prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
         end
         
-        
+    figure(1); imagesc(msckfState.imuCovar); colorbar; axis equal; axis ij; drawnow;    
 end %for state_K = ...
 
 
@@ -317,7 +318,7 @@ transLim = [-1 1];
 % Translation Errors
 figure
 subplot(3,1,1)
-plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
@@ -328,7 +329,7 @@ ylabel('\delta r_x')
 
 
 subplot(3,1,2)
-plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
@@ -337,7 +338,7 @@ xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_y')
 
 subplot(3,1,3)
-plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 1.2)
+plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')
@@ -349,7 +350,7 @@ xlabel('t_k')
 % Rotation Errors
 figure
 subplot(3,1,1)
-plot(tPlot, theta_CG_err(1,:), 'LineWidth', 1.2)
+plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_x, '--r')
 %plot(t(k1:k2), -3*sigma_x, '--r')
@@ -360,7 +361,7 @@ ylabel('\delta \theta_x')
 
 
 subplot(3,1,2)
-plot(tPlot, theta_CG_err(2,:), 'LineWidth', 1.2)
+plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_y, '--r')
 %plot(t(k1:k2), -3*sigma_y, '--r')
@@ -369,7 +370,7 @@ xlim([tPlot(1) tPlot(end)])
 ylabel('\delta \theta_y')
 
 subplot(3,1,3)
-plot(tPlot, theta_CG_err(3,:), 'LineWidth', 1.2)
+plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
 hold on
 %plot(t(k1:k2), 3*sigma_z, '--r')
 %plot(t(k1:k2), -3*sigma_z, '--r')

@@ -18,14 +18,13 @@ function [ prunedMsckfState, deletedCamStates ] = pruneStates( msckfState )
     deletedCamStates = msckfState.camStates(deleteIdx);
     prunedMsckfState.camStates = removeCells(msckfState.camStates, deleteIdx);
     
-    
-    keepStatesIdx = ones(size(msckfState.camCovar,1), 1);
+    keepStatesIdx = 1:size(msckfState.camCovar,1);
+    keepStatesMask = true(1, numel(keepStatesIdx));
     for dIdx = deleteIdx
-        keepStatesIdx(6*dIdx - 5:6*dIdx) = zeros(6,1);
+        keepStatesMask(6*dIdx - 5:6*dIdx) = false(6,1);
     end
     
-    keepStatesIdx = (keepStatesIdx == 1);
-    
+    keepStatesIdx = keepStatesIdx(keepStatesMask);
     
     prunedMsckfState.camCovar = msckfState.camCovar(keepStatesIdx, keepStatesIdx);
     %Keep rows, prune columns of upper right covariance matrix
