@@ -196,20 +196,17 @@ The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is des
     \dot{\hat{\Vec{q}}}_{IG} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right)\hat{\Vec{q}}_{IG} \\
     \dot{\hat{\Vec{b}}}_{\boldsymbol{\omega}}  &= \Vec{0}_{3\times1} \\
     \dot{\hat{\Vec{b}}}_{\Vec{v}} &= \Vec{0}_{3\times1} \\
-    \dot{\hat{\Vec{p}}}^{IG}_G &= \hat{\Vec{C}}_{I G}^T\left(\Vec{v}_m - \hat{\Vec{b}}_{\Vec{v}} \right)
+    \dot{\hat{\Vec{p}}}^{IG}_G &= \hat{\Vec{C}}_{I G}^T \hat{\Vec{v}}
 \end{align}
-where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG}$ and
+where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG}$,
+\begin{align*}
+    \hat{\Vec{v}} &= \Vec{v}_m - \hat{\Vec{b}}_{\Vec{v}}, & \hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_{\boldsymbol{\omega}},
+\end{align*}
 \begin{align*}
     \boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right) &= \bbm -\hat{\boldsymbol{\omega}}^\times & \hat{\boldsymbol{\omega}} \\
                                                                 -\hat{\boldsymbol{\omega}}^T & 0
-                                                            \ebm 
-\end{align*}
-with
-\begin{align*}
-    \hat{\boldsymbol{\omega}} = \boldsymbol{\omega}_m - \hat{\Vec{b}}_{\boldsymbol{\omega}}
-\end{align*}
-and
-\begin{align*}
+                                                            \ebm ,
+                                                            & \text{and} &&
     \hat{\boldsymbol{\omega}}^\times &=   \bbm    0 & -\hat{\omega}_3 & \hat{\omega}_2 \\
                                                 \hat{\omega}_3 & 0 & -\hat{\omega}_1 \\
                                                 -\hat{\omega}_2 & \hat{\omega}_1 & 0
@@ -242,7 +239,7 @@ The Jacobians $\Vec{F}$, $\Vec{G}$ are given by
 \Vec{F} &= \bbm -\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
                     \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
                     \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \\
+                    -\hat{\Vec{C}}_{I G}^T \hat{\Vec{v}}^\times & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \\
             \ebm
 \end{align}
 \begin{align}

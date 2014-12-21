@@ -9,8 +9,8 @@ clear;
 close all;
 clc;
 addpath('utils');
-% load('../dataset3_fresh2.mat')
-load('../dataset3.mat')
+load('../dataset3_fresh2.mat')
+% load('../dataset3.mat')
 
 %Dataset window bounds
 kStart = 1215;
@@ -32,12 +32,12 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
-noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w; w bias; v; v bias]
+noiseParams.Q_imu = diag([w_var; 1e-6*ones(3,1); v_var; 1e-6*ones(3,1)]); % [w; w bias; v; v bias]
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
 %MSCKF parameters
-msckfParams.minTrackLength = 5;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 60;     % Set to inf to wait for features to go out of view
+msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 80;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -164,8 +164,7 @@ for state_k = kStart:(kEnd-1)
                
                 %Remove the track
                 featureTracks = featureTracks(trackedFeatureIds ~= featureId);
-                trackedFeatureIds(trackedFeatureIds == featureId) = [];
-                
+                trackedFeatureIds(trackedFeatureIds == featureId) = [];                
             else
                 %Append observation and append id to cam states
                 featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
@@ -199,16 +198,9 @@ for state_k = kStart:(kEnd-1)
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
-            
-%              camStatesGT = {};
-%              for c_i_temp = 1:length(track.camStates)
-%                  camStatesGT{end+1} = groundTruthStates{track.camStates{c_i_temp}.state_k}.camState;
-%              end
-
-
-            [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+%             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
-%             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
+            p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
             
             if Jcost > msckfParams.maxGNCost
                 break;
@@ -279,7 +271,9 @@ for state_k = kStart:(kEnd-1)
         
         if ~isempty(deletedCamStates)
             prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
-        end            
+        end    
+        
+%     figure(1); imagesc(msckfState.imuCovar(10:12,10:12)); axis equal; axis ij; colorbar;
 end %for state_K = ...
 
 

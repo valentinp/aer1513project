@@ -528,18 +528,19 @@ with
 \dot{\hat{\Vec{q}}}_{I G} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}} \right)\hat{\Vec{q}}_{I G} \nl
 \dot{\hat{\Vec{b}}}_g  &= \Vec{0}_{3\times1} \nl
 \dot{\hat{\Vec{b}}}_v &= \Vec{0}_{3\times1} \nl
-\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\left(\hat{\Vec{v}}^G_I - \hat{\Vec{b}}_v \right)
+\dot{\hat{\Vec{p}}}^G_I &= \hat{\Vec{C}}_{I G}^T\hat{\Vec{v}}
 \end{align}
 where
 \begin{align}
-\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g,
+\hat{\boldsymbol{\omega}} &= \boldsymbol{\omega}_m - \hat{\Vec{b}}_g, \\
+\hat{\Vec{v}} &= \Vec{v}_m - \hat{\Vec{b}}_v,
 \end{align}
 
 \begin{align}
 \Vec{F} &= \bbm	-\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
-					\Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \nl
+					-\hat{\Vec{C}}_{I G}^T \hat{\Vec{v}}^\times & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \nl
 		\ebm \text{ is } 12\times12, \nl
 \Vec{G} &= 	\bbm	-\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl
 								\Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \nl

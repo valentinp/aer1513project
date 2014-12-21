@@ -8,18 +8,21 @@ function msckfState_prop = propagateMsckfStateAndCovar(msckfState, measurements_
     %Propagate State
     msckfState_prop.imuState = propagateImuState(msckfState.imuState, measurements_k);
 
+    % State Transition Matrix
+    Phi = eye(size(F,1)) + F * measurements_k.dT; % Leutenegger 2013
+    
     % IMU-IMU Covariance
-    msckfState_prop.imuCovar = msckfState.imuCovar + ...
-                                ( F * msckfState.imuCovar ...
-                                + msckfState.imuCovar * F' ...
-                                + G * Q_imu * G' ) ...
-                                        * measurements_k.dT;
+%     msckfState_prop.imuCovar = msckfState.imuCovar + ...
+%                                 ( F * msckfState.imuCovar ...
+%                                 + msckfState.imuCovar * F' ...
+%                                 + G * Q_imu * G' ) ...
+%                                         * measurements_k.dT;
+
+    msckfState_prop.imuCovar = Phi * msckfState.imuCovar * Phi' ...
+                                + G * Q_imu * G' * measurements_k.dT; % Leutenegger 2013
                                     
     % Camera-Camera Covariance
     msckfState_prop.camCovar = msckfState.camCovar;
-    
-    % State Transition Matrix
-    Phi = eye(size(F,1)) + F * measurements_k.dT; % Leutenegger 2013
     
     % IMU-Camera Covariance
     msckfState_prop.imuCamCovar = Phi * msckfState.imuCamCovar;

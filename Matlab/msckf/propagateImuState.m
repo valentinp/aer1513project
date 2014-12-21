@@ -18,6 +18,7 @@ function imuState_prop = propagateImuState(imuState_k, measurements_k)
     imuState_prop.b_v = imuState_k.b_v;
     
     % Translation state
-    imuState_prop.p_I_G = C_IG' * (measurements_k.v - imuState_k.b_v) * measurements_k.dT + imuState_k.p_I_G;
+    d = (measurements_k.v - imuState_k.b_v) * measurements_k.dT;
+    imuState_prop.p_I_G = C_IG' * d + imuState_k.p_I_G;
     
 end

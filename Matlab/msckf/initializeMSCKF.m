@@ -8,21 +8,9 @@ firstImuState.b_g = zeros(3,1);
 firstImuState.b_v = zeros(3,1);
 msckfState.imuState = firstImuState;
 msckfState.imuCovar = noiseParams.initialIMUCovar;
-% msckfState.camCovar = noiseParams.initialCamCovar;
-% msckfState.imuCamCovar = zeros(12, 6);
 msckfState.camCovar = [];
 msckfState.imuCamCovar = [];
-
-% Compute camera pose from current IMU pose
-% camState = {};
-% C_IG = quatToRotMat(msckfState.imuState.q_IG);
-% camState.q_CG = quatLeftComp(camera.q_CI) * msckfState.imuState.q_IG;
-% camState.p_C_G = msckfState.imuState.p_I_G + C_IG' * camera.p_C_I;
-% camState.trackedFeatureIds = [];
-% camState.state_k = state_k;
-
 msckfState.camStates = {};
-% msckfState.camStates{1} = camState;
 
 msckfState = augmentState(msckfState, camera, state_k);
 
