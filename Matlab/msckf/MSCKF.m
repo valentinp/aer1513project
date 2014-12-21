@@ -36,8 +36,8 @@ noiseParams.Q_imu = diag([w_var; 1e-6*ones(3,1); v_var; 1e-6*ones(3,1)]); % [w; 
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
 %MSCKF parameters
-msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 80;     % Set to inf to wait for features to go out of view
+msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -198,9 +198,9 @@ for state_k = kStart:(kEnd-1)
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
-%             [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
-            p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
+%             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
             
             if Jcost > msckfParams.maxGNCost
                 break;
