@@ -18,17 +18,25 @@ function [ prunedMsckfState, deletedCamStates ] = pruneStates( msckfState )
     deletedCamStates = msckfState.camStates(deleteIdx);
     prunedMsckfState.camStates = removeCells(msckfState.camStates, deleteIdx);
     
-    keepStatesIdx = 1:size(msckfState.camCovar,1);
-    keepStatesMask = true(1, numel(keepStatesIdx));
+    statesIdx = 1:size(msckfState.camCovar,1);
+    keepCovarMask = true(1, numel(statesIdx));
     for dIdx = deleteIdx
-        keepStatesMask(6*dIdx - 5:6*dIdx) = false(6,1);
+        keepCovarMask(6*dIdx - 5:6*dIdx) = false(6,1);
     end
     
-    keepStatesIdx = keepStatesIdx(keepStatesMask);
+    keepCovarIdx = statesIdx(keepCovarMask);
+    deleteCovarIdx = statesIdx(~keepCovarMask);
     
-    prunedMsckfState.camCovar = msckfState.camCovar(keepStatesIdx, keepStatesIdx);
+    prunedMsckfState.camCovar = msckfState.camCovar(keepCovarIdx, keepCovarIdx);
     %Keep rows, prune columns of upper right covariance matrix
-    prunedMsckfState.imuCamCovar = msckfState.imuCamCovar(:, keepStatesIdx);
-     
+    prunedMsckfState.imuCamCovar = msckfState.imuCamCovar(:, keepCovarIdx);
+    
+    deletedCamCovar = msckfState.camCovar(deleteCovarIdx, deleteCovarIdx);
+    deletedCamSigma = sqrt(diag(deletedCamCovar));
+    
+    % Grab the variances of the deleted states for plotting
+    for i = 1:size(deletedCamStates, 2)
+        deletedCamStates{i}.sigma = deletedCamSigma(6*i - 5 : 6*i);
+    end
 end
 

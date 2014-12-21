@@ -12,7 +12,7 @@ addpath('utils');
 load('../dataset3_fresh2.mat')
 
 %Dataset window bounds
-kStart = 1215;
+kStart = 1515;
 kEnd = 1715;
 
 %Set constant
@@ -35,8 +35,8 @@ noiseParams.Q_imu = diag([w_var; 1e-12*ones(3,1); v_var; 1e-12*ones(3,1)]); % [w
 noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
 
 %MSCKF parameters
-msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 30;     % Set to inf to wait for features to go out of view
+msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 50;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -225,9 +225,6 @@ for state_k = kStart:(kEnd-1)
             H_o = [H_o; H_o_j];
 
             if ~isempty(A_j)
-                if f_i > 1
-                    disp('here');
-                end
                 r_o_j = A_j' * r_j;
                 r_o = [r_o ; r_o_j];
                 
@@ -275,7 +272,6 @@ for state_k = kStart:(kEnd-1)
         imuStates = updateStateHistory(imuStates, msckfState, camera, state_k+1);
         
         
-        
         %% ==========================STATE PRUNING======================== %%
         %Remove any camera states with no tracked features
         [msckfState, deletedCamStates] = pruneStates(msckfState);
@@ -283,6 +279,10 @@ for state_k = kStart:(kEnd-1)
         if ~isempty(deletedCamStates)
             prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
         end
+    
+    if max(msckfState.imuCovar(:)) > 1
+        disp('here');
+    end
         
     figure(1); imagesc(msckfState.imuCovar); colorbar; axis equal; axis ij; drawnow;    
 end %for state_K = ...
@@ -295,6 +295,7 @@ kNum = length(prunedStates);
 p_C_G_est = NaN(3, kNum);
 p_C_G_GT = NaN(3, kNum);
 theta_CG_err = NaN(3,kNum);
+err_sigma = NaN(6,kNum);
 
 tPlot = NaN(1, kNum);
 
@@ -308,7 +309,9 @@ for k = 1:kNum
     theta_CG_err(:,k) = crossMatToVec( eye(3) ...
                     - quatToRotMat(q_CG_est) ...
                         * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
-        
+      
+    err_sigma(:,k) = prunedStates{k}.sigma;
+                    
     tPlot(k) = t(state_k);
 end
 
@@ -320,8 +323,8 @@ figure
 subplot(3,1,1)
 plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_x, '--r')
-%plot(t(k1:k2), -3*sigma_x, '--r')
+plot(tPlot, 3*err_sigma(1,:), '--r')
+plot(tPlot, -3*err_sigma(1,:), '--r')
 ylim(transLim)
 xlim([tPlot(1) tPlot(end)])
 title('Translational Error')
@@ -331,8 +334,8 @@ ylabel('\delta r_x')
 subplot(3,1,2)
 plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_y, '--r')
-%plot(t(k1:k2), -3*sigma_y, '--r')
+plot(tPlot, 3*err_sigma(2,:), '--r')
+plot(tPlot, -3*err_sigma(2,:), '--r')
 ylim(transLim)
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_y')
@@ -340,8 +343,8 @@ ylabel('\delta r_y')
 subplot(3,1,3)
 plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_z, '--r')
-%plot(t(k1:k2), -3*sigma_z, '--r')
+plot(tPlot, 3*err_sigma(3,:), '--r')
+plot(tPlot, -3*err_sigma(3,:), '--r')
 ylim(transLim)
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta r_z')
@@ -352,8 +355,8 @@ figure
 subplot(3,1,1)
 plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_x, '--r')
-%plot(t(k1:k2), -3*sigma_x, '--r')
+plot(tPlot, 3*err_sigma(4,:), '--r')
+plot(tPlot, -3*err_sigma(4,:), '--r')
 ylim(rotLim)
 xlim([tPlot(1) tPlot(end)])
 title('Rotational Error')
@@ -363,8 +366,8 @@ ylabel('\delta \theta_x')
 subplot(3,1,2)
 plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_y, '--r')
-%plot(t(k1:k2), -3*sigma_y, '--r')
+plot(tPlot, 3*err_sigma(5,:), '--r')
+plot(tPlot, -3*err_sigma(5,:), '--r')
 ylim(rotLim)
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta \theta_y')
@@ -372,8 +375,8 @@ ylabel('\delta \theta_y')
 subplot(3,1,3)
 plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
 hold on
-%plot(t(k1:k2), 3*sigma_z, '--r')
-%plot(t(k1:k2), -3*sigma_z, '--r')
+plot(tPlot, 3*err_sigma(6,:), '--r')
+plot(tPlot, -3*err_sigma(6,:), '--r')
 ylim(rotLim)
 xlim([tPlot(1) tPlot(end)])
 ylabel('\delta \theta_z')
