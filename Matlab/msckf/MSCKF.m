@@ -9,12 +9,12 @@ clear;
 close all;
 clc;
 addpath('utils');
-% load('../dataset3_fresh3.mat')
-load('../dataset3.mat')
+load('../dataset3_fresh2.mat')
+% load('../dataset3.mat')
 
 %Dataset window bounds
-kStart = 515;
-kEnd = 1515;
+kStart = 1215;
+kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -32,12 +32,14 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
-noiseParams.Q_imu = diag([w_var; 1e-6*ones(3,1); v_var; 1e-6*ones(3,1)]); % [w; w bias; v; v bias]
-noiseParams.initialIMUCovar = 1e-12*ones(12); % should be small since we're initializing with ground truth
-
+% [w, w bias change, v, v bias change]
+noiseParams.Q_imu = diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
+% [q, w bias, v bias, p]
+noiseParams.initialIMUCovar = 1e-4 * eye(12);
+    
 %MSCKF parameters
 msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = inf;     % Set to inf to wait for features to go out of view
+msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
