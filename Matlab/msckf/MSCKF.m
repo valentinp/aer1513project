@@ -9,12 +9,12 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../dataset3_fresh2.mat')
-% load('../dataset3.mat')
+% load('../dataset3_fresh3.mat')
+load('../dataset3.mat')
 
 %Dataset window bounds
-kStart = 1215;
-kEnd = 1715;
+kStart = 515;
+kEnd = 1515;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -33,11 +33,11 @@ noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
 noiseParams.Q_imu = diag([w_var; 1e-6*ones(3,1); v_var; 1e-6*ones(3,1)]); % [w; w bias; v; v bias]
-noiseParams.initialIMUCovar = 1e-12*eye(12); % should be small since we're initializing with ground truth
+noiseParams.initialIMUCovar = 1e-12*ones(12); % should be small since we're initializing with ground truth
 
 %MSCKF parameters
 msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
+msckfParams.maxTrackLength = inf;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -69,6 +69,11 @@ measurements = cell(1,numel(t));
 groundTruthStates = cell(1,numel(t));
 groundTruthMap = rho_i_pj_i;
 
+% Important: Because we're idealizing our pixel measurements and the
+% idealized measurements could legitimately be -1, replace our invalid
+% measurement flag with NaN
+y_k_j(y_k_j == -1) = NaN;
+
 for state_k = kStart:kEnd 
     measurements{state_k}.dT    = dT(state_k);                      % sampling times
     measurements{state_k}.y     = squeeze(y_k_j(1:2,state_k,:));    % left camera only
@@ -76,7 +81,7 @@ for state_k = kStart:kEnd
     measurements{state_k}.v     = v_vk_vk_i(:,state_k);             % lin vel
     
     %Idealize measurements
-    validMeas = (measurements{state_k}.y(1,:) ~= -1);
+    validMeas = ~isnan(measurements{state_k}.y(1,:));
     measurements{state_k}.y(1,validMeas) = (measurements{state_k}.y(1,validMeas) - camera.c_u)/camera.f_u;
     measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
     
@@ -145,11 +150,24 @@ for state_k = kStart:(kEnd-1)
     for featureId = 1:numLandmarks
         %IMPORTANT: state_k + 1 not state_k
         meas_k = measurements{state_k+1}.y(:, featureId);
+        
+        outOfView = isnan(meas_k(1,1));
+        
         if ismember(featureId, trackedFeatureIds)
+
+            if ~outOfView
+                %Append observation and append id to cam states
+                featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
+                
+                %Add observation to current camera
+                msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
+            end
             
             track = featureTracks{trackedFeatureIds == featureId};
             
-            if meas_k(1,1) == -1 || size(track.observations, 2) >= msckfParams.maxTrackLength
+            if outOfView ...
+                    || size(track.observations, 2) >= msckfParams.maxTrackLength ...
+                    || state_k+1 == kEnd
                                 
                 %Feature is not in view, remove from the tracked features
                 [msckfState, camStates, camStateIndices] = removeTrackedFeature(msckfState, featureId);
@@ -165,15 +183,9 @@ for state_k = kStart:(kEnd-1)
                 %Remove the track
                 featureTracks = featureTracks(trackedFeatureIds ~= featureId);
                 trackedFeatureIds(trackedFeatureIds == featureId) = [];                
-            else
-                %Append observation and append id to cam states
-                featureTracks{trackedFeatureIds == featureId}.observations(:, end+1) = meas_k;
-                
-                %Add observation to current camera
-                msckfState.camStates{end}.trackedFeatureIds(end+1) = featureId;
             end
             
-        elseif meas_k(1,1) ~= -1 % && ~ismember(featureId, trackedFeatureIds)
+        elseif ~outOfView && state_k+1 < kEnd % && ~ismember(featureId, trackedFeatureIds)
             %Track new feature
             track.featureId = featureId;
             track.observations = meas_k;

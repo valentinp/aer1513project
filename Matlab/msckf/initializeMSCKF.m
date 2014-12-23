@@ -18,9 +18,9 @@ msckfState = augmentState(msckfState, camera, state_k);
 featureTracks = {};
 trackedFeatureIds = [];
 
- for featureId = 1:20
+ for featureId = 1:size(firstMeasurements.y,2)
         meas_k = firstMeasurements.y(:, featureId);
-        if meas_k(1,1) ~= -1
+        if ~isnan(meas_k(1,1))
                 %Track new feature
                 track.featureId = featureId;
                 track.observations = meas_k;
