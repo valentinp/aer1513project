@@ -94,7 +94,7 @@ Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM)
 What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), as well as a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EXTENDED KALMAN FILTER} \label{sec:ekf}
+\subsection{Extended Kalman Filter (EKF)} \label{subsec:ekf}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and feature positions are simultaneously estimated at each time step by augmenting the filter state with feature positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of features by recursively updating the state as new measurements become available.
 %Features are commonly parametrized as three-dimensional vectors and are initialized using two-view geometry, but alternative parametrization and initialization schemes exist \cite{Sola:2011:IJCV}.
@@ -111,7 +111,7 @@ Because the filter state includes only the most recent vehicle pose, a given upd
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and feature positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{SLIDING WINDOW FILTER} \label{sec:slidingwindow}
+\subsection{Sliding Window Filter (SWF)} \label{subsec:slidingwindow}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
@@ -212,8 +212,28 @@ where $\hat{\Vec{C}}_{I G}$ is the rotation matrix corresponding to $\hat{\Vec{q
                                                 -\hat{\omega}_2 & \hat{\omega}_1 & 0
                                             \ebm .
 \end{align*}
-
 In our implementation we propagate the motion model using a simple forward-Euler integration rather than the fifth-order Runge-Kutta procedure used in \cite{Mourikis:2007:ICRA}.
+
+We can also examine the linearized continuous-time model of the IMU error state:
+\begin{align}
+    \dot{\widetilde{\Vec{x}}}_I = \Vec{F}\widetilde{\Vec{x}}_I + \Vec{G}\Vec{n}_I
+\end{align}
+where the Jacobians $\Vec{F}$, $\Vec{G}$ are given by
+\begin{align}
+\Vec{F} &= \bbm -\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                    -\hat{\Vec{C}}_{I G}^T \hat{\Vec{v}}^\times & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \\
+            \ebm
+\end{align}
+\begin{align}
+\Vec{G} &=  \bbm    -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                                \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
+                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \\
+                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3}
+            \ebm ,
+\end{align}
+and $\Vec{n}_I = \bbm \Vec{n}_{\boldsymbol{\omega}}^T & \Vec{n}_{\Vec{b}_{\boldsymbol{\omega}}}^T & \Vec{n}_{\Vec{v}}^T & \Vec{n}_{\Vec{b}_{\Vec{v}}}^T \ebm^T$ is the IMU process noise, which has covariance matrix $\Vec{Q}_I$.
 
 \subsection{MSCKF State Covariance Propagation}
 With reference to the partitions defined in (\ref{eq:covariance}), we compute the predicted camera-camera and IMU-camera state covariances as follows:
@@ -234,22 +254,6 @@ We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by i
                 & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
 \end{align}
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k, t_k\right) = \hat{\Vec{P}}_{II,k}$. 
-The Jacobians $\Vec{F}$, $\Vec{G}$ are given by
-\begin{align}
-\Vec{F} &= \bbm -\hat{\boldsymbol{\omega}}^\times & -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                    \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                    -\hat{\Vec{C}}_{I G}^T \hat{\Vec{v}}^\times & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3} \\
-            \ebm
-\end{align}
-\begin{align}
-\Vec{G} &=  \bbm    -\Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                                \Vec{0}_{3\times3} & \Vec{1}_3 & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} \\
-                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & \Vec{1}_3 \\
-                                \Vec{0}_{3\times3} & \Vec{0}_{3\times3} & -\hat{\Vec{C}}_{I G}^T & \Vec{0}_{3\times3}
-            \ebm ,
-\end{align}
-and $\Vec{Q}_I$ is the covariance of the IMU measurement noise.
 
 \subsection{Feature Position Estimation}
 When a feature $f_j$ goes out of view of the camera, the MSCKF generates a batch-optimized estimate $\hat{\Vec{p}}_G^{f_j G}$ of the feature's position in the global frame.
@@ -286,12 +290,14 @@ where the left $\Vec{0}$ in $\Vec{H}_{\Vec{x}, i}^{(j)}$ has dimension $2\times\
              0 & \hat{Z}^{(j)}_{C_i} & -\hat{Y}^{(j)}_{C_i}
     \ebm .
 \end{align}
-$\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Vec{R}_i^{(j)} = \sigma^2_{\text{im}} \Vec{1}_{2}$.
+$\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Vec{R}_i^{(j)} = \text{diag}\left\{\sigma^2_u, \sigma^2_v\right\}$.
 
 By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M_j \times 1$ measurement error vector of feature $f_j$ over the entire window of camera poses, where $M_j$ is the number of camera poses from which feature $f_j$ was observed:
 \begin{align} \label{eq:residual_stacked}
     \Vec{r}^{(j)} &\simeq \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}^{(j)}
 \end{align}
+The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
+
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
 Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly. [TALK HERE ABOUT WHAT HAPPENS IF YOU LEAVE IT IN]
 
@@ -303,7 +309,7 @@ In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can def
 \end{align}
 
 Since $\Vec{H}_{f}^{(j)}$ has full column rank, $\Vec{A}$ has dimension $2M_j \times \left(2M_j - 3\right)$ and $\Vec{r}_o^{(j)}$ has dimension $\left(2M_j - 3\right) \times 1$.
-Furthermore, because $\Vec{A}$ is semi-unitary, the covariance matrix of $\Vec{n}_o^{(j)}$ is given by $\Vec{R}_o = \sigma^2_{\text{im}}\Vec{A}^T\Vec{A} = \sigma^2_{\text{im}}\Vec{1}_{2M_j - 3}$.
+The covariance matrix of $\Vec{n}_o^{(j)}$ is given by $\Vec{R}_o^{(j)} = \Vec{A}^T\Vec{R}^{(j)}\Vec{A}$.
 
 We can now stack all the errors $\Vec{r}_o^{(j)}$ for all the features in the current batch to arrive at
 \begin{align} \label{eq:residual_nullspace_stacked}
@@ -322,7 +328,7 @@ Noting that the quantity $\Vec{Q}_2^T \Vec{r}_o$ is only noise, we discard it an
 \begin{align}
     \Vec{r}_n &:= \Vec{Q}_1^T \Vec{r}_o = \Vec{T}_\Vec{H} \widetilde{\Vec{x}} + \Vec{Q}_1^T \Vec{n}_o =: \Vec{T}_\Vec{H} \widetilde{\Vec{x}} + \Vec{n}_n
 \end{align} 
-The covariance matrix of $\Vec{n}_n$ is given by $\Vec{R}_n = \Vec{Q}_1^T \Vec{R}_o \Vec{Q}_1 = \sigma^2_\text{im} \Vec{1}_r$ where $r$ is the number of columns in $\Vec{Q}_1$.
+The covariance matrix of $\Vec{n}_n$ is given by $\Vec{R}_n = \Vec{Q}_1^T \Vec{R}_o^{(j)} \Vec{Q}_1$.
 
 Finally, we can formulate the Kalman gain and correction equations to arrive at the updated estimates for the filter state and covariance:
 \begin{align}
