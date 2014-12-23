@@ -1,4 +1,4 @@
-function [H_o_j, A_j] = calcHoj(p_f_G, msckfState, camStateIndices)
+function [H_o_j, A_j, H_x_j] = calcHoj(p_f_G, msckfState, camStateIndices)
 %CALCHOJ Calculates H_o_j according to Mourikis 2007
 % Inputs: p_f_G: feature location in the Global frame
 %         msckfState: the current window of states

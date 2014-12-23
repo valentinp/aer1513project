@@ -41,6 +41,8 @@ noiseParams.initialIMUCovar = 1e-4 * eye(12);
 msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.doNullSpaceTrick = true;
+msckfParams.doQRdecomp = true;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -225,29 +227,40 @@ for state_k = kStart:(kEnd-1)
             end
             
             %Calculate residual and Hoj 
-            [r_j] = calcResidual(p_f_G, track.camStates, track.observations);  
-            [H_o_j, A_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
+            [r_j] = calcResidual(p_f_G, track.camStates, track.observations);
+            R_j = diag(repmat([noiseParams.u_var_prime, noiseParams.v_var_prime], [1, numel(r_j)/2]));
+            [H_o_j, A_j, H_x_j] = calcHoj(p_f_G, msckfState, track.camStateIndices);
 
             % Stacked residuals and friends
-            H_o = [H_o; H_o_j];
+            if msckfParams.doNullSpaceTrick
+                H_o = [H_o; H_o_j];
 
-            if ~isempty(A_j)
-                r_o_j = A_j' * r_j;
-                r_o = [r_o ; r_o_j];
+                if ~isempty(A_j)
+                    r_o_j = A_j' * r_j;
+                    r_o = [r_o ; r_o_j];
+
+                    R_o_j = A_j' * R_j * A_j;
+                    R_o(end+1 : end+size(R_o_j,1), end+1 : end+size(R_o_j,2)) = R_o_j;
+                end
                 
-                R_j = diag(repmat([noiseParams.u_var_prime, noiseParams.v_var_prime], [1, numel(r_j)/2]));
-                R_o_j = A_j' * R_j * A_j;
-                R_o(end+1 : end+size(R_o_j,1), end+1 : end+size(R_o_j,2)) = R_o_j;
+            else
+                H_o = [H_o; H_x_j];
+                r_o = [r_o; r_j];
+                R_o(end+1 : end+size(R_j,1), end+1 : end+size(R_j,2)) = R_j;
             end
         end
         
         if ~isempty(r_o)
             % Put residuals into their final update-worthy form
-            [T_H, Q_1] = calcTH(H_o);
-            r_n = Q_1' * r_o;
-%             r_n = r_o;
-
-            R_n = Q_1' * R_o * Q_1;
+            if msckfParams.doQRdecomp
+                [T_H, Q_1] = calcTH(H_o);
+                r_n = Q_1' * r_o;
+                R_n = Q_1' * R_o * Q_1;
+            else
+                T_H = H_o;
+                r_n = r_o;
+                R_n = R_o;
+            end           
 
             % Build MSCKF covariance matrix
             P = [msckfState.imuCovar, msckfState.imuCamCovar;
