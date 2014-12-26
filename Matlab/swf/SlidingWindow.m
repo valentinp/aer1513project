@@ -10,6 +10,9 @@ close all
 addpath('utils')
 load('../dataset3.mat')
 
+%Set number of landmarks
+numLandmarks = size(y_k_j,3);
+
 %Set up appropriate structs
 calibParams.c_u = cu;
 calibParams.c_v = cv;
@@ -22,13 +25,14 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
 kStart = 1215;
-kEnd = 1515; 
+kEnd = 1714; 
 kappa = 50; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
 k2 = k1+kappa;
 K = k2 - k1;  %There are K + 1 total states, since x0 is the k1th state
+
 
 initialStateStruct = {};
 
@@ -79,12 +83,12 @@ for k = (k1+1):k2
     lmObsVec(k-k1) = sum(y_k_j(1, k, :) > -1);
     totalLandmarkObs = totalLandmarkObs + sum(y_k_j(1, k, :) > -1);
 end
-totalLandmarkObs
+
 
 %To initialize G-N, we propagate all the states for the first window
 %and then only propagate the most recent state, re-using the rest
 if k1 == kStart
-    currentStateStruct = initialStateStruct;
+        currentStateStruct = initialStateStruct;
 else
         currentStateStruct = currentStateStruct(2:end);
 
@@ -96,6 +100,22 @@ else
         %Propagate the state forward
         currentStateStruct{end+1} = propagateState(currentStateStruct{end}, imuMeasurement, deltaT);
 end
+
+% Initialize the landmark positions 
+rho_i_pj_i_est = NaN(3, );
+for kIdx = 1:K
+      yMeas = y_k_j(:, k, lmId);
+        %Find the ground truth position of the observed landmark
+        %rho_pi_i_check = rho_i_pj_i(:, lmId);
+
+        if (isnan(rho_i_pj_i_est(1, lmId)))
+            %Use triangulation to find the position of the landmark
+            rho_pc_c = triangulate(yMeas, calibParams);
+            rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+            rho_i_pj_i_est(:, lmId) = rho_pi_i;
+        end
+end
+
 
 %Define the optimal state
 optimalStateStruct = currentStateStruct;
@@ -130,6 +150,7 @@ for kIdx = 1:K
     %Note that there are K+1 states (the 0th state is the 1st element)
     kState = currentStateStruct{kIdx+1};
     kMinus1State = currentStateStruct{kIdx};
+    
     intErrorVec = imuError(kState, kMinus1State, imuMeasurement, deltaT);
     H_x_k =  H_xfn(kMinus1State, imuMeasurement, deltaT );
     H_w_k = H_wfn(kMinus1State);
@@ -142,6 +163,10 @@ for kIdx = 1:K
         extErrorVec = NaN(4*length(validLmObsId), 1);
         G_x_k = NaN(4*length(validLmObsId),6);
         
+        %Jacobians wrt feature position
+        G_x_f_k = NaN(4*length(validLmObsId), 3);
+        
+        
         idx = 1;
         for lmId = validLmObsId'
             
@@ -151,15 +176,23 @@ for kIdx = 1:K
             
             %if (rho_i_pj_i_est(1, lmId) == -1)
                  %Use triangulation to find the position of the landmark
-                rho_pc_c = triangulate(yMeas, calibParams);
-                rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                %rho_pc_c = triangulate(yMeas, calibParams);
+                %rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
              %   rho_i_pj_i_est(:, lmId) = rho_pi_i;
             %else
                 %rho_pi_i = rho_i_pj_i_est(:, lmId);
             %end
+            
+            %rho_pi_i = rho_i_pj_i(:, lmId);
            
+            rho_pi_i = rho_i_pj_i_est(lmId);
+            
             extErrorVec(idx:idx+3, 1) = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
-            G_x_k(idx:idx+3, :) = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams );
+            [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams);
+            
+            G_x_k(idx:idx+3, :) = G_x_k_state;
+            G_x_f_k(idx:idx+3, :) = G_x_k_feat;
+            
             idx = idx + 4;
         end
     else
@@ -172,10 +205,11 @@ for kIdx = 1:K
     errorVector(errorVectorHelperIdx:(errorVectorHelperIdx + length(combinedErrorVec) - 1) ,1) = combinedErrorVec;
     errorVectorHelperIdx = errorVectorHelperIdx + length(combinedErrorVec);
     
-    %==== H matrix =====
+    %==== H matrix =====    
     Hblock = zeros(6+4*length(validLmObsId), 12);
     Hblock(1:6,1:6) = -H_x_k;
     Hblock(1:6,7:12) = eye(6);
+    
     if ~isempty(validLmObsId)
         Hblock(7:(7+4*length(validLmObsId) - 1), 7:12) = -G_x_k;
     end
@@ -238,7 +272,7 @@ if ~all(stateVar > 0)
     warning('Variances not positive');
 end
 stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{1};
-stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
+stateSigmaHistMat(:,k1 - kStart + 1) = sqrt((stateVar(1:6)));
 toc
 end %End Sliding window
 
@@ -264,7 +298,7 @@ for stIdx = 1:length(stateVecHistStruct)
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
-transLim = 0.2;
+transLim = 0.1;
 rotLim = 0.2;
 recycleStates = 'Yes';
 
