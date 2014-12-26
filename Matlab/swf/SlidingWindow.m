@@ -24,8 +24,9 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-kStart = 1215;
-kEnd = 1714; 
+LMLambda = 0.001;
+kStart = 500;
+kEnd = 600; 
 kappa = 50; %Sliding window size
 maxOptIter = 10;
 
@@ -66,8 +67,8 @@ stateSigmaHistMat = [];
 
 %Keep track of triangulated landmarks
 % rho_i_pj_i_est = nan(3, 20);
-rho_i_pj_i_est = initializeMap(initialStateStruct, y_k_j, y_var, ...
-    calibParams, vehicleCamTransform, k1, k2);
+% rho_i_pj_i_est = initializeMap(initialStateStruct, y_k_j, y_var, ...
+%     calibParams, vehicleCamTransform, k1, k2);
 
 
 for k1 = kStart:kEnd    
@@ -77,12 +78,16 @@ k2 = k1+kappa;
 %How many exteroceptive measurements do we have?
 %NOTE: k1 is the 0th state
 totalLandmarkObs = 0;
+observedBinaryFlags = zeros(numLandmarks, 1);
 lmObsVec = zeros(1, K);
 
 for k = (k1+1):k2
-    lmObsVec(k-k1) = sum(y_k_j(1, k, :) > -1);
+    validObs = squeeze(y_k_j(1, k, :) > -1);
+    lmObsVec(k-k1) = sum(validObs);
+    observedBinaryFlags(validObs') = ones(1, sum(validObs==1));
     totalLandmarkObs = totalLandmarkObs + sum(y_k_j(1, k, :) > -1);
 end
+totalUniqueObservedLandmarks = sum(observedBinaryFlags);
 
 
 %To initialize G-N, we propagate all the states for the first window
@@ -215,9 +220,10 @@ for kIdx = 1:K
     for lmId = validLmObsId'
         rowIdx = 4*lmNum-3;
         colIdx = 6*(K+1)+3*lmId-2;
-        H(HHelperIdx+rowIdx-1:HHelperIdx+rowIdx+2, colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+3, :);
+        H(HHelperIdx+5+rowIdx:HHelperIdx+rowIdx+8, colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+3, :);
         lmNum = lmNum + 1;
     end
+    %HHelperIdx+6+rowIdx:HHelperIdx+rowIdx+9
     %H = sparse(6*K+4*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
 
     HHelperIdx = HHelperIdx + Hblockrows;
@@ -253,7 +259,7 @@ end
     end
 
     % Solve for the optimal step size!
-    dx = (H'*(T\H))\(-H'*(T\errorVector));
+    dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
     [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  dx);
 
    
@@ -268,7 +274,7 @@ end
     fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
 
 %Extract variance of states
-stateCov = inv(H'*(T\H));
+stateCov = inv(H'*(T\H) + LMLambda*eye(size(H,2)));
 stateVar = diag(stateCov);
 
 %Keep track of the first state in the window
@@ -302,8 +308,8 @@ for stIdx = 1:length(stateVecHistStruct)
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
-transLim = 0.1;
-rotLim = 0.2;
+transLim = 0.5;
+rotLim = 0.5;
 recycleStates = 'Yes';
 
 figure
