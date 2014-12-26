@@ -102,17 +102,23 @@ else
 end
 
 % Initialize the landmark positions 
-rho_i_pj_i_est = NaN(3, );
+rho_i_pj_i_est = NaN(3, numLandmarks);
 for kIdx = 1:K
-      yMeas = y_k_j(:, k, lmId);
-        %Find the ground truth position of the observed landmark
-        %rho_pi_i_check = rho_i_pj_i(:, lmId);
+        k = kIdx + k1;
+        validLmObsId = find(y_k_j(1, k, :) > -1);
+        kState = currentStateStruct{kIdx+1};
+        for lmId = validLmObsId'
 
-        if (isnan(rho_i_pj_i_est(1, lmId)))
-            %Use triangulation to find the position of the landmark
-            rho_pc_c = triangulate(yMeas, calibParams);
-            rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-            rho_i_pj_i_est(:, lmId) = rho_pi_i;
+            yMeas = y_k_j(:, k, lmId);
+            %Find the ground truth position of the observed landmark
+            %rho_pi_i_check = rho_i_pj_i(:, lmId);
+
+            if (isnan(rho_i_pj_i_est(1, lmId)))
+                %Use triangulation to find the position of the landmark
+                rho_pc_c = triangulate(yMeas, calibParams);
+                rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                rho_i_pj_i_est(:, lmId) = rho_pi_i;
+            end
         end
 end
 
@@ -131,7 +137,7 @@ errorVector = NaN(6*K+4*totalLandmarkObs, 1);
 errorVectorHelperIdx = 1;
 
 %H and T
-H = sparse(6*K+4*totalLandmarkObs, 6*(K+1));
+H = sparse(6*K+4*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
 T = sparse(6*K+4*totalLandmarkObs, 6*K+4*totalLandmarkObs);
 
 %Helper indices that keep track of the row number of the last block entry
@@ -171,21 +177,8 @@ for kIdx = 1:K
         for lmId = validLmObsId'
             
             yMeas = y_k_j(:, k, lmId);
-            %Find the ground truth position of the observed landmark
-            %rho_pi_i_check = rho_i_pj_i(:, lmId);
-            
-            %if (rho_i_pj_i_est(1, lmId) == -1)
-                 %Use triangulation to find the position of the landmark
-                %rho_pc_c = triangulate(yMeas, calibParams);
-                %rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-             %   rho_i_pj_i_est(:, lmId) = rho_pi_i;
-            %else
-                %rho_pi_i = rho_i_pj_i_est(:, lmId);
-            %end
-            
-            %rho_pi_i = rho_i_pj_i(:, lmId);
            
-            rho_pi_i = rho_i_pj_i_est(lmId);
+            rho_pi_i = rho_i_pj_i_est(:,lmId);
             
             extErrorVec(idx:idx+3, 1) = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
             [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams);
@@ -216,6 +209,17 @@ for kIdx = 1:K
     Hblockrows = size(Hblock, 1);
     
     H(HHelperIdx:(HHelperIdx + Hblockrows - 1), 1+6*(kIdx-1):12+6*(kIdx-1) ) = Hblock;
+    
+    %Add the feature Jacobians
+    lmNum = 1;
+    for lmId = validLmObsId'
+        rowIdx = 4*lmNum-3;
+        colIdx = 6*(K+1)+3*lmId-2;
+        H(HHelperIdx+rowIdx-1:HHelperIdx+rowIdx+2, colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+3, :);
+        lmNum = lmNum + 1;
+    end
+    %H = sparse(6*K+4*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
+
     HHelperIdx = HHelperIdx + Hblockrows;
     
     %==== T matrix =====
@@ -250,7 +254,7 @@ end
 
     % Solve for the optimal step size!
     dx = (H'*(T\H))\(-H'*(T\errorVector));
-    currentStateStruct = updateStateStruct(currentStateStruct, dx);
+    [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  dx);
 
    
 end %End optimization iterations

@@ -1,15 +1,22 @@
-function [updatedStates] = updateStateStruct( currentStates, dx)
+function [updatedStates, rho_i_pj_i_est] = updateStateStruct( currentStates, rho_i_pj_i_est, dx)
 %UPDATESTATESTRUCT Updates states by applying a step dx
 
 updatedStates = currentStates;
-
-for stIdx = 1:length(currentStates)
+numStates = length(currentStates);
+for stIdx = 1:numStates
     dr = dx(1+(stIdx-1)*6:3+(stIdx-1)*6);
     phi = dx(4+(stIdx-1)*6:6+(stIdx-1)*6);
     
     updatedStates{stIdx}.r_vi_i = currentStates{stIdx}.r_vi_i + dr;
     updatedStates{stIdx}.C_vi = Cfrompsi(phi)*currentStates{stIdx}.C_vi;
 
+end
+
+initialIdx = numStates*6 + 1;
+for lm_i = 1:size(rho_i_pj_i_est, 2)
+    idx = initialIdx + (lm_i-1)*3;
+    dp = dx(idx:idx+2);
+    rho_i_pj_i_est(:, lm_i) = rho_i_pj_i_est(:, lm_i) + dp;
 end
 
 
