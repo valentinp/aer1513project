@@ -24,10 +24,10 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0.001;
-kStart = 500;
-kEnd = 600; 
-kappa = 50; %Sliding window size
+LMLambda = 100;
+kStart = 1200;
+kEnd = 1700; 
+kappa = 10; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
@@ -94,6 +94,7 @@ totalUniqueObservedLandmarks = sum(observedBinaryFlags);
 %and then only propagate the most recent state, re-using the rest
 if k1 == kStart
         currentStateStruct = initialStateStruct;
+        rho_i_pj_i_est = NaN(3, numLandmarks);
 else
         currentStateStruct = currentStateStruct(2:end);
 
@@ -107,7 +108,6 @@ else
 end
 
 % Initialize the landmark positions 
-rho_i_pj_i_est = NaN(3, numLandmarks);
 for kIdx = 1:K
         k = kIdx + k1;
         validLmObsId = find(y_k_j(1, k, :) > -1);
@@ -253,7 +253,7 @@ end
     end
     
     %Check for convergence
-    if norm(dx) < 1e-2
+    if norm(dx) < 1e-4
         disp('Converged!')
         break;
     end
@@ -264,6 +264,14 @@ end
 
    
 end %End optimization iterations
+
+error = 0;
+for i=1:numLandmarks
+    if ~isnan(rho_i_pj_i_est(1,i))
+        error = error + norm(rho_i_pj_i_est(:,i) - rho_i_pj_i(:,i));
+    end
+end
+error = error/numLandmarks
 
 currentStateStruct = optimalStateStruct;
 
@@ -282,7 +290,7 @@ if ~all(stateVar > 0)
     warning('Variances not positive');
 end
 stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{1};
-stateSigmaHistMat(:,k1 - kStart + 1) = sqrt((stateVar(1:6)));
+stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
 toc
 end %End Sliding window
 
