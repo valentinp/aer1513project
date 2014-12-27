@@ -91,7 +91,8 @@ In these cases, the strength of the IMU's signal far exceeds its baseline noise 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
-What follows is a discussion of two common solutions, the Extended Kalman Filter (EKF) and the Sliding Window Filter (SWF), as well as a third hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+
+In this work, we compare and contrast three modern solutions, the Extended Kalman Filter (EKF), the Sliding Window Filter (SWF), and a hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Extended Kalman Filter (EKF)} \label{subsec:ekf}

@@ -9,6 +9,7 @@ Phi = cos(psiMag)*eye(3) + (1 - cos(psiMag))*(psiVec/psiMag)*(psiVec/psiMag)' - 
 
 newState.C_vi = Phi*oldState.C_vi;
 newState.r_vi_i = oldState.r_vi_i + oldState.C_vi'*(d);
+newState.k = oldState.k + 1;
 
 end
 
