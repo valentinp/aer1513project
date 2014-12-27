@@ -128,7 +128,7 @@ The optimization problem in the SWF is typically solved as a non-linear least sq
 \end{equation}
 where $N$ is the number of unique features observed in the window and 
 \begin{equation}
-\mathbf{H} := \begin{bmatrix}
+\mathbf{H} := \left[\begin{array}{cccccc}
  -\mbf H_{\mbf x, 1} & \mbf 1 & &  & &   \\ 
  & -\mbf G_{\mbf x, 1} &  &  &  &   -\mbf G_{\mbf f, 1} \\ \hline
  & -\mbf H_{\mbf x, 2} & \mbf 1 & & &    \\ 
@@ -136,7 +136,7 @@ where $N$ is the number of unique features observed in the window and
  &  & \ddots & \ddots & & \vdots  \\  \hline
   & & & -\mbf H_{\mbf x, K} & \mbf 1 & \\ 
  & & & & -\mbf G_{\mbf x, K} &  -\mbf G_{\mbf f, K}   \\  
-\end{bmatrix}, 
+\end{array}\right], 
 \end{equation},
 
 \begin{equation}
@@ -182,7 +182,7 @@ This update step typically occurs when a tracked feature goes out of view of the
 
 \subsection{MSCKF State Parametrization}
 We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
-In order to accommodate this alternative state parametrization, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
+In order to accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}

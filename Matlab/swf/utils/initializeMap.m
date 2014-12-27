@@ -11,7 +11,7 @@ function rho_i_pj_i_est = initializeMap(imuStates, y_k_j, y_var, ...
     % Get cam states from IMU state
     for i = 1:size(imuStates, 2)
         camStates{i}.p_C_G = imuStates{i}.C_vi' * vehicleCamTransform.rho_cv_v + imuStates{i}.r_vi_i;
-        camStates{i}.q_CG = rotMatToQuat(vehicleCamTransform.C_cv * imuStates{i}.C_vi);
+        camStates{i}.q_CG  = rotMatToQuat(vehicleCamTransform.C_cv * imuStates{i}.C_vi);
     end
     
     % Make the map
