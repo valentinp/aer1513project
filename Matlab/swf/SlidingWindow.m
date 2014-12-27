@@ -29,7 +29,7 @@ lineLambda = 0.75;
 
 kStart = 1200;
 kEnd = 1700; 
-kappa = 25; %Sliding window size
+kappa = 10; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
