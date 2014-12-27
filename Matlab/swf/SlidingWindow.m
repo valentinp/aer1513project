@@ -1,6 +1,3 @@
-% AER1513 A3
-% Author: Valentin Peretroukhin
-% December 2014
 % Sliding Window Gauss Newton Optimization
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -8,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3.mat')
+load('../dataset3_fresh2.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -29,10 +26,10 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1550;
-kEnd = 1650; 
+kStart = 500;
+kEnd = 600; 
 kappa = 10; %Sliding window size
-maxOptIter = 5;
+maxOptIter = 15;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -133,12 +130,12 @@ for kIdx = 1:K
 
             if (isnan(rho_i_pj_i_est(1, lmId)))
                 %Use triangulation to find the position of the landmark
-                 %rho_pc_c = triangulate(yMeas, calibParams);
-                 %rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                 %rho_i_pj_i_est(:, lmId) = rho_pi_i;
+                 rho_pc_c = triangulate(yMeas, calibParams);
+                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                 rho_i_pj_i_est(:, lmId) = rho_pi_i;
                  
                  %Use ground truth for now
-                 rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
+                 %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
             end
         end
 end
@@ -185,9 +182,11 @@ for kIdx = 1:K
     
     %==== Build the exteroceptive error and Jacobians=====%
     validLmObsId = find(y_k_j(1, k, :) > -1);
+    
     if imuPropagationOnly
         validLmObsId = [];
     end
+    
     if ~isempty(validLmObsId)
         
         extErrorVec = NaN(pixMeasDim*length(validLmObsId), 1);
@@ -290,6 +289,7 @@ end
 
     % Solve for the optimal step size!
     if optIdx <= maxOptIter
+        H = H(:, 7:end);
         dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
         [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, observedLandmarkIds, rho_i_pj_i_est,  lineLambda*dx);
     end
