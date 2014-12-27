@@ -1,4 +1,4 @@
-function [updatedStates, rho_i_pj_i_est] = updateStateStruct( currentStates, rho_i_pj_i_est, dx)
+function [updatedStates, rho_i_pj_i_est] = updateStateStruct( currentStates, lmIds, rho_i_pj_i_est, dx)
 %UPDATESTATESTRUCT Updates states by applying a step dx
 
 updatedStates = currentStates;
@@ -13,10 +13,10 @@ for stIdx = 1:numStates
 end
 
 initialIdx = numStates*6 + 1;
-for lm_i = 1:size(rho_i_pj_i_est, 2)
+for lm_i = 1:length(lmIds)
     idx = initialIdx + (lm_i-1)*3;
     dp = dx(idx:idx+2);
-    rho_i_pj_i_est(:, lm_i) = rho_i_pj_i_est(:, lm_i) + dp;
+    rho_i_pj_i_est(:, lmIds(lm_i)) = rho_i_pj_i_est(:, lmIds(lm_i)) + dp;
 end
 
 

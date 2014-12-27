@@ -29,9 +29,9 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1214;
-kEnd = 1250; 
-kappa = 25; %Sliding window size
+kStart = 1550;
+kEnd = 1650; 
+kappa = 10; %Sliding window size
 maxOptIter = 5;
 
 k1 = kStart;
@@ -81,11 +81,6 @@ end
 stateVecHistStruct = {};
 stateSigmaHistMat = [];
 
-%Keep track of triangulated landmarks
-% rho_i_pj_i_est = nan(3, 20);
-% rho_i_pj_i_est = initializeMap(initialStateStruct, y_k_j, y_var, ...
-%     calibParams, vehicleCamTransform, k1, k2);
-
 
 for k1 = kStart:kEnd    
 tic    
@@ -104,6 +99,7 @@ for k = (k1+1):k2
     totalLandmarkObs = totalLandmarkObs + sum(y_k_j(1, k, :) > -1);
 end
 totalUniqueObservedLandmarks = sum(observedBinaryFlags);
+observedLandmarkIds = find(observedBinaryFlags);
 
 
 %To initialize G-N, we propagate all the states for the first window
@@ -123,7 +119,8 @@ else
         currentStateStruct{end+1} = propagateState(currentStateStruct{end}, imuMeasurement, deltaT);
 end
 
-% Initialize the landmark positions 
+% Initialize the landmark positions (start fresh each window)
+rho_i_pj_i_est = NaN(3, numLandmarks);
 for kIdx = 1:K
         k = kIdx + k1;
         validLmObsId = find(y_k_j(1, k, :) > -1);
@@ -136,10 +133,12 @@ for kIdx = 1:K
 
             if (isnan(rho_i_pj_i_est(1, lmId)))
                 %Use triangulation to find the position of the landmark
-                 rho_pc_c = triangulate(yMeas, calibParams);
-                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                 rho_i_pj_i_est(:, lmId) = rho_pi_i;
-                  %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
+                 %rho_pc_c = triangulate(yMeas, calibParams);
+                 %rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                 %rho_i_pj_i_est(:, lmId) = rho_pi_i;
+                 
+                 %Use ground truth for now
+                 rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
             end
         end
 end
@@ -159,7 +158,7 @@ errorVector = NaN(6*K+pixMeasDim*totalLandmarkObs, 1);
 errorVectorHelperIdx = 1;
 
 %H and T
-H = sparse(6*K+pixMeasDim*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
+H = sparse(6*K+pixMeasDim*totalLandmarkObs, 6*(K+1) + 3*totalUniqueObservedLandmarks);
 T = sparse(6*K+pixMeasDim*totalLandmarkObs, 6*K+pixMeasDim*totalLandmarkObs);
 
 %Helper indices that keep track of the row number of the last block entry
@@ -206,10 +205,7 @@ for kIdx = 1:K
             
             stereoError = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
             
-            if k == 1216
-                a=2;
-            end
-            
+     
             [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams, useMonoCamera);
 
             %Use stereo or monocular errors
@@ -226,7 +222,6 @@ for kIdx = 1:K
                 G_x_f_k(idx:idx+3, :) = G_x_k_feat;
                 idx = idx + 4;
             end
-            
         end
     else
         extErrorVec = [];
@@ -253,14 +248,15 @@ for kIdx = 1:K
     %Add the feature Jacobians
     lmNum = 1;
     for lmId = validLmObsId'
-        rowIdx = pixMeasDim*lmNum-pixMeasDim+1;
-        colIdx = 6*(K+1)+3*lmId-2;
+        rowIdx = pixMeasDim*(lmNum-1)+1;
+        
+        colLmId = find(observedLandmarkIds == lmId);
+        colIdx = 6*(K+1)+3*colLmId-2;
+        
         H(HHelperIdx+5+rowIdx:HHelperIdx+rowIdx+5+(pixMeasDim-1), colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+pixMeasDim-1, :);
         lmNum = lmNum + 1;
     end
-    %HHelperIdx+6+rowIdx:HHelperIdx+rowIdx+9
-    %H = sparse(6*K+4*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
-
+    
     HHelperIdx = HHelperIdx + Hblockrows;
     
     %==== T matrix =====
@@ -296,7 +292,7 @@ end
     % Solve for the optimal step size!
     if optIdx <= maxOptIter
         dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
-        [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  lineLambda*dx);
+        [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, observedLandmarkIds, rho_i_pj_i_est,  lineLambda*dx);
     end
    
 end %End optimization iterations
