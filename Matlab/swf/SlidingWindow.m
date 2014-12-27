@@ -1,6 +1,3 @@
-% AER1513 A3
-% Author: Valentin Peretroukhin
-% December 2014
 % Sliding Window Gauss Newton Optimization
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -24,15 +21,15 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0;
-lineLambda = 1;
+LMLambda = 0.0001;
+lineLambda = 0.75;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1550;
-kEnd = 1650; 
-kappa = 10; %Sliding window size
-maxOptIter = 5;
+kStart = 1214;
+kEnd = 1300; 
+kappa = 25; %Sliding window size
+maxOptIter = 15;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -133,12 +130,12 @@ for kIdx = 1:K
 
             if (isnan(rho_i_pj_i_est(1, lmId)))
                 %Use triangulation to find the position of the landmark
-                 %rho_pc_c = triangulate(yMeas, calibParams);
-                 %rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                 %rho_i_pj_i_est(:, lmId) = rho_pi_i;
+                 rho_pc_c = triangulate(yMeas, calibParams);
+                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                 rho_i_pj_i_est(:, lmId) = rho_pi_i;
                  
                  %Use ground truth for now
-                 rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
+                 %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
             end
         end
 end
@@ -185,9 +182,11 @@ for kIdx = 1:K
     
     %==== Build the exteroceptive error and Jacobians=====%
     validLmObsId = find(y_k_j(1, k, :) > -1);
+    
     if imuPropagationOnly
         validLmObsId = [];
     end
+    
     if ~isempty(validLmObsId)
         
         extErrorVec = NaN(pixMeasDim*length(validLmObsId), 1);
