@@ -8,7 +8,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3.mat')
+load('../dataset3_fresh.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -24,7 +24,7 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0.1;
+LMLambda = 0.8;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
@@ -280,7 +280,7 @@ end
     end
     
     %Check for convergence
-    if norm(dx) < 1e-3
+    if norm(dx) < 1e-5
         disp('Converged!')
         break;
     end
