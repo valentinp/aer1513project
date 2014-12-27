@@ -25,9 +25,11 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
 LMLambda = 100;
+lineLambda = 0.75;
+
 kStart = 1200;
 kEnd = 1700; 
-kappa = 10; %Sliding window size
+kappa = 25; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
@@ -260,7 +262,7 @@ end
 
     % Solve for the optimal step size!
     dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
-    [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  dx);
+    [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  lineLambda*dx);
 
    
 end %End optimization iterations
@@ -272,7 +274,6 @@ for i=1:numLandmarks
     end
 end
 error = error/numLandmarks
-
 currentStateStruct = optimalStateStruct;
 
 
