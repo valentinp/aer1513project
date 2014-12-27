@@ -8,7 +8,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3_fresh.mat')
+load('../dataset3.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -24,15 +24,15 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0.8;
+LMLambda = 0;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 1214;
-kEnd = 1715; 
-kappa = 50; %Sliding window size
-maxOptIter = 10;
+kEnd = 1250; 
+kappa = 25; %Sliding window size
+maxOptIter = 5;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -60,8 +60,10 @@ end
 %Use ground truth for the first state
 firstState.C_vi = Cfrompsi(theta_vk_i(:,k1));
 firstState.r_vi_i = r_i_vk_i(:,k1);
+firstState.k = k1;
 
 initialStateStruct{1} = firstState;
+
 %There are K + 1 states (there is a '0' state)
 for kIdx = 1:K
     k = kIdx + k1;
@@ -134,9 +136,10 @@ for kIdx = 1:K
 
             if (isnan(rho_i_pj_i_est(1, lmId)))
                 %Use triangulation to find the position of the landmark
-                rho_pc_c = triangulate(yMeas, calibParams);
-                rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                rho_i_pj_i_est(:, lmId) = rho_pi_i;
+                 rho_pc_c = triangulate(yMeas, calibParams);
+                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+                 rho_i_pj_i_est(:, lmId) = rho_pi_i;
+                  %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
             end
         end
 end
@@ -147,7 +150,7 @@ optimalStateStruct = currentStateStruct;
 Jbest = Inf;
 dx = Inf;
 
-for optIdx = 1:maxOptIter
+for optIdx = 1:maxOptIter+1
 
 %Error Vector
 errorVector = NaN(6*K+pixMeasDim*totalLandmarkObs, 1);
@@ -202,6 +205,11 @@ for kIdx = 1:K
             rho_pi_i = rho_i_pj_i_est(:,lmId);
             
             stereoError = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
+            
+            if k == 1216
+                a=2;
+            end
+            
             [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams, useMonoCamera);
 
             %Use stereo or monocular errors
@@ -286,9 +294,10 @@ end
     end
 
     % Solve for the optimal step size!
-    dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
-    [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  lineLambda*dx);
-
+    if optIdx <= maxOptIter
+        dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
+        [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, rho_i_pj_i_est,  lineLambda*dx);
+    end
    
 end %End optimization iterations
 
@@ -305,7 +314,8 @@ currentStateStruct = optimalStateStruct;
 if optIdx == maxOptIter
     fprintf('Warning: Failed to converge! \n');
 end
-    fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
+
+fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
 
 %Extract variance of states
 stateCov = inv(H'*(T\H) + LMLambda*eye(size(H,2)));
