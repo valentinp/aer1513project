@@ -46,6 +46,9 @@
 \def\Vec#1{\mathbf{#1}}
 \newcommand{\bbm}{\begin{bmatrix}}
 \newcommand{\ebm}{\end{bmatrix}}
+\DeclareMathAlphabet{\mbf}{OT1}{ptm}{b}{n}
+\newcommand{\mbs}[1]{{\boldsymbol{#1}}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
 
 \title{\LARGE \bf
 The Battle for Filter Supremacy: A Retrospective: The Movie: The Game: The Paper
@@ -116,7 +119,54 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
-[BATCH MATH GOES HERE?]
+\begin{equation}
+(\mbf H^T \mbf T ^{-1} \mbf H ) \delta \mbf{x}^*  = - \mbf{H}^T\mbf{T}^{-1}\mbf{e}(\bar{\mbf{x}})
+\end{equation}
+
+\begin{equation}
+\delta\mbf{x} := \bbm \delta \mbf x_0 \\ \vdots \\ \delta \mbf x_K \\ \delta \mbf f_1 \\ \vdots \\ \delta \mbf f_N\ebm,
+\end{equation}
+where $N$ is the number of unique features observed in the window and 
+\begin{equation}
+\mathbf{H} := \begin{bmatrix}
+ -\mbf H_{\mbf x, 1} & \mbf 1 & &  & &   \\ 
+ & -\mbf G_{\mbf x, 1} &  &  &  &   -\mbf G_{\mbf f, 1} \\ \hline
+ & -\mbf H_{\mbf x, 2} & \mbf 1 & & &    \\ 
+ & & -\mbf G_{\mbf x, 2} &  & &  -\mbf G_{\mbf f, 2}   \\ \hline
+ &  & \ddots & \ddots & & \vdots  \\  \hline
+  & & & -\mbf H_{\mbf x, K} & \mbf 1 & \\ 
+ & & & & -\mbf G_{\mbf x, K} &  -\mbf G_{\mbf f, K}   \\  
+\end{bmatrix}, 
+\end{equation},
+
+\begin{equation}
+\mbf G_{\mbf x, k}^j := \pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} \bbm -\mbf C_{cv} \mbf C_{v_k i} & \mbf C_{cv} (\mbf C_{v_k i} (\pmb{\rho}_i^{p_j i} - \mbf r_i^{v_k i} ) )^\times  \ebm\end{equation}
+
+\begin{equation}
+\quad \mbf G_{\mbf x, k} := \bbm \mbf G_{\mbf x, k}^1 \\ \vdots \\ \mbf G_{\mbf x, k}^M \ebm
+\end{equation}
+
+\begin{equation}
+\mbf G_{\mbf f, k}^j := \pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} \bbm \mbf C_{cv} \mbf C_{v_k i}\ebm\end{equation}
+
+\begin{equation}
+\quad \mbf G_{\mbf f, k} := \underbrace{\bbm \mbf G_{\mbf f, k}^1 & & \\ & & \mbf G_{\mbf f, k}^2 & \\ & & \vdots &  \\ & & & \mbf G_{\mbf f, k}^M \ebm}_{\text{$j$th block column position given by feature id $n$}} \in \Real^{4M \times 3N}
+\end{equation}
+
+and,
+\begin{equation}
+\bar{\mbf p}_{c_k}^{p_j c_k} := \bbm x \\ y \\ z \ebm = \mbf C_{cv} \left( \mbf C_{v_k i} (\pmb{\rho}_i^{p_j i} - \mbf r_i^{v_k i} )   - \pmb \rho_v^{cv} \right),
+\end{equation}
+
+\begin{equation}
+\pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y  \\ \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u (x-b) \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y\ebm.
+\end{equation}
+or for monocular,
+\begin{equation}
+\pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y \ebm.
+\end{equation}
+
+
 
 An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
