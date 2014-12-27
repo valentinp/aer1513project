@@ -205,7 +205,6 @@ for kIdx = 1:K
             
             stereoError = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
             
-     
             [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams, useMonoCamera);
 
             %Use stereo or monocular errors
