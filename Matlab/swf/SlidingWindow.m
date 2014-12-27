@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3.mat')
+load('../dataset3_fresh2.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -21,14 +21,14 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0.0001;
-lineLambda = 0.75;
+LMLambda = 0;
+lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1214;
-kEnd = 1300; 
-kappa = 25; %Sliding window size
+kStart = 500;
+kEnd = 600; 
+kappa = 10; %Sliding window size
 maxOptIter = 15;
 
 k1 = kStart;
@@ -289,6 +289,7 @@ end
 
     % Solve for the optimal step size!
     if optIdx <= maxOptIter
+        H = H(:, 7:end);
         dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
         [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, observedLandmarkIds, rho_i_pj_i_est,  lineLambda*dx);
     end

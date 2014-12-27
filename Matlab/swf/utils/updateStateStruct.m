@@ -3,7 +3,7 @@ function [updatedStates, rho_i_pj_i_est] = updateStateStruct( currentStates, lmI
 
 updatedStates = currentStates;
 numStates = length(currentStates);
-for stIdx = 1:numStates
+for stIdx = 2:numStates
     dr = dx(1+(stIdx-1)*6:3+(stIdx-1)*6);
     phi = dx(4+(stIdx-1)*6:6+(stIdx-1)*6);
     
@@ -12,7 +12,7 @@ for stIdx = 1:numStates
 
 end
 
-initialIdx = numStates*6 + 1;
+initialIdx = (numStates-1)*6 + 1;
 for lm_i = 1:length(lmIds)
     idx = initialIdx + (lm_i-1)*3;
     dp = dx(idx:idx+2);
