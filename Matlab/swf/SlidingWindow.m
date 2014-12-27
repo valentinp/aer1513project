@@ -24,24 +24,36 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 100;
-lineLambda = 0.75;
+LMLambda = 0.1;
+lineLambda = 1;
+useMonoCamera = true; %If true, only left camera will be used
+imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1200;
-kEnd = 1700; 
-kappa = 10; %Sliding window size
+kStart = 1214;
+kEnd = 1715; 
+kappa = 50; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
 k2 = k1+kappa;
 K = k2 - k1;  %There are K + 1 total states, since x0 is the k1th state
 
+%% Setup
+if useMonoCamera
+    pixMeasDim = 2;
+else
+    pixMeasDim = 4;
+end
 
 initialStateStruct = {};
 
-%% Extract noise values
+% Extract noise values
 Q = diag([v_var; w_var]);
-R = diag(y_var);
+if useMonoCamera
+    R = diag(y_var(1:2));
+else
+    R = diag(y_var);
+end
 
 %% First create the initial guess using dead reackoning
 
@@ -138,14 +150,14 @@ dx = Inf;
 for optIdx = 1:maxOptIter
 
 %Error Vector
-errorVector = NaN(6*K+4*totalLandmarkObs, 1);
+errorVector = NaN(6*K+pixMeasDim*totalLandmarkObs, 1);
 %This helper index will keep track of where we need to insert our next
 %errors
 errorVectorHelperIdx = 1;
 
 %H and T
-H = sparse(6*K+4*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
-T = sparse(6*K+4*totalLandmarkObs, 6*K+4*totalLandmarkObs);
+H = sparse(6*K+pixMeasDim*totalLandmarkObs, 6*(K+1) + 3*numLandmarks);
+T = sparse(6*K+pixMeasDim*totalLandmarkObs, 6*K+pixMeasDim*totalLandmarkObs);
 
 %Helper indices that keep track of the row number of the last block entry
 %into H and T
@@ -171,13 +183,15 @@ for kIdx = 1:K
     
     %==== Build the exteroceptive error and Jacobians=====%
     validLmObsId = find(y_k_j(1, k, :) > -1);
+    if imuPropagationOnly
+        validLmObsId = [];
+    end
     if ~isempty(validLmObsId)
         
-        extErrorVec = NaN(4*length(validLmObsId), 1);
-        G_x_k = NaN(4*length(validLmObsId),6);
-        
+        extErrorVec = NaN(pixMeasDim*length(validLmObsId), 1);
+        G_x_k = NaN(pixMeasDim*length(validLmObsId),6);
         %Jacobians wrt feature position
-        G_x_f_k = NaN(4*length(validLmObsId), 3);
+        G_x_f_k = NaN(pixMeasDim*length(validLmObsId), 3);
         
         
         idx = 1;
@@ -187,13 +201,24 @@ for kIdx = 1:K
            
             rho_pi_i = rho_i_pj_i_est(:,lmId);
             
-            extErrorVec(idx:idx+3, 1) = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
-            [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams);
+            stereoError = stereoCamError(yMeas, kState, vehicleCamTransform, rho_pi_i, calibParams);
+            [G_x_k_state, G_x_k_feat] = G_xfn(kState, vehicleCamTransform, rho_pi_i, calibParams, useMonoCamera);
+
+            %Use stereo or monocular errors
+            if useMonoCamera
+                extErrorVec(idx:idx+1, 1) = stereoError(1:2);
+                
+                G_x_k(idx:idx+1, :) = G_x_k_state;
+                G_x_f_k(idx:idx+1, :) = G_x_k_feat;
+                idx = idx + 2;
+            else
+                extErrorVec(idx:idx+3, 1) = stereoError;
+                
+                G_x_k(idx:idx+3, :) = G_x_k_state;
+                G_x_f_k(idx:idx+3, :) = G_x_k_feat;
+                idx = idx + 4;
+            end
             
-            G_x_k(idx:idx+3, :) = G_x_k_state;
-            G_x_f_k(idx:idx+3, :) = G_x_k_feat;
-            
-            idx = idx + 4;
         end
     else
         extErrorVec = [];
@@ -206,12 +231,12 @@ for kIdx = 1:K
     errorVectorHelperIdx = errorVectorHelperIdx + length(combinedErrorVec);
     
     %==== H matrix =====    
-    Hblock = zeros(6+4*length(validLmObsId), 12);
+    Hblock = zeros(6+pixMeasDim*length(validLmObsId), 12);
     Hblock(1:6,1:6) = -H_x_k;
     Hblock(1:6,7:12) = eye(6);
     
     if ~isempty(validLmObsId)
-        Hblock(7:(7+4*length(validLmObsId) - 1), 7:12) = -G_x_k;
+        Hblock(7:(7+pixMeasDim*length(validLmObsId) - 1), 7:12) = -G_x_k;
     end
     Hblockrows = size(Hblock, 1);
     
@@ -220,9 +245,9 @@ for kIdx = 1:K
     %Add the feature Jacobians
     lmNum = 1;
     for lmId = validLmObsId'
-        rowIdx = 4*lmNum-3;
+        rowIdx = pixMeasDim*lmNum-pixMeasDim+1;
         colIdx = 6*(K+1)+3*lmId-2;
-        H(HHelperIdx+5+rowIdx:HHelperIdx+rowIdx+8, colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+3, :);
+        H(HHelperIdx+5+rowIdx:HHelperIdx+rowIdx+5+(pixMeasDim-1), colIdx:colIdx+2) = -G_x_f_k(rowIdx:rowIdx+pixMeasDim-1, :);
         lmNum = lmNum + 1;
     end
     %HHelperIdx+6+rowIdx:HHelperIdx+rowIdx+9
@@ -231,7 +256,7 @@ for kIdx = 1:K
     HHelperIdx = HHelperIdx + Hblockrows;
     
     %==== T matrix =====
-    T_k = zeros(6+4*length(validLmObsId), 6+4*length(validLmObsId));
+    T_k = zeros(6+pixMeasDim*length(validLmObsId), 6+pixMeasDim*length(validLmObsId));
     T_k(1:6, 1:6) = H_w_k*Q*deltaT^2*H_w_k';
     
     %Here, G_n_k is identity, so we can just repeat the variances along the
@@ -255,7 +280,7 @@ end
     end
     
     %Check for convergence
-    if norm(dx) < 1e-4
+    if norm(dx) < 1e-3
         disp('Converged!')
         break;
     end

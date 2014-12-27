@@ -9,12 +9,12 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../dataset3_fresh2.mat')
+load('../dataset3.mat')
 % load('../dataset3.mat')
 
 %Dataset window bounds
-kStart = 1215;
-kEnd = 1715;
+kStart = 500;
+kEnd = 1000;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -38,7 +38,7 @@ noiseParams.Q_imu = diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
 noiseParams.initialIMUCovar = 1e-4 * eye(12);
     
 %MSCKF parameters
-msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
+msckfParams.minTrackLength = 3;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.doNullSpaceTrick = true;
