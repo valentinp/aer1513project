@@ -13,8 +13,8 @@ load('../dataset3.mat')
 % load('../dataset3.mat')
 
 %Dataset window bounds
-kStart = 1214;
-kEnd = 1715;
+kStart = 500;
+kEnd = 1000;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -333,6 +333,12 @@ end
 
 rotLim = [-0.5 0.5];
 transLim = [-0.5 0.5];
+
+% Save estimates
+msckf_trans_err = p_C_G_est - p_C_G_GT;
+msckf_rot_err = theta_CG_err;
+
+save('mskcf_est.mat', 'msckf_trans_err', 'msckf_rot_err');
 
 % Translation Errors
 figure

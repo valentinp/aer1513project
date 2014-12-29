@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3_fresh2.mat')
+load('../dataset3.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -26,10 +26,10 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1214;
-kEnd = 1715; 
-kappa = 25; %Sliding window size
-maxOptIter = 10;
+kStart = 500;
+kEnd = 1000; 
+kappa = 50; %Sliding window size
+maxOptIter = 20;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -43,7 +43,7 @@ else
 end
 
 initialStateStruct = {};
-
+    
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
@@ -335,7 +335,7 @@ sigma_th3 = (stateSigmaHistMat(6,:));
 %% Plot error and variances
 addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
 
-rotErrVec = zeros(3, length(stateVecHistStruct));
+rotErrVxec = zeros(3, length(stateVecHistStruct));
 transErrVec = zeros(3, length(stateVecHistStruct));
 
 
@@ -346,8 +346,15 @@ for stIdx = 1:length(stateVecHistStruct)
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
-transLim = 0.7;
-rotLim = 0.5;
+
+% Save estimates
+swf_trans_err = transErrVec;
+swf_rot_err = rotErrVec;
+save('swf_est.mat', 'transErrVec', 'rotErrVec');
+
+
+transLim = 0.4;
+rotLim = 0.3;
 recycleStates = 'Yes';
 
 figure
