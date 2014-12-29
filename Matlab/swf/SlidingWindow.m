@@ -28,7 +28,7 @@ imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 500;
 kEnd = 1000; 
-kappa = 25; %Sliding window size
+kappa = 100; %Sliding window size
 maxOptIter = 20;
 
 k1 = kStart;
@@ -282,7 +282,7 @@ end
     end
     
     %Check for convergence
-    if norm(dx) < 1e-2
+    if norm(dx) < 0.5e-2
         disp('Converged!')
         break;
     end
@@ -350,7 +350,7 @@ end
 % Save estimates
 swf_trans_err = transErrVec;
 swf_rot_err = rotErrVec;
-save('swf_est.mat', 'transErrVec', 'rotErrVec');
+save(sprintf('swf_%d_%d_%d.mat',kStart,kEnd, kappa), 'swf_trans_err', 'swf_rot_err');
 
 
 transLim = 0.4;
