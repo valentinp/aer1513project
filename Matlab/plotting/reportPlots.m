@@ -22,6 +22,7 @@ title(sprintf('Translational Error (MSCKF vs. SWF)'))
 ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
 grid on
+grid minor
 
 subplot(3,1,2)
 plot(t(kStart:kEnd), msckf_trans_err(2,:), '-b', 'LineWidth', 1.2)
@@ -32,6 +33,7 @@ ylim([-transLim transLim])
 ylabel('\delta r_y [m]')
 set(gca,'FontSize',fontSize)
 grid on
+grid minor
 
 
 subplot(3,1,3)
@@ -45,6 +47,7 @@ xlabel('t_k [s]')
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
 grid on
+grid minor
 
 filename = sprintf('transError.pdf');
 export_fig(gcf, filename, '-transparent');
@@ -61,6 +64,7 @@ ylabel('\delta\theta_x')
 legend('MSCKF', 'SWF');
 set(gca,'FontSize',fontSize)
 grid on
+grid minor
 
 
  
@@ -73,6 +77,7 @@ ylim([-rotLim rotLim])
 ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
 grid on
+grid minor
 
 subplot(3,1,3)
 plot(t(kStart:kEnd), msckf_rot_err(3,:), '-b', 'LineWidth', 1.2)
@@ -83,6 +88,7 @@ ylim([-rotLim rotLim])
 ylabel('\delta\theta_z')
 xlabel('t_k [s]')
 grid on
+grid minor
 
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
