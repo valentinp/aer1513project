@@ -99,7 +99,7 @@ In this work, we compare and contrast three modern solutions, the Extended Kalma
 We present an experimental comparison of the SWF and MSCKF using a dataset consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Extended Kalman Filter (EKF)} \label{subsec:ekf}
+\section{Extended Kalman Filter (EKF)} \label{sec:EKF}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and feature positions are simultaneously estimated at each time step by augmenting the filter state with feature positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of features by recursively updating the state as new measurements become available.
 %Features are commonly parametrized as three-dimensional vectors and are initialized using two-view geometry, but alternative parametrization and initialization schemes exist \cite{Sola:2011:IJCV}.
@@ -114,7 +114,7 @@ Because the filter state includes only the most recent vehicle pose, a given upd
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and feature positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Sliding Window Filter (SWF)} \label{subsec:slidingwindow}
+\section{Sliding Window Filter (SWF)} \label{sec:SWF}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 \begin{equation}
@@ -165,7 +165,7 @@ However, the hard cut-off of the SWF may result in only some measurements of a p
 As a result, the filter may not maximally constrain some vehicle poses, and hence localization may be less accurate than we could expect from the full batch solution.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:msckf}
+\section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:MSCKF}
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
@@ -350,7 +350,7 @@ where
 & &
 \text{and}
 &
-\Vec W &= \bbm \Vec{R}_1'^{(j)} & & \\ & \ddots & \\ & & \Vec{R}_N'^{(j)} \ebm 
+\Vec W &= \text{diag}\left\{ \Vec{R}_1'^{(j)}, \hdots, \Vec{R}_N'^{(j)} \right\}
 \end{align}
 with $\Vec{R}_i'^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
 
@@ -411,14 +411,14 @@ $\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Ve
 
 By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M_j \times 1$ measurement error vector of feature $f_j$ over the entire window of camera poses, where $M_j$ is the number of camera poses from which feature $f_j$ was observed:
 \begin{align} \label{eq:residual_stacked}
-    \Vec{r}^{(j)} &\simeq \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}^{(j)}
+    \Vec{r}^{(j)} &= \Vec{z}^{(j)} - \hat{\Vec{z}}^{(j)} \simeq \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}^{(j)}
 \end{align}
 The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
 
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
 Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly.
 Figure \ref{fig:nullspace} shows the effect of attempting to use this error directly in the EKF.
-The correlation between the measurement error on the state causes the filter to behave very poorly after a small number of time steps.
+The correlation between the measurement error and the state causes the filter to behave very poorly after a small number of time steps.
 
 \begin{figure}
     \centering
@@ -436,10 +436,10 @@ The correlation between the measurement error on the state causes the filter to 
     \label{fig:nullspace}
 \end{figure}
 
-In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form:
+In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form (to first order):
 \begin{align}
-    \Vec{r}_o^{(j)} &:= \Vec{A}^T \left(\Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}\right) \\
-                    &\simeq \Vec{A}^T \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{0} + \Vec{A}^T \Vec{n}^{(j)} \\
+    \Vec{r}_o^{(j)} := \Vec{A}^T \Vec{r}^{(j)} 
+                    &\simeq \Vec{A}^T \Vec{H}_{\Vec{x}}^{(j)} \widetilde{\Vec{x}} + \Vec{0} + \Vec{A}^T \Vec{n}^{(j)} \notag \\
                     &=: \Vec{H}_{o}^{(j)} \widetilde{\Vec{x}} + \Vec{n}_o^{(j)}
 \end{align}
 
@@ -492,7 +492,7 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
         \label{fig:comp_1:rot_err}
     }
 
-    \caption{MSCKF vs. SWF}
+    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[500,1000]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature tracks lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_1}
 \end{figure}
 
@@ -500,16 +500,16 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
     \centering
     \subfigure {
         \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-1215-1715-Trans}
-        \label{fig:comp_1:trans_err}
+        \label{fig:comp_2:trans_err}
     }
 
     \subfigure {
         \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-1215-1715-Rot}
-        \label{fig:comp_1:rot_err}
+        \label{fig:comp_2:rot_err}
     }
 
-    \caption{MSCKF vs. SWF}
-    \label{fig:comp_1}
+    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature tracks lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
+    \label{fig:comp_2}
 \end{figure}
 
 

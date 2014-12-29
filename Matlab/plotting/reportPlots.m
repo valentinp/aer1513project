@@ -38,6 +38,7 @@ ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 subplot(3,1,2)
 plot(t(kStart:kEnd), imu.msckf_trans_err(2,:), '-k', 'LineWidth', 1.2)
@@ -55,7 +56,7 @@ ylabel('\delta r_y [m]')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
-
+box on
 
 subplot(3,1,3)
 plot(t(kStart:kEnd), imu.msckf_trans_err(3,:), '-k', 'LineWidth', 1.2)
@@ -69,11 +70,13 @@ plot(t(kStart:kEnd), swf100.swf_trans_err(3,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim([-transLim transLim])
+ylabel('\delta r_z [m]')
 xlabel('t_k [s]')
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 filename = sprintf('6-Way-Comparison-500-1000-Trans.pdf');
 export_fig(gcf, filename, '-transparent');
@@ -97,7 +100,7 @@ set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
-
+box on
 
  
 subplot(3,1,2)
@@ -115,6 +118,7 @@ ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 subplot(3,1,3)
 plot(t(kStart:kEnd), imu.msckf_rot_err(3,:), '-k', 'LineWidth', 1.2)
@@ -131,6 +135,7 @@ ylabel('\delta\theta_z')
 xlabel('t_k [s]')
 grid on
 grid minor
+box on
 
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
@@ -149,9 +154,8 @@ msckf20 = load('msckf_1215_1715_min20_max100');
 imu = load('imu_1215_1715.mat');
 
 load('../datasets/dataset3.mat');
-kStart = 500;
-kEnd = 1000;
-
+kStart = 1215;
+kEnd = 1715;
 
 transLim = 1;
 rotLim = 0.5;
@@ -178,6 +182,7 @@ ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 subplot(3,1,2)
 plot(t(kStart:kEnd), imu.msckf_trans_err(2,:), '-k', 'LineWidth', 1.2)
@@ -195,6 +200,7 @@ ylabel('\delta r_y [m]')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 
 subplot(3,1,3)
@@ -209,11 +215,13 @@ plot(t(kStart:kEnd), swf100.swf_trans_err(3,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim([-transLim transLim])
+ylabel('\delta r_z [m]')
 xlabel('t_k [s]')
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 filename = sprintf('6-Way-Comparison-1215-1715-Trans.pdf');
 export_fig(gcf, filename, '-transparent');
@@ -237,7 +245,7 @@ set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
-
+box on
 
  
 subplot(3,1,2)
@@ -255,6 +263,7 @@ ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
+box on
 
 subplot(3,1,3)
 plot(t(kStart:kEnd), imu.msckf_rot_err(3,:), '-k', 'LineWidth', 1.2)
@@ -271,6 +280,7 @@ ylabel('\delta\theta_z')
 xlabel('t_k [s]')
 grid on
 grid minor
+box on
 
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
