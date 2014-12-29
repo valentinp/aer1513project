@@ -19,7 +19,7 @@ xlim([t(kStart) t(kEnd)]);
 ylim([-transLim transLim])
 legend('MSCKF', 'SWF');
 title(sprintf('Translational Error (MSCKF vs. SWF)'))
-ylabel('\delta r_x')
+ylabel('\delta r_x [m]')
 
 
 subplot(3,1,2)
@@ -28,7 +28,7 @@ hold on
 plot(t(kStart:kEnd), swf_trans_err(2,:), '-g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd)]);
 ylim([-transLim transLim])
-ylabel('\delta r_y')
+ylabel('\delta r_y [m]')
 
 subplot(3,1,3)
 plot(t(kStart:kEnd), msckf_trans_err(3,:), '-b', 'LineWidth', 1.2)
@@ -36,8 +36,8 @@ hold on
 plot(t(kStart:kEnd), swf_trans_err(3,:), '-g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd)]);
 ylim([-transLim transLim])
-ylabel('\delta r_z')
-xlabel('t_k')
+ylabel('\delta r_z [m]')
+xlabel('t_k [s]')
 %set(gca,'FontSize',12)
 %set(findall(gcf,'type','text'),'FontSize',12)
 
@@ -69,4 +69,4 @@ plot(t(kStart:kEnd), swf_rot_err(3,:), '-g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd)]);
 ylim([-rotLim rotLim])
 ylabel('\delta\theta_z')
-xlabel('t_k')
+xlabel('t_k [s]')
