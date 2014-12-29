@@ -96,6 +96,7 @@ A complicating factor in the general form of this problem is the absence of a kn
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
 In this work, we compare and contrast three modern solutions, the Extended Kalman Filter (EKF), the Sliding Window Filter (SWF), and a hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+We present an experimental comparison of the SWF and MSCKF using a dataset consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Extended Kalman Filter (EKF)} \label{subsec:ekf}
@@ -103,8 +104,6 @@ In the Extended Kalman Filter (EKF) solution, vehicle poses and feature position
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of features by recursively updating the state as new measurements become available.
 %Features are commonly parametrized as three-dimensional vectors and are initialized using two-view geometry, but alternative parametrization and initialization schemes exist \cite{Sola:2011:IJCV}.
 %In this paper we consider only the three-dimensional parametrization and two-view initialization scheme.
-
-[EKF EQUATIONS HERE?]
 
 Although the recursive nature of EKF-SLAM allows it to operate online, the computational cost of the filter grows cubically with map size.
 This behavior is due to the fact that the dimension of the state grows linearly with the number of features, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
@@ -118,17 +117,16 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 \subsection{Sliding Window Filter (SWF)} \label{subsec:slidingwindow}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
-
 \begin{equation}
 (\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}})
 \end{equation}
-
 \begin{equation}
-\delta\Vec{x} := \bbm \delta \Vec x_0 \\ \vdots \\ \delta \Vec x_K \\ \delta \Vec f_1 \\ \vdots \\ \delta \Vec f_N\ebm,
+\delta\Vec{x} := \bbm \delta \Vec x_0 & \hdots & \delta \Vec x_K & \delta \Vec f_1 & \hdots & \delta \Vec f_N\ebm ^T,
 \end{equation}
-where $N$ is the number of unique features observed in the window and 
+where $N$ is the number of unique features observed in the window.
+The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
 \begin{equation}
-\mathbf{H} := \left[\begin{array}{cccccc}
+\mathbf{H} = \left[\begin{array}{cccccc}
  -\Vec H_{\Vec x, 1} & \Vec 1 & &  & &   \\ 
  & -\Vec G_{\Vec x, 1} &  &  &  &   -\Vec G_{\Vec f, 1} \\ \hline
  & -\Vec H_{\Vec x, 2} & \Vec 1 & & &    \\ 
@@ -137,33 +135,25 @@ where $N$ is the number of unique features observed in the window and
   & & & -\Vec H_{\Vec x, K} & \Vec 1 & \\ 
  & & & & -\Vec G_{\Vec x, K} &  -\Vec G_{\Vec f, K}   \\  
 \end{array}\right], 
-\end{equation},
-
+\end{equation}
+where
+\begin{align}
+\Vec G_{\Vec{x}, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}}
+    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\boldsymbol{\rho}_i^{f_j G} - \Vec r_G^{IG,k} ) )^\times  \ebm ^T
+\\[0.5em]
+\Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
+\\[0.5em]
+\Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k}
+\\[0.5em]
+\Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j$}}
+\end{align}
+with
 \begin{equation}
-\Vec G_{\Vec{x}, k}^j := \pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} \bbm -\Vec C_{cv} \Vec C_{v_k i} & \Vec C_{cv} (\Vec C_{v_k i} (\boldsymbol{\rho}_i^{p_j i} - \Vec r_i^{v_k i} ) )^\times  \ebm\end{equation}
-
-\begin{equation}
-\quad \Vec G_{\Vec x, k} := \bbm \Vec G_{\Vec x, k}^1 \\ \vdots \\ \Vec G_{\Vec x, k}^M \ebm
+\bar{\Vec p}_{C_k}^{f_j C_k} := \bbm x \\ y \\ z \ebm = \Vec C_{CI} \left( \Vec C_{IG,k} (\boldsymbol{\rho}_G^{f_j G} - \Vec r_G^{IG,k} )   - \boldsymbol \rho_I^{CI} \right),
 \end{equation}
 
 \begin{equation}
-\Vec G_{\Vec f, k}^j := \pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} \bbm \Vec C_{cv} \Vec C_{v_k i}\ebm\end{equation}
-
-\begin{equation}
-\quad \Vec G_{\Vec f, k} := \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature id $n$}} \in \Real^{4M \times 3N}
-\end{equation}
-
-and,
-\begin{equation}
-\bar{\Vec p}_{c_k}^{p_j c_k} := \bbm x \\ y \\ z \ebm = \Vec C_{cv} \left( \Vec C_{v_k i} (\boldsymbol{\rho}_i^{p_j i} - \Vec r_i^{v_k i} )   - \boldsymbol \rho_v^{cv} \right),
-\end{equation}
-
-\begin{equation}
-\pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y  \\ \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u (x-b) \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y\ebm.
-\end{equation}
-or for monocular,
-\begin{equation}
-\pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y \ebm.
+\pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
 
 
@@ -300,11 +290,11 @@ with the initial condition $\boldsymbol{\Phi}\left(t_k, t_k \right) = \Vec{1}_{1
 
 We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
 \begin{align} \label{eq:imucovar}
-    \dot{\hat{\Vec{P}}}_{II}\left(t_k, t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k, t_k  + \tau \right) \notag \\ 
-                & + \hat{\Vec{P}}_{II}\left(t_k, t_k  + \tau \right) \Vec{F}^T \notag \\ 
+    \dot{\hat{\Vec{P}}}_{II}\left(t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) 
+                \hat{x}_{C_i}^{C_1 C_i} + \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) \Vec{F}^T \notag \\ 
                 & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
 \end{align}
-with the initial condition $\hat{\Vec{P}}_{II}\left(t_k, t_k\right) = \hat{\Vec{P}}_{II,k}$. 
+with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{II,k}$. 
 
 \subsection{Feature Position Estimation}
 When a feature $f_j$ goes out of view of the camera, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
