@@ -26,9 +26,9 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 500;
-kEnd = 1000; 
-kappa = 100; %Sliding window size
+kStart = 1215;
+kEnd = 1715; 
+kappa = 10; %Sliding window size
 maxOptIter = 20;
 
 k1 = kStart;
