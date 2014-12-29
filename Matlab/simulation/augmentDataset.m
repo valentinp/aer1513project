@@ -17,7 +17,7 @@ mu = zeros(4,1);
 sigma = diag(y_var);
 
 %Generate new landmarks
-newLmNum = 100;
+newLmNum = 60;
 
 if exist('newLmPos', 'var')
     oldLmNum = size(newLmPos,2);
@@ -67,4 +67,4 @@ for k = 1:length(t)
 end
 
 
-save('../datasets/dataset3_fresh_100lessnoisy.mat');
+save(['../datasets/dataset3_fresh_',num2str(newLmNum),'lessnoisy.mat']);
