@@ -1,5 +1,4 @@
-clc;
-clear all;
+% clear all;
 addpath('../msckf/utils');
 load('../datasets/dataset3.mat')
 
@@ -18,6 +17,15 @@ sigma = diag(y_var);
 
 %Generate new landmarks
 newLmNum = 100;
+
+if exist('newLmPos', 'var')
+    oldLmNum = size(newLmPos,2);
+    oldLmPos = newLmPos;
+else
+    oldLmNum = 0;
+    oldLmPos = [];
+end
+
 % xRange = linspace(min(rho_i_pj_i(1,:)), max(rho_i_pj_i(1,:)), newLmNum);
 % yRange = linspace(min(rho_i_pj_i(2,:)), max(rho_i_pj_i(2,:)), newLmNum);
 % zRange = linspace(min(rho_i_pj_i(3,:)), max(rho_i_pj_i(3,:)), newLmNum);
@@ -27,14 +35,14 @@ xRange = [min(rho_i_pj_i(1,:)) - 5, max(rho_i_pj_i(1,:)) + 5];
 yRange = [min(rho_i_pj_i(2,:)) - 5, max(rho_i_pj_i(2,:)) + 5];
 zRange = [min(rho_i_pj_i(3,:)) - 5, max(rho_i_pj_i(3,:)) ];
 
-newLmPosX = range(xRange)*rand(1,newLmNum) + xRange(1);
-newLmPosY = range(yRange)*rand(1,newLmNum) + yRange(1);
-newLmPosZ = range(zRange)*rand(1,newLmNum) + zRange(1);
+newLmPosX = range(xRange)*rand(1,newLmNum - oldLmNum) + xRange(1);
+newLmPosY = range(yRange)*rand(1,newLmNum - oldLmNum) + yRange(1);
+newLmPosZ = range(zRange)*rand(1,newLmNum - oldLmNum) + zRange(1);
 
-newLMPos = [newLmPosX(:)'; newLmPosY(:)'; newLmPosZ(:)'];
+newLmPos = [newLmPosX(:)'; newLmPosY(:)'; newLmPosZ(:)'];
+newLmPos = [oldLmPos, newLmPos];
 
-
-rho_i_pj_i = newLMPos;
+rho_i_pj_i = newLmPos;
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 y_k_j = [];
 
@@ -44,8 +52,8 @@ for k = 1:length(t)
     T_ci = T_cv*T_vi;
     
     %Add observations
-    for lm_i = 1:size(newLMPos, 2)
-        p_li_i = newLMPos(:,lm_i);
+    for lm_i = 1:size(newLmPos, 2)
+        p_li_i = newLmPos(:,lm_i);
         p_lc_c = homo2cart(T_ci*cart2homo(p_li_i));
         [yMeas] = stereoCamProject(p_lc_c, calibParams);
         if all(yMeas > 0) && all(yMeas([1,3]) <= 640) && all(yMeas([2,4]) <= 480)
