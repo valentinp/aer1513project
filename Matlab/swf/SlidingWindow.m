@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-load('../dataset3.mat')
+load('../datasets/dataset3.mat')
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -47,7 +47,7 @@ initialStateStruct = {};
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
-    R = diag(y_var(1:2));
+    R = 2*diag(y_var(1:2));
 else
     R = diag(y_var);
 end
