@@ -475,10 +475,36 @@ Finally, we can formulate the Kalman gain and correction equations to arrive at 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS} \label{sec:experiments}
-We conducted a comparative study of the MSCKF and SWF algorithms using the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
+We compared the performance of the MSCKF and SWF algorithms on two intervals in the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
 The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 features while moving along an arbitrary 3D path.
-The dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
+This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.45\textwidth]{figs/sensorhead}
+    \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
+    \label{fig:sensorhead}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth}
+    \caption{Vicon ground truth for sensor head motion (blue) and feature positions (red) in the ``Starry Night'' dataset.}
+    \label{fig:trajectory_groundtruth}
+\end{figure}
+
+\subsection{Interval 1: Many visible features}
+In the first experiment, we compared the SWF and MSCKF for various parameter settings on an interval with many visible features.
+Figure \ref{fig:nVisible_int1} shows the number of visible features in the first interval.
+At least three features are visible in $64\%$ of this interval, and the number of visible features is frequently in excess of ten.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{figs/nVisible_500_1000}
+    \caption{Number of visible features in the interval $k\in[500,1000]$. Red points indicate that fewer than three features were visible, while green points indicate at least three features were visible.}
+    \label{fig:nVisible_int1}
+\end{figure}
 
 \begin{figure}
     \centering
@@ -494,6 +520,19 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
 
     \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[500,1000]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature tracks lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_1}
+\end{figure}
+
+\subsection{Interval 2: Fewer visible features}
+In the second experiment, we compared the SWF and MSCKF for various parameter settings on an interval with few visible features.
+Figure \ref{fig:nVisible_int2} shows the number of visible features in the second interval.
+At least three features are visible in only $56\%$ of this interval, and the number of visible features rarely exceeds ten.
+Moreover, the features that are visible do not remain in view of the camera for as long a time as in the first interval.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{figs/nVisible_1215_1715}
+    \caption{Number of visible features in the interval $k\in[1215,1715]$. Red points indicate that fewer than three features were visible, while green points indicate at least three features were visible.}
+    \label{fig:nVisible_int2}
 \end{figure}
 
 \begin{figure}
@@ -512,27 +551,11 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
     \label{fig:comp_2}
 \end{figure}
 
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.45\textwidth]{figs/sensorhead}
-    \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
-    \label{fig:sensorhead}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth}
-    \caption{Vicon ground truth for sensor head motion (blue) and feature positions (red) in the ``Starry Night'' dataset.}
-    \label{fig:trajectory_groundtruth}
-\end{figure}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CONCLUSIONS} \label{sec:conclusions}
 Things quickly got out of hand when Matlab achieved sentience. 
 We were forced to abandon our lab and have been surviving in the harsh environment of the MarsDome for weeks.
 If this ever gets published, please send help!
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{CONCLUSIONS} \label{sec:conclusions}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
