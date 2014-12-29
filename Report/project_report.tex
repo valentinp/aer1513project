@@ -75,7 +75,7 @@ The Battle for Filter Supremacy: A Retrospective: The Movie: The Game: The Paper
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-Monkey Style Chinese Kung Fu
+Monkey Style Chinese Kung Fu vs. SWFfer Wet Jet
 
 \end{abstract}
 
@@ -432,7 +432,7 @@ The correlation between the measurement error and the state causes the filter to
         \label{fig:nullspace:rot_err}
     }
     
-    \caption{Effect of nullspace projection on MSCKF performance}
+    \caption{Effect of nullspace projection on MSCKF performance. The correlation between the measurement error and the state causes the filter to behave very poorly after a small number of time steps.}
     \label{fig:nullspace}
 \end{figure}
 
@@ -494,7 +494,7 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
     \label{fig:trajectory_groundtruth}
 \end{figure}
 
-\subsection{Interval 1: Many visible features}
+\subsection{Experiment 1: Many visible features}
 In the first experiment, we compared the SWF and MSCKF for various parameter settings on an interval with many visible features.
 Figure \ref{fig:nVisible_int1} shows the number of visible features in the first interval.
 At least three features are visible in $64\%$ of this interval, and the number of visible features is frequently in excess of ten.
@@ -518,11 +518,11 @@ At least three features are visible in $64\%$ of this interval, and the number o
         \label{fig:comp_1:rot_err}
     }
 
-    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[500,1000]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature tracks lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
+    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[500,1000]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_1}
 \end{figure}
 
-\subsection{Interval 2: Fewer visible features}
+\subsection{Experiment 2: Fewer visible features}
 In the second experiment, we compared the SWF and MSCKF for various parameter settings on an interval with few visible features.
 Figure \ref{fig:nVisible_int2} shows the number of visible features in the second interval.
 At least three features are visible in only $56\%$ of this interval, and the number of visible features rarely exceeds ten.
@@ -547,7 +547,7 @@ Moreover, the features that are visible do not remain in view of the camera for 
         \label{fig:comp_2:rot_err}
     }
 
-    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature tracks lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
+    \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_2}
 \end{figure}
 
