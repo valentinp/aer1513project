@@ -13,8 +13,8 @@ load('../datasets/dataset3.mat')
 % load('../dataset3.mat')
 
 %Dataset window bounds
-kStart = 500;
-kEnd = 1000;
+% kStart = 500; kEnd = 1000;
+kStart = 1215; kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
