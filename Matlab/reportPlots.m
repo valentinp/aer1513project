@@ -17,7 +17,7 @@ hold on
 plot(t(kStart:kEnd), swf_trans_err(1,:), '-g', 'LineWidth', 1.2)
 ylim([-transLim transLim])
 legend('MSCKF', 'SWF');
-title(sprintf('Translational Error (MSCKF vs. SWF)', kappa, recycleStates))
+title(sprintf('Translational Error (MSCKF vs. SWF)'))
 ylabel('\delta r_x')
 
 
@@ -44,7 +44,7 @@ plot(t(kStart:kEnd), msckf_rot_err(1,:), '-b', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), swf_rot_err(1,:), '-g', 'LineWidth', 1.2)
 ylim([-rotLim rotLim])
-title(sprintf('Rotational Error (MSCKF vs. SWF)', kappa, recycleStates))
+title(sprintf('Rotational Error (MSCKF vs. SWF)'))
 ylabel('\delta\theta_x')
 legend('MSCKF', 'SWF');
 
