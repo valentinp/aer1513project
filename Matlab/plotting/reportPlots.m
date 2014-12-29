@@ -1,7 +1,6 @@
 load('swf_est25.mat');
 load('msckf_est.mat');
-load('datasets/dataset3.mat');
-addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
+load('../datasets/dataset3.mat');
 kStart = 500;
 kEnd = 1000;
 swf_trans_err = transErrVec;
