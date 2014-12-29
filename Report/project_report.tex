@@ -418,6 +418,26 @@ The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{di
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
 Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly. [TALK HERE ABOUT WHAT HAPPENS IF YOU LEAVE IT IN]
 
+\begin{figure}
+    \centering
+    \subfigure[Translational error with and without nullspace projection] {
+        \includegraphics[width=0.45\textwidth]{figs/NST_trans}
+        \label{fig:NST:trans_err}
+    }
+
+    \subfigure[Rotational error with and without nullspace projection] {
+        \includegraphics[width=0.45\textwidth]{figs/NST_rot}
+        \label{fig:NST:rot_err}
+    }
+    \label{fig:NST}
+    \caption{Effect of nullspace projection on MSCKF performance}
+
+\end{figure}
+
+\begin{figure}
+    
+\end{figure}
+
 In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form:
 \begin{align}
     \Vec{r}_o^{(j)} &:= \Vec{A}^T \left(\Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}\right) \\
