@@ -30,8 +30,8 @@ plot(t(kStart:kEnd), swf100.swf_trans_err(1,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim([-transLim transLim])
-h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'southeast');
-set(h_legend,'FontSize',8);
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
+set(h_legend,'FontSize',10);
 
 title(sprintf('Translational Error (Interval 1)'))
 ylabel('\delta r_x [m]')
@@ -75,7 +75,7 @@ set(findall(gcf,'type','text'),'FontSize',fontSize)
 grid on
 grid minor
 
-filename = sprintf('6-Way-Comparison-500-100-Trans.pdf');
+filename = sprintf('6-Way-Comparison-500-1000-Trans.pdf');
 export_fig(gcf, filename, '-transparent');
 
 figure
@@ -92,8 +92,8 @@ xlim([t(kStart) t(kEnd) ]);
 ylim([-rotLim rotLim])
 title(sprintf('Rotational Error (Interval 1)'))
 ylabel('\delta\theta_x')
-h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'southeast');
-set(h_legend,'FontSize',8);
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
+set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
@@ -135,7 +135,7 @@ grid minor
 set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
 
-filename = sprintf('6-Way-Comparison-500-100-Rot.pdf');
+filename = sprintf('6-Way-Comparison-500-1000-Rot.pdf');
 export_fig(gcf, filename, '-transparent');
 
 %% 1215-1715
@@ -170,8 +170,8 @@ plot(t(kStart:kEnd), swf100.swf_trans_err(1,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim([-transLim transLim])
-h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northeast');
-set(h_legend,'FontSize',8);
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
+set(h_legend,'FontSize',10);
 
 title(sprintf('Translational Error (Interval 2)'))
 ylabel('\delta r_x [m]')
@@ -232,8 +232,8 @@ xlim([t(kStart) t(kEnd) ]);
 ylim([-rotLim rotLim])
 title(sprintf('Rotational Error (Interval 2)'))
 ylabel('\delta\theta_x')
-h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northeast');
-set(h_legend,'FontSize',8);
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
+set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
 grid on
 grid minor
