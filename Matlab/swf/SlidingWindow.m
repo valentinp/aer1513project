@@ -28,7 +28,7 @@ imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 500;
 kEnd = 1000; 
-kappa = 50; %Sliding window size
+kappa = 25; %Sliding window size
 maxOptIter = 20;
 
 k1 = kStart;
