@@ -1,4 +1,4 @@
-function [p_f_G, Jnew] = calcGNPosEst(camStates, observations, noiseParams)
+function [p_f_G, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParams)
 %CALCGNPOSEST Calculate the position estimate of the feature using Gauss
 %Newton optimization
 %   INPUT:
@@ -79,7 +79,9 @@ for optI = 1:maxIter
     %Calculate the cost function
     Jnew = 0.5*errorVec'*(W\errorVec);
     %Solve!
-    dx_star =  (E'*(W\E))\(-E'*(W\errorVec)); 
+    EWE = E'*(W\E);
+    RCOND = rcond(EWE);
+    dx_star =  (EWE)\(-E'*(W\errorVec)); 
     
     xEst = xEst + dx_star;
     
@@ -110,10 +112,10 @@ end
            v_1 = v_1/norm(v_1);
            v_2 = v_2/norm(v_2);
 
-           A = [v_1 -C_12*v_2];
+           EWE = [v_1 -C_12*v_2];
            b = t_21_1;
 
-           scalar_consts = A\b;
+           scalar_consts = EWE\b;
            p_f1_1 = scalar_consts(1)*v_1;
     end
 
