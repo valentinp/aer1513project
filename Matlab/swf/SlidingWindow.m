@@ -21,14 +21,14 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 1e-3;
+LMLambda = 1;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 500;
-kEnd = 700; 
-kappa = 20; %Sliding window size
+kStart = 1214;
+kEnd = 1715; 
+kappa = 25; %Sliding window size
 maxOptIter = 10;
 
 k1 = kStart;
@@ -269,7 +269,8 @@ for kIdx = 1:K
     T(THelperIdx:(THelperIdx + Tksize - 1), THelperIdx:(THelperIdx + Tksize - 1)) = T_k;
     THelperIdx = THelperIdx + Tksize;
 end
-        H = H(:, 7:end);
+
+    H = H(:, 7:end);
 
     %Calculate scalar objective
     Jnew = 0.5*errorVector'*(T\errorVector);
@@ -278,19 +279,17 @@ end
     if Jnew < Jbest 
         optimalStateStruct = currentStateStruct;
         Jbest = Jnew;
-    else 
-        break;
     end
     
     %Check for convergence
-    if norm(dx) < 1e-5
+    if norm(dx) < 1e-2
         disp('Converged!')
         break;
     end
 
     % Solve for the optimal step size!
     if optIdx <= maxOptIter
-        dx = (H'*(T\H) + LMLambda*eye(size(H,2)))\(-H'*(T\errorVector));
+        dx = (H'*(T\H) + LMLambda*diag(diag(H'*(T\H))))\(-H'*(T\errorVector));
         [currentStateStruct, rho_i_pj_i_est] = updateStateStruct(currentStateStruct, observedLandmarkIds, rho_i_pj_i_est,  lineLambda*dx);
     end
    
@@ -321,7 +320,7 @@ if ~all(stateVar > 0)
     warning('Variances not positive');
 end
 stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{2};
-stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(7:12)));
+stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
 toc
 end %End Sliding window
 
@@ -341,14 +340,14 @@ transErrVec = zeros(3, length(stateVecHistStruct));
 
 
 for stIdx = 1:length(stateVecHistStruct)
-    k = kStart+stIdx-1;
+    k = kStart+stIdx;
     transErrVec(:,stIdx) = stateVecHistStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
     eRotMat = eye(3) - stateVecHistStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
-transLim = 0.2;
-rotLim = 0.2;
+transLim = 0.7;
+rotLim = 0.5;
 recycleStates = 'Yes';
 
 figure
