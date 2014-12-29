@@ -13,7 +13,7 @@ calibParams.f_v = fv;
 calibParams.b = b;
 
 %Generate new landmarks
-newLmNum = 40;
+newLmNum = 100;
 % xRange = linspace(min(rho_i_pj_i(1,:)), max(rho_i_pj_i(1,:)), newLmNum);
 % yRange = linspace(min(rho_i_pj_i(2,:)), max(rho_i_pj_i(2,:)), newLmNum);
 % zRange = linspace(min(rho_i_pj_i(3,:)), max(rho_i_pj_i(3,:)), newLmNum);
@@ -21,7 +21,7 @@ newLmNum = 40;
 
 xRange = [min(rho_i_pj_i(1,:)) - 5, max(rho_i_pj_i(1,:)) + 5];
 yRange = [min(rho_i_pj_i(2,:)) - 5, max(rho_i_pj_i(2,:)) + 5];
-zRange = [min(rho_i_pj_i(3,:)) - 5, max(rho_i_pj_i(3,:)) - 5];
+zRange = [min(rho_i_pj_i(3,:)) - 5, max(rho_i_pj_i(3,:)) ];
 
 newLmPosX = range(xRange)*rand(1,newLmNum) + xRange(1);
 newLmPosY = range(yRange)*rand(1,newLmNum) + yRange(1);
@@ -53,4 +53,4 @@ for k = 1:length(t)
 end
 
 
-save('../dataset3_fresh2.mat');
+save('../dataset3_fresh3.mat');
