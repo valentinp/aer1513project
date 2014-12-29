@@ -9,7 +9,7 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../datasets/dataset3.mat')
+load('../datasets/dataset3_fresh2.mat')
 % load('../dataset3.mat')
 
 %Dataset window bounds
@@ -38,7 +38,7 @@ noiseParams.Q_imu = diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
 noiseParams.initialIMUCovar = 1e-4 * eye(12);
     
 %MSCKF parameters
-msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
+msckfParams.minTrackLength = Inf;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.doNullSpaceTrick = true;
@@ -331,8 +331,8 @@ for k = 1:kNum
     tPlot(k) = t(state_k);
 end
 
-rotLim = [-0.5 0.5];
-transLim = [-0.5 0.5];
+rotLim = [-0.3 0.3];
+transLim = [-0.4 0.4];
 
 % Save estimates
 msckf_trans_err = p_C_G_est - p_C_G_GT;

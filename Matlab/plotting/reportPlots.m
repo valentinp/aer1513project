@@ -287,3 +287,8 @@ set(findall(gcf,'type','text'),'FontSize',fontSize)
 
 filename = sprintf('6-Way-Comparison-1215-1715-Rot.pdf');
 export_fig(gcf, filename, '-transparent');
+
+%% Fresh2 dataset
+
+msckf_1215_1715_min20_max100_fresh2
+swf_1215_1715_50_fresh2

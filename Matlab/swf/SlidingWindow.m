@@ -5,7 +5,9 @@ clc
 clear
 close all
 addpath('utils')
-load('../datasets/dataset3.mat')
+fileName = '100noisy';
+load(['../datasets/dataset3_fresh_' fileName '.mat'])
+
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -21,15 +23,15 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 1;
+LMLambda = 0.1;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 1215;
 kEnd = 1715; 
-kappa = 10; %Sliding window size
-maxOptIter = 20;
+kappa = 50; %Sliding window size
+maxOptIter = 10;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -47,7 +49,7 @@ initialStateStruct = {};
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
-    R = 2*diag(y_var(1:2));
+    R = diag(y_var(1:2));
 else
     R = diag(y_var);
 end
@@ -282,7 +284,7 @@ end
     end
     
     %Check for convergence
-    if norm(dx) < 0.5e-2
+    if norm(dx) < 1e-3
         disp('Converged!')
         break;
     end
@@ -350,11 +352,11 @@ end
 % Save estimates
 swf_trans_err = transErrVec;
 swf_rot_err = rotErrVec;
-save(sprintf('swf_%d_%d_%d.mat',kStart,kEnd, kappa), 'swf_trans_err', 'swf_rot_err');
+save(sprintf('swf_%d_%d_%d_%s.mat',kStart,kEnd, kappa, fileName), 'swf_trans_err', 'swf_rot_err');
 
 
-transLim = 0.4;
-rotLim = 0.3;
+transLim = 0.5;
+rotLim = 0.5;
 recycleStates = 'Yes';
 
 figure
