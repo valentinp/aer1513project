@@ -416,26 +416,24 @@ By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M
 The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
 
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
-Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly. [TALK HERE ABOUT WHAT HAPPENS IF YOU LEAVE IT IN]
+Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly.
+Figure \ref{fig:nullspace} shows the effect of attempting to use this error directly in the EKF.
+The correlation between the measurement error on the state causes the filter to behave very poorly after a small number of time steps.
 
 \begin{figure}
     \centering
-    \subfigure[Translational error with and without nullspace projection] {
+    \subfigure {
         \includegraphics[width=0.45\textwidth]{figs/NST_trans}
         \label{fig:nullspace:trans_err}
     }
 
-    \subfigure[Rotational error with and without nullspace projection] {
+    \subfigure {
         \includegraphics[width=0.45\textwidth]{figs/NST_rot}
         \label{fig:nullspace:rot_err}
     }
-    \label{fig:nullspace}
-    \caption{Effect of nullspace projection on MSCKF performance}
-
-\end{figure}
-
-\begin{figure}
     
+    \caption{Effect of nullspace projection on MSCKF performance}
+    \label{fig:nullspace}
 \end{figure}
 
 In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form:
@@ -484,16 +482,18 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{figs/Comparison-Trans-Error}
-    \caption{MSCKF vs. SWF}
-    \label{fig:comp_1_trans}
-\end{figure}
+    \subfigure {
+        \includegraphics[width=0.48\textwidth]{figs/Comparison-Trans-Error}
+        \label{fig:comp_1:trans_err}
+    }
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.48\textwidth]{figs/Comparison-Rot-Error}
+    \subfigure {
+        \includegraphics[width=0.48\textwidth]{figs/Comparison-Rot-Error}
+        \label{fig:comp_1:rot_err}
+    }
+
     \caption{MSCKF vs. SWF}
-    \label{fig:comp_1_trans}
+    \label{fig:comp_1}
 \end{figure}
 
 \begin{figure}
