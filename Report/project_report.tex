@@ -120,50 +120,50 @@ In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to co
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
 
 \begin{equation}
-(\mbf H^T \mbf T ^{-1} \mbf H ) \delta \mbf{x}^*  = - \mbf{H}^T\mbf{T}^{-1}\mbf{e}(\bar{\mbf{x}})
+(\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}})
 \end{equation}
 
 \begin{equation}
-\delta\mbf{x} := \bbm \delta \mbf x_0 \\ \vdots \\ \delta \mbf x_K \\ \delta \mbf f_1 \\ \vdots \\ \delta \mbf f_N\ebm,
+\delta\Vec{x} := \bbm \delta \Vec x_0 \\ \vdots \\ \delta \Vec x_K \\ \delta \Vec f_1 \\ \vdots \\ \delta \Vec f_N\ebm,
 \end{equation}
 where $N$ is the number of unique features observed in the window and 
 \begin{equation}
 \mathbf{H} := \left[\begin{array}{cccccc}
- -\mbf H_{\mbf x, 1} & \mbf 1 & &  & &   \\ 
- & -\mbf G_{\mbf x, 1} &  &  &  &   -\mbf G_{\mbf f, 1} \\ \hline
- & -\mbf H_{\mbf x, 2} & \mbf 1 & & &    \\ 
- & & -\mbf G_{\mbf x, 2} &  & &  -\mbf G_{\mbf f, 2}   \\ \hline
+ -\Vec H_{\Vec x, 1} & \Vec 1 & &  & &   \\ 
+ & -\Vec G_{\Vec x, 1} &  &  &  &   -\Vec G_{\Vec f, 1} \\ \hline
+ & -\Vec H_{\Vec x, 2} & \Vec 1 & & &    \\ 
+ & & -\Vec G_{\Vec x, 2} &  & &  -\Vec G_{\Vec f, 2}   \\ \hline
  &  & \ddots & \ddots & & \vdots  \\  \hline
-  & & & -\mbf H_{\mbf x, K} & \mbf 1 & \\ 
- & & & & -\mbf G_{\mbf x, K} &  -\mbf G_{\mbf f, K}   \\  
+  & & & -\Vec H_{\Vec x, K} & \Vec 1 & \\ 
+ & & & & -\Vec G_{\Vec x, K} &  -\Vec G_{\Vec f, K}   \\  
 \end{array}\right], 
 \end{equation},
 
 \begin{equation}
-\mbf G_{\mbf x, k}^j := \pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} \bbm -\mbf C_{cv} \mbf C_{v_k i} & \mbf C_{cv} (\mbf C_{v_k i} (\pmb{\rho}_i^{p_j i} - \mbf r_i^{v_k i} ) )^\times  \ebm\end{equation}
+\Vec G_{\Vec{x}, k}^j := \pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} \bbm -\Vec C_{cv} \Vec C_{v_k i} & \Vec C_{cv} (\Vec C_{v_k i} (\boldsymbol{\rho}_i^{p_j i} - \Vec r_i^{v_k i} ) )^\times  \ebm\end{equation}
 
 \begin{equation}
-\quad \mbf G_{\mbf x, k} := \bbm \mbf G_{\mbf x, k}^1 \\ \vdots \\ \mbf G_{\mbf x, k}^M \ebm
+\quad \Vec G_{\Vec x, k} := \bbm \Vec G_{\Vec x, k}^1 \\ \vdots \\ \Vec G_{\Vec x, k}^M \ebm
 \end{equation}
 
 \begin{equation}
-\mbf G_{\mbf f, k}^j := \pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} \bbm \mbf C_{cv} \mbf C_{v_k i}\ebm\end{equation}
+\Vec G_{\Vec f, k}^j := \pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} \bbm \Vec C_{cv} \Vec C_{v_k i}\ebm\end{equation}
 
 \begin{equation}
-\quad \mbf G_{\mbf f, k} := \underbrace{\bbm \mbf G_{\mbf f, k}^1 & & \\ & & \mbf G_{\mbf f, k}^2 & \\ & & \vdots &  \\ & & & \mbf G_{\mbf f, k}^M \ebm}_{\text{$j$th block column position given by feature id $n$}} \in \Real^{4M \times 3N}
+\quad \Vec G_{\Vec f, k} := \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature id $n$}} \in \Real^{4M \times 3N}
 \end{equation}
 
 and,
 \begin{equation}
-\bar{\mbf p}_{c_k}^{p_j c_k} := \bbm x \\ y \\ z \ebm = \mbf C_{cv} \left( \mbf C_{v_k i} (\pmb{\rho}_i^{p_j i} - \mbf r_i^{v_k i} )   - \pmb \rho_v^{cv} \right),
+\bar{\Vec p}_{c_k}^{p_j c_k} := \bbm x \\ y \\ z \ebm = \Vec C_{cv} \left( \Vec C_{v_k i} (\boldsymbol{\rho}_i^{p_j i} - \Vec r_i^{v_k i} )   - \boldsymbol \rho_v^{cv} \right),
 \end{equation}
 
 \begin{equation}
-\pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y  \\ \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u (x-b) \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y\ebm.
+\pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y  \\ \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u (x-b) \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y\ebm.
 \end{equation}
 or for monocular,
 \begin{equation}
-\pd{\mbf g}{ \mbf p}\Bigr|_{\mbf p = \bar{\mbf p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y \ebm.
+\pd{\Vec g}{ \Vec p}\Bigr|_{\Vec p = \bar{\Vec p}_{c_k}^{p_j c_k}} = \bbm \frac{f_u}{z} & 0 & -\frac{1}{z^2} f_u x \\  0 & \frac{f_v}{z} & -\frac{1}{z^2} f_v y \ebm.
 \end{equation}
 
 
@@ -307,7 +307,83 @@ We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by i
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k, t_k\right) = \hat{\Vec{P}}_{II,k}$. 
 
 \subsection{Feature Position Estimation}
-When a feature $f_j$ goes out of view of the camera, the MSCKF generates a batch-optimized estimate $\hat{\Vec{p}}_G^{f_j G}$ of the feature's position in the global frame.
+When a feature $f_j$ goes out of view of the camera, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
+The procedure takes as input $N$ camera poses and $N$ sets of ``ideal'' pixel measurements, where ``ideal'' means that the pixel measurements have been corrected for the camera intrinsics:
+\begin{align}
+\hat{\Vec{z}}_i^{(j)} &= \bbm u'_i & v'_i \ebm ^T = \bbm (u_i - c_u)/f_u & (v_i - c_v)/f_v \ebm ^T
+\end{align}
+We initialize the optimization by estimating the position of feature $f_j$ in camera frame $C_1$ using a linear least squares method with measurements from the first two camera frames, $C_1$ and $C_2$:
+\begin{align}
+\hat{\Vec{p}}_{C_1}^{f_j C_1} := \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & \hat{Z}^{(j)}_{C_1} \ebm ^T = \lambda \boldsymbol{\rho}_{C_1}^{f_j}
+\end{align}
+where
+\begin{align}
+\boldsymbol{\rho}_{C_i}^{f_j} &:= \frac{1}{\sqrt{u'^2_i + v'^2_i + 1}}\bbm u'_i & v'_i & 1\ebm^T
+\end{align}
+and
+\begin{align}
+\lambda &= \left[(\Vec A^T \Vec A)^{-1} \Vec A^T \hat{\Vec{p}}_{C_1}^{C_2 C_1} \right]_1
+\end{align}
+with
+\begin{align}
+\Vec A &:= \bbm \boldsymbol{\rho}_{C_1}^{f_j} & -\boldsymbol{\rho}_{C_2}^{f_j} \ebm.
+\end{align}
+
+Next, we define a vector of three parameters:
+\begin{align}
+\hat{\Vec{y}} &= \bbm \alpha & \beta & \gamma \ebm^T = \frac{1}{\hat{Z}^{(j)}_{C_1}} \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & 1 \ebm ^T
+\end{align}
+The feature position in camera frame $C_i$ can be expressed as
+\begin{align}
+\hat{\Vec{p}}_{C_i}^{f_j C_i} = \hat{\Vec{C}}_{i1} \hat{\Vec{p}}_{C_1}^{f_j C_1}  + \hat{\Vec{p}}_{C_i}^{C_1 C_i}
+\end{align}
+With our state parameters, we can use this equation to define three functions:
+\begin{align}
+    \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \\ h_3 (\hat{\Vec{y}}) \ebm 
+    & = \hat{\Vec{C}}_{i1} \bbm \alpha \\ \beta \\ 1 \ebm + \gamma  \hat{\Vec{p}}_{C_i}^{C_1 C_i} \notag \\
+    & = \bbm C_{11} \alpha + C_{12} \beta + C_{13} + \gamma \hat{x}_{C_i}^{C_1 C_i} \\[0.5em]
+            C_{21} \alpha + C_{22} \beta + C_{23} + \gamma \hat{y}_{C_i}^{C_1 C_i} \\[0.5em]
+            C_{31} \alpha + C_{32} \beta + C_{33} + \gamma \hat{z}_{C_i}^{C_1 C_i} 
+        \ebm 
+\end{align}
+The camera measurement error can then be written as
+\begin{align}
+\Vec e(\hat{\Vec{y}}) = \hat{\Vec{z}}_i^{(j)} - \frac{1}{h_3 (\hat{\Vec{y}}) } \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \ebm
+\end{align}
+The least squares linear system then becomes
+\begin{align}
+(\Vec  E^T \Vec W ^{-1} \Vec E ) \delta \Vec{y}^*  = - \Vec{E}^T\Vec{W}^{-1}\Vec{e}(\hat{\Vec{y}})
+\end{align}
+where
+\begin{align}
+\Vec E &= \frac{\partial \Vec e}{\partial \hat{\Vec{y}}}
+& &
+\text{and}
+&
+\Vec W &= \bbm \Vec{R}_1'^{(j)} & & \\ & \ddots & \\ & & \Vec{R}_N'^{(j)} \ebm 
+\end{align}
+with $\Vec{R}_i'^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
+
+The Jacobian elements are given by
+\begin{align}
+\frac{\partial \Vec e}{\partial \alpha} &= 
+    \frac{1}{h_3^2} \bbm -\frac{\partial h_1}{\partial \alpha} h_3 + \frac{\partial h_3}{\partial \alpha} h_1 \\[0.5em]
+                        -\frac{\partial h_2}{\partial \alpha} h_3 + \frac{\partial h_3}{\partial \alpha} h_2 \ebm
+\\[0.5em]
+\frac{\partial \Vec e}{\partial \beta} &= 
+    \frac{1}{h_3^2} \bbm -\frac{\partial h_1}{\partial \beta} h_3 + \frac{\partial h_3}{\partial \beta} h_1 \\[0.5em] 
+                        -\frac{\partial h_2}{\partial \beta} h_3 + \frac{\partial h_3}{\partial \beta} h_2 \ebm
+\\[0.5em]
+\frac{\partial \Vec e}{\partial \gamma} &= 
+    \frac{1}{h_3^2} \bbm -\frac{\partial h_1}{\partial \gamma} h_3 + \frac{\partial h_3}{\partial \gamma} h_1 \\[0.5em] 
+                        -\frac{\partial h_2}{\partial \gamma} h_3 + \frac{\partial h_3}{\partial \gamma} h_2 \ebm
+\end{align}
+with
+\begin{align}
+\frac{\partial h_1}{\partial \alpha} &= C_{11}, & \frac{\partial h_1}{\partial \beta} &= C_{12}, & \frac{\partial h_1}{\partial \gamma} &= \hat{x}_{C_i}^{C_1 C_i} \notag \\
+\frac{\partial h_2}{\partial \alpha} &= C_{21}, & \frac{\partial h_2}{\partial \beta} &= C_{22}, & \frac{\partial h_2}{\partial \gamma} &= \hat{y}_{C_i}^{C_1 C_i} \\
+\frac{\partial h_3}{\partial \alpha} &= C_{31}, & \frac{\partial h_3}{\partial \beta} &= C_{32}, & \frac{\partial h_3}{\partial \gamma} &= \hat{z}_{C_i}^{C_1 C_i} \notag .
+\end{align}
 
 \subsection{MSCKF State Correction Equations}
 Now that we have estimated the positions of any features that have gone out of view, we can apply the corresponding motion constraints to the window of poses from which each feature was observed.
