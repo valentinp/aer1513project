@@ -12,12 +12,18 @@ addpath('utils');
 % load('../datasets/dataset3.mat')
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_20noisy.mat')
-load('../datasets/dataset3_fresh_40noisy.mat')
+% load('../datasets/dataset3_fresh_40noisy.mat')
 % load('../datasets/dataset3_fresh_100noisy.mat')
+% load('../datasets/dataset3_fresh_10lessnoisy.mat')
+% load('../datasets/dataset3_fresh_20lessnoisy.mat')
+% load('../datasets/dataset3_fresh_40lessnoisy.mat')
+load('../datasets/dataset3_fresh_60lessnoisy.mat')
+% load('../datasets/dataset3_fresh_80lessnoisy.mat')
+% load('../datasets/dataset3_fresh_100lessnoisy.mat')
 
 %Dataset window bounds
-kStart = 500; kEnd = 1000;
-% kStart = 1215; kEnd = 1715;
+% kStart = 500; kEnd = 1000;
+kStart = 1215; kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -45,7 +51,7 @@ noiseParams.initialIMUCovar = 1e-4 * eye(12);
 msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
-msckfParams.minRCOND       = 1e-6;
+msckfParams.minRCOND       = 0;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;
 
@@ -223,7 +229,7 @@ for state_k = kStart:(kEnd-1)
             %optimization
             [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
-%             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
+%             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; RCOND = 1;
             
             if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND
                 break;
@@ -268,7 +274,7 @@ for state_k = kStart:(kEnd-1)
                 r_n = r_o;
                 R_n = R_o;
             end           
-
+            
             % Build MSCKF covariance matrix
             P = [msckfState.imuCovar, msckfState.imuCamCovar;
                    msckfState.imuCamCovar', msckfState.camCovar];
@@ -291,6 +297,9 @@ for state_k = kStart:(kEnd-1)
             msckfState.camCovar = P_corrected(13:end,13:end);
             msckfState.imuCamCovar = P_corrected(1:12, 13:end);
            
+%             figure(1); clf; imagesc(deltaX); axis equal; axis ij; colorbar;
+%             drawnow;
+            
         end
         
     end
@@ -307,7 +316,12 @@ for state_k = kStart:(kEnd-1)
             prunedStates(end+1:end+length(deletedCamStates)) = deletedCamStates;
         end    
         
-%     figure(1); imagesc(msckfState.imuCovar(10:12,10:12)); axis equal; axis ij; colorbar;
+        if max(max(msckfState.imuCovar(1:12,1:12))) > 1
+            disp('omgbroken');
+        end
+        
+%     figure(1); imagesc(msckfState.imuCovar(1:12,1:12)); axis equal; axis ij; colorbar;
+%     drawnow;
 end %for state_K = ...
 
 
