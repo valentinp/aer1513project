@@ -1,7 +1,7 @@
 clc;
 clear all;
 addpath('../msckf/utils');
-load('../dataset3.mat')
+load('../datasets/dataset3.mat')
 
 rng(42);
 
@@ -11,6 +11,10 @@ calibParams.c_v = cv;
 calibParams.f_u = fu;
 calibParams.f_v = fv;
 calibParams.b = b;
+
+%Noise parameters
+mu = zeros(4,1);
+sigma = diag(y_var);
 
 %Generate new landmarks
 newLmNum = 100;
@@ -45,7 +49,8 @@ for k = 1:length(t)
         p_lc_c = homo2cart(T_ci*cart2homo(p_li_i));
         [yMeas] = stereoCamProject(p_lc_c, calibParams);
         if all(yMeas > 0) && all(yMeas([1,3]) <= 640) && all(yMeas([2,4]) <= 480)
-                y_k_j(:,k, lm_i) = yMeas;
+                noise = mvnrnd(mu, sigma)';
+                y_k_j(:,k, lm_i) = yMeas + noise;
         else
                 y_k_j(:,k, lm_i) = -1*ones(4,1);
         end
@@ -53,4 +58,4 @@ for k = 1:length(t)
 end
 
 
-save('../dataset3_fresh3.mat');
+save('../datasets/dataset3_fresh_100noisy.mat');
