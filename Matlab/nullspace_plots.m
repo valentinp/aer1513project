@@ -17,7 +17,7 @@ hold on
 plot(tPlot, swf_trans_err(1,:), '-g', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim([-transLim transLim])
-legend('MSCKF', 'SWF');
+legend('With Nullspace Projection', 'Without Nullspace Projection');
 title(sprintf('Translational Error'))
 ylabel('\delta r_x [m]')
 
