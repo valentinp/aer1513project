@@ -9,12 +9,16 @@ clear;
 close all;
 clc;
 addpath('utils');
-load('../datasets/dataset3_fresh2.mat')
-% load('../dataset3.mat')
+
+% load('../datasets/dataset3.mat')
+% load('../datasets/dataset3_fresh_10noisy.mat')
+% load('../datasets/dataset3_fresh_20noisy.mat')
+load('../datasets/dataset3_fresh_40noisy.mat')
+% load('../datasets/dataset3_fresh_100noisy.mat')
 
 %Dataset window bounds
-% kStart = 500; kEnd = 1000;
-kStart = 1215; kEnd = 1715;
+kStart = 500; kEnd = 1000;
+% kStart = 1215; kEnd = 1715;
 
 %Set constant
 numLandmarks = size(y_k_j,3);
@@ -29,6 +33,7 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
+y_var = [1,1,1,1];
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
@@ -41,8 +46,11 @@ noiseParams.initialIMUCovar = 1e-4 * eye(12);
 msckfParams.minTrackLength = Inf;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.minRCOND       = 1e-6;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;
+
+LMLambda = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -214,11 +222,11 @@ for state_k = kStart:(kEnd-1)
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
-            [p_f_G, Jcost] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+            [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
 %             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; 
             
-            if Jcost > msckfParams.maxGNCost
+            if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND
                 break;
             else
                 numFeatureTracksResidualized = numFeatureTracksResidualized + 1;
@@ -268,7 +276,7 @@ for state_k = kStart:(kEnd-1)
 
             % Calculate Kalman gain
             K = (P*T_H') / ( T_H*P*T_H' + R_n ); % == (P*T_H') * inv( T_H*P*T_H' + R_n )
-%             K = (P*H_o') / ( H_o*P*H_o' + R_n );
+%             K = (P*T_H') / ( T_H*P*T_H' + R_n + LMLambda*eye(size(R_n,1)));
 
             % State correction
             deltaX = K * r_n;
@@ -338,7 +346,7 @@ transLim = [-0.4 0.4];
 msckf_trans_err = p_C_G_est - p_C_G_GT;
 msckf_rot_err = theta_CG_err;
 
-save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err');
+save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
 
 % Translation Errors
 figure

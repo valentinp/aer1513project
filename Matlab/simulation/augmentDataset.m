@@ -12,6 +12,7 @@ calibParams.f_v = fv;
 calibParams.b = b;
 
 %Noise parameters
+y_var = [1,1,1,1];
 mu = zeros(4,1);
 sigma = diag(y_var);
 
@@ -66,4 +67,4 @@ for k = 1:length(t)
 end
 
 
-save('../datasets/dataset3_fresh_100noisy.mat');
+save('../datasets/dataset3_fresh_100lessnoisy.mat');
