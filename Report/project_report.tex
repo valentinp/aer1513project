@@ -602,6 +602,17 @@ This result indicates that the MSCKF is much more sensitive to feature density t
 
 Table [TABLETABLETABLE] provides summary statistics of each algorithm's performance on the synthetic datasets.
 
+\begin{table*}[t]
+  \centering
+    \caption{Comparison of root mean squared error (RMSE) and Normalized Estimation Error Squared (NEES) of the MSCKF and SWF for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$.}
+  \begin{tabular}{*{7}{c}}
+    \hline
+Feature Count & MSCKF Position RMSE & MSCKF Rotation RMSE & MSCKF NEES & SWF Position RMSE & SWF Rotation RMSE & SWF NEES \\ \hline
+40            & 0.2672              & 0.1378              & 10.179     & 0.1750            & 0.0495            & 2280     \\
+60            & 0.2550              & 0.1247              & 12.03      & 0.1687            & 0.0377            & 2093     \\
+100           & 0.2304              & 0.0952              & 16.755     & 0.1755            & 0.0481            & 2013     \\ \hline
+  \end{tabular}
+\end{table*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
