@@ -350,9 +350,9 @@ where
 & &
 \text{and}
 &
-\Vec W &= \text{diag}\left\{ \Vec{R}_1'^{(j)}, \hdots, \Vec{R}_N'^{(j)} \right\}
+\Vec W &= \text{diag}\left\{ \Vec{R}_1^{(j)}, \hdots, \Vec{R}_N^{(j)} \right\}
 \end{align}
-with $\Vec{R}_i'^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
+with $\Vec{R}_i^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
 
 The Jacobian elements are given by
 \begin{align}
@@ -407,7 +407,7 @@ where the left $\Vec{0}$ in $\Vec{H}_{\Vec{x}, i}^{(j)}$ has dimension $2\times\
              0 & \hat{Z}^{(j)}_{C_i} & -\hat{Y}^{(j)}_{C_i}
     \ebm .
 \end{align}
-$\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Vec{R}_i^{(j)} = \text{diag}\left\{\sigma^2_u, \sigma^2_v\right\}$.
+$\Vec{n}_i^{(j)}$ is a zero-mean Gaussian noise term with covariance matrix $\Vec{R}_i^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
 
 By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M_j \times 1$ measurement error vector of feature $f_j$ over the entire window of camera poses, where $M_j$ is the number of camera poses from which feature $f_j$ was observed:
 \begin{align} \label{eq:residual_stacked}

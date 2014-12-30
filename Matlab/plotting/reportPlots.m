@@ -1,3 +1,5 @@
+plotAbsErr = true;
+
 %% 500-1000
 
 swf10 = load('swf_500_1000_10.mat');
@@ -13,9 +15,30 @@ kStart = 500;
 kEnd = 1000;
 
 
-transLim = 0.5;
-rotLim = 0.5;
+transLim = [-0.5 0.5];
+rotLim = [-0.25 0.25];
 fontSize = 14;
+
+if plotAbsErr
+    imu.msckf_trans_err = abs(imu.msckf_trans_err);
+    msckf5.msckf_trans_err = abs(msckf5.msckf_trans_err);
+    msckf10.msckf_trans_err = abs(msckf10.msckf_trans_err);
+    msckf20.msckf_trans_err = abs(msckf20.msckf_trans_err);
+    swf10.swf_trans_err = abs(swf10.swf_trans_err);
+    swf50.swf_trans_err = abs(swf50.swf_trans_err);
+    swf100.swf_trans_err = abs(swf100.swf_trans_err);
+
+    imu.msckf_rot_err = abs(imu.msckf_rot_err);
+    msckf5.msckf_rot_err = abs(msckf5.msckf_rot_err);
+    msckf10.msckf_rot_err = abs(msckf10.msckf_rot_err);
+    msckf20.msckf_rot_err = abs(msckf20.msckf_rot_err);
+    swf10.swf_rot_err = abs(swf10.swf_rot_err);
+    swf50.swf_rot_err = abs(swf50.swf_rot_err);
+    swf100.swf_rot_err = abs(swf100.swf_rot_err);
+    
+    transLim = transLim - transLim(1);
+    rotLim = rotLim - rotLim(1);
+end
 
 figure
 subplot(3,1,1)
@@ -29,11 +52,11 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(1,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(1,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
 set(h_legend,'FontSize',10);
 
-title(sprintf('Translational Error (Interval 1)'))
+title(sprintf('Absolute Translational Error (Interval 1)'))
 ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
 grid on
@@ -51,7 +74,7 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(2,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(2,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 ylabel('\delta r_y [m]')
 set(gca,'FontSize',fontSize)
 grid on
@@ -69,7 +92,7 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(3,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(3,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 ylabel('\delta r_z [m]')
 xlabel('t_k [s]')
 set(gca,'FontSize',fontSize)
@@ -92,8 +115,8 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(1,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(1,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(1,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
-title(sprintf('Rotational Error (Interval 1)'))
+ylim(rotLim)
+title(sprintf('Absolute Rotational Error (Interval 1)'))
 ylabel('\delta\theta_x')
 h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
 set(h_legend,'FontSize',10);
@@ -113,7 +136,7 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(2,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(2,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(2,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
+ylim(rotLim)
 ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
 grid on
@@ -130,7 +153,7 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(3,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(3,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(3,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
+ylim(rotLim)
 ylabel('\delta\theta_z')
 xlabel('t_k [s]')
 grid on
@@ -157,9 +180,30 @@ load('../datasets/dataset3.mat');
 kStart = 1215;
 kEnd = 1715;
 
-transLim = 1;
-rotLim = 0.5;
+transLim = [-1 1];
+rotLim = [-0.5 0.5];
 fontSize = 14;
+
+if plotAbsErr
+    imu.msckf_trans_err = abs(imu.msckf_trans_err);
+    msckf5.msckf_trans_err = abs(msckf5.msckf_trans_err);
+    msckf10.msckf_trans_err = abs(msckf10.msckf_trans_err);
+    msckf20.msckf_trans_err = abs(msckf20.msckf_trans_err);
+    swf10.swf_trans_err = abs(swf10.swf_trans_err);
+    swf50.swf_trans_err = abs(swf50.swf_trans_err);
+    swf100.swf_trans_err = abs(swf100.swf_trans_err);
+
+    imu.msckf_rot_err = abs(imu.msckf_rot_err);
+    msckf5.msckf_rot_err = abs(msckf5.msckf_rot_err);
+    msckf10.msckf_rot_err = abs(msckf10.msckf_rot_err);
+    msckf20.msckf_rot_err = abs(msckf20.msckf_rot_err);
+    swf10.swf_rot_err = abs(swf10.swf_rot_err);
+    swf50.swf_rot_err = abs(swf50.swf_rot_err);
+    swf100.swf_rot_err = abs(swf100.swf_rot_err);
+    
+    transLim = transLim - transLim(1);
+    rotLim = rotLim - rotLim(1);
+end
 
 figure
 subplot(3,1,1)
@@ -173,11 +217,11 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(1,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(1,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
 set(h_legend,'FontSize',10);
 
-title(sprintf('Translational Error (Interval 2)'))
+title(sprintf('Absolute Translational Error (Interval 2)'))
 ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
 grid on
@@ -195,7 +239,7 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(2,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(2,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 ylabel('\delta r_y [m]')
 set(gca,'FontSize',fontSize)
 grid on
@@ -214,7 +258,7 @@ plot(t(kStart:kEnd), swf50.swf_trans_err(3,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_trans_err(3,:), '--g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim([-transLim transLim])
+ylim(transLim)
 ylabel('\delta r_z [m]')
 xlabel('t_k [s]')
 set(gca,'FontSize',fontSize)
@@ -237,8 +281,8 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(1,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(1,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(1,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
-title(sprintf('Rotational Error (Interval 2)'))
+ylim(rotLim)
+title(sprintf('Absolute Rotational Error (Interval 2)'))
 ylabel('\delta\theta_x')
 h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-50', 'MSCKF 20-100', 'SWF 10', 'SWF 50', 'SWF 100','Location', 'northwest');
 set(h_legend,'FontSize',10);
@@ -258,7 +302,7 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(2,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(2,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(2,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
+ylim(rotLim)
 ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
 grid on
@@ -275,7 +319,7 @@ plot(t(kStart:kEnd), swf10.swf_rot_err(3,:), '-g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf50.swf_rot_err(3,:), '-.g', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), swf100.swf_rot_err(3,:), '--g', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
-ylim([-rotLim rotLim])
+ylim(rotLim)
 ylabel('\delta\theta_z')
 xlabel('t_k [s]')
 grid on
