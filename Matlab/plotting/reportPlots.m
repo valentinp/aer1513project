@@ -2,9 +2,9 @@ plotAbsErr = true;
 
 %% 500-1000
 
-swf10 = load('swf_500_1000_10.mat');
-swf50 = load('swf_500_1000_50.mat');
-swf100 = load('swf_500_1000_100.mat');
+swf10 = load('swf_500_1000_10_dataset3.mat');
+swf50 = load('swf_500_1000_50_dataset3.mat');
+swf100 = load('swf_500_1000_100_dataset3.mat');
 msckf5 = load('msckf_500_1000_min5_maxInf');
 msckf10 = load('msckf_500_1000_min10_max50');
 msckf20 = load('msckf_500_1000_min20_max100');
@@ -168,20 +168,22 @@ export_fig(gcf, filename, '-transparent');
 
 %% 1215-1715
 
-swf10 = load('swf_1215_1715_10.mat');
-swf50 = load('swf_1215_1715_50.mat');
-swf100 = load('swf_1215_1715_100.mat');
+swf10 = load('swf_1215_1715_10_dataset3.mat');
+swf50 = load('swf_1215_1715_50_dataset3.mat');
+swf100 = load('swf_1215_1715_100_dataset3.mat');
 msckf5 = load('msckf_1215_1715_min5_maxInf');
 msckf10 = load('msckf_1215_1715_min10_max50');
 msckf20 = load('msckf_1215_1715_min20_max100');
 imu = load('imu_1215_1715.mat');
 
+plotAbsErr = true;
+
 load('../datasets/dataset3.mat');
 kStart = 1215;
 kEnd = 1715;
 
-transLim = [-1 1];
-rotLim = [-0.5 0.5];
+transLim = [0 1];
+rotLim = [0 1];
 fontSize = 14;
 
 if plotAbsErr
