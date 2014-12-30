@@ -9,15 +9,15 @@ clear;
 close all;
 clc;
 addpath('utils');
-
+tic
 % load('../datasets/dataset3.mat')
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_10lessnoisy.mat')
 %load('../datasets/dataset3_fresh_20lessnoisy.mat')
-%load('../datasets/dataset3_fresh_40lessnoisy.mat')
+load('../datasets/dataset3_fresh_40lessnoisy.mat')
 %load('../datasets/dataset3_fresh_60lessnoisy.mat')
 %load('../datasets/dataset3_fresh_80lessnoisy.mat')
-load('../datasets/dataset3_fresh_100lessnoisy.mat')
+%load('../datasets/dataset3_fresh_100lessnoisy.mat')
 
 %Dataset window bounds
 kStart = 500; kEnd = 1000;
@@ -321,7 +321,7 @@ for state_k = kStart:(kEnd-1)
 %     drawnow;
 end %for state_K = ...
 
-
+toc
 
 
 %% ==========================PLOT ERRORS======================== %%
