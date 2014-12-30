@@ -551,6 +551,23 @@ Moreover, the features that are visible do not remain in view of the camera for 
     \label{fig:comp_2}
 \end{figure}
 
+
+\begin{figure}
+    \centering
+    \subfigure {
+        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-Feat-Density-1215-1715-Trans}
+        \label{fig:comp_3:trans_err}
+    }
+
+    \subfigure {
+        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-Feat-Density-1215-1715-Rot}
+        \label{fig:comp_3:rot_err}
+    }
+
+    \caption{Comparison of MSCKF, SWF, and IMU integration for three different synthetic maps generated based on the imu data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the amount of features in the dataset (20, 40 or 60).}
+    \label{fig:comp_3}
+\end{figure}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 Things quickly got out of hand when Matlab achieved sentience. 
