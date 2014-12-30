@@ -74,7 +74,7 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Each approach is motivated and outlined in detail with.
+Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a monocular camera and then correct this motion with image observations of salient features. The SWF includes the feature positions in the state estimate itself, while the MSCKF estimates the feature positions in a separate optimization routine. Herein, we compare the performance of the MSCKF and SWF, in error bounds and consistency, on two different datasets with real and synthetic features. We analyze the effect of feature track length and feature density. In general, the SWF is found to be more accurate than the MSCKF. The MSCKF, however, is signficantly faster to compute, has good consistency, and its performance improves with more tracked features. 
 \end{abstract}
 
 
@@ -97,6 +97,13 @@ In this work, we compare and contrast three modern solutions, the Extended Kalma
 We present an experimental comparison of the SWF and MSCKF using a dataset consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+    \centering
+    \includegraphics[width=0.45\textwidth]{figs/sensorhead}
+    \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
+    \label{fig:sensorhead}
+\end{figure}
+
 \section{Extended Kalman Filter (EKF)} \label{sec:EKF}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and feature positions are simultaneously estimated at each time step by augmenting the filter state with feature positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of features by recursively updating the state as new measurements become available.
@@ -478,12 +485,7 @@ The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fi
 This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.45\textwidth]{figs/sensorhead}
-    \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
-    \label{fig:sensorhead}
-\end{figure}
+
 
 \begin{figure}
     \centering
@@ -624,7 +626,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 \begin{table}
     \centering
     \caption{Comparison of Average Root Mean Squared Error (ARMSE), Average Normalized Estimation Error Squared (ANEES), and Compute Time of IMU integration, MSCKF, and SWF on synthetic datasets.}
-    \begin{tabular}{*{5}c} 
+    \begin{tabular}{rlccc} 
                     &                   & \multicolumn{3}{c}{Feature Count} \B      \\ \cline{3-5}
                     &                   & 40        & 60        & 100       \T\B    \\ \hline
         IMU Only    & Position ARMSE    & 0.3679    & 0.3679    & 0.3679    \T      \\
