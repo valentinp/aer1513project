@@ -95,7 +95,7 @@ The question, then, is how best to fuse measurements from these two sensor types
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast three modern solutions, the Extended Kalman Filter (EKF), the Sliding Window Filter (SWF), and a hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF), that combines the strengths of both.
+In this work, we compare and contrast three modern solutions, the Extended Kalman Filter (EKF), the Sliding Window Filter (SWF), and a hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}, that combines the strengths of both.
 We present an experimental comparison of the SWF and MSCKF using a dataset consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,7 +166,7 @@ As a result, the filter may not maximally constrain some vehicle poses, and henc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:MSCKF}
-The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
+The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
 
@@ -506,6 +506,14 @@ At least three features are visible in $64\%$ of this interval, and the number o
     \label{fig:nVisible_int1}
 \end{figure}
 
+Figure \ref{fig:comp_1} shows absolute translational and rotational errors for pure IMU integration and various parameter settings for the MSCKF and SWF.
+For the MSCKF, we varied both the maximum number of observations before triggering an update and the minimum number of observations for a feature track to be used in an update.
+For the SWF, we varied the number of states in the sliding window.
+These parameters did not significantly affect the accuracy of either filter, however Figure \ref{fig:comp_1} shows some small gains in accuracy for larger feature track lengths and window sizes.
+
+On this interval, the SWF slightly outperforms the MSCKF in terms of translational accuracy in the $y$- and $z$-directions, and significantly outperforms the MSCKF in terms of rotational accuracy about the $x$- and $y$-axes.
+The MSCKF does not perform much better than pure IMU integration on this interval, likely due to the overall low number of feature tracks in this dataset.
+
 \begin{figure}
     \centering
     \subfigure {
@@ -522,11 +530,16 @@ At least three features are visible in $64\%$ of this interval, and the number o
     \label{fig:comp_1}
 \end{figure}
 
+
 \subsection{Experiment 2: Fewer visible features}
 In the second experiment, we compared the SWF and MSCKF for various parameter settings on an interval with few visible features.
 Figure \ref{fig:nVisible_int2} shows the number of visible features in the second interval.
 At least three features are visible in only $56\%$ of this interval, and the number of visible features rarely exceeds ten.
 Moreover, the features that are visible do not remain in view of the camera for as long a time as in the first interval.
+
+Figure \ref{fig:comp_2} shows absolute translational and rotational errors for pure IMU integration and the same MSCKF and SWF parameter settings as in Experiment 1.
+Compared to Interval 1, the difference in performance between the MSCKF and SWF is less pronounced, with the exception of the SWF's clearly superior translational accuracy in the $y$-direction.
+Neither filter performs substantially better than pure IMU integration on this interval, again likely due to the overall low number of feature tracks in this dataset.
 
 \begin{figure}
     \centering
@@ -553,10 +566,11 @@ Moreover, the features that are visible do not remain in view of the camera for 
 
 
 \subsection{Experiment 3: Effect of feature density}
-Finally, we investigated the effect of feature density on the performance of both the MSCKF and SWF.
-For this experiment, we modified the ``Starry Night'' dataset by creating synthetic feature distributions with larger spatial extents and more features than the original dataset.
-We retained the original IMU data, but simulated camera measurements with lower measurement noise.
+In order to investigate the effect of feature density on the performance of the MSCKF and SWF, we modified the ``Starry Night'' dataset by creating synthetic feature distributions with larger spatial extents and more features than the original dataset.
+We constructed each dataset so that the larger maps contained the same features as the smaller maps, plus additional features to make up the difference.
+Although the camera measurements in these datasets are synthetic, the IMU data are unchanged from the original dataset.
 Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribution for the 100-feature synthetic dataset.
+By generating longer feature tracks and increasing the number of features visible at each time step, these synthetic datasets allowed for a clearer comparison between the MSCKF and SWF.
 
 \begin{figure}
     \centering
@@ -564,6 +578,11 @@ Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribut
     \caption{Modified ``Starry Night'' dataset with 100 synthetic features. The sensor trajectory is identical to the original dataset.}
     \label{fig:trajectory_groundtruth_100lessnoisy}
 \end{figure}
+
+Figure \ref{fig:comp_3} compares translational and rotational root mean squared error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
+On all three datasets, the SWF outperforms the MSCKF by a wide margin, although the MSCKF's performance improves as more features are added.
+
+
 
 \begin{figure}
     \centering
@@ -577,7 +596,7 @@ Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribut
         \label{fig:comp_3:rot_err}
     }
 
-    \caption{Comparison of cumulative Root Mean Squared Error (RMSE) of MSCKF, SWF, and IMU integration for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
+    \caption{Comparison of root mean squared error (RMSE) of the MSCKF, SWF, and pure IMU integration for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
 \end{figure}
 
