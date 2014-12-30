@@ -13,8 +13,8 @@ addpath('utils');
 % load('../datasets/dataset3.mat')
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_20noisy.mat')
-load('../datasets/dataset3_fresh_40noisy.mat')
-% load('../datasets/dataset3_fresh_100noisy.mat')
+%load('../datasets/dataset3_fresh_40noisy.mat')
+ load('../datasets/dataset3_fresh_100noisy.mat')
 
 %Dataset window bounds
 kStart = 500; kEnd = 1000;
