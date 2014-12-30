@@ -5,9 +5,9 @@ clc
 clear
 close all
 addpath('utils')
-fileName = '40lessnoisy';
-load(['../datasets/dataset3_fresh_' fileName '.mat'])
-%load('../datasets/dataset3.mat');
+fileName = 'dataset3';
+%load(['../datasets/dataset3_fresh_' fileName '.mat'])
+load('../datasets/dataset3.mat');
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -30,7 +30,7 @@ imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 1215;
 kEnd = 1715; 
-kappa = 25; %Sliding window size
+kappa = 5i0; %Sliding window size
 maxOptIter = 25;
 
 k1 = kStart;
