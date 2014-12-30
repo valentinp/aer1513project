@@ -51,7 +51,7 @@
 \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
 
 \title{\LARGE \bf
-The Battle for Filter Supremacy: A Retrospective: The Movie: The Game: The Paper
+The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constraint Kalman Filter and Sliding Window Filter
 }
 
 
@@ -577,7 +577,7 @@ By generating longer feature tracks and increasing the number of features visibl
     \label{fig:trajectory_groundtruth_100lessnoisy}
 \end{figure}
 
-Figure \ref{fig:comp_3} compares translational and rotational root mean squared error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
+Figure \ref{fig:comp_3} compares translational and rotational Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
 With additional features, both algorithms consistently outperform pure IMU integration, and the SWF outperforms the MSCKF by a wide margin on all three datasets.
 Note that the MSCKF's performance improves as the number of features increases while the SWF's performance is not significantly affected by increasing feature count.
 This result indicates that the MSCKF is much more sensitive to feature density than the SWF.
@@ -594,47 +594,40 @@ This result indicates that the MSCKF is much more sensitive to feature density t
         \label{fig:comp_3:rot_err}
     }
 
-    \caption{Comparison of root mean squared error (RMSE) of the MSCKF, SWF, and pure IMU integration for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
+    \caption{Comparison of Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
 \end{figure}
 
-Table [TABLETABLETABLE] provides summary statistics of each algorithm's performance on the synthetic datasets.
+Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
+As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
+It is worth noting, however, that, on average, the MSCKF achieves low Normalized Estimation Error Squared (NEES) values, which indicates that the filter scores well on consistency if not on accuracy.
+The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window.
+The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so the SWF may be considered inconsistent in the absence of a known map.
+
+Another point in favour of the MSCKF is that the computational effort required was significantly smaller than for the SWF.
+The MSCKF may therefore be better suited to vehicles with limited computational resources, particularly if they are operating in feature-rich environments.
 
 \begin{table*}[t]
   \centering
-    \caption{Comparison of root mean squared error (RMSE) and Normalized Estimation Error Squared (NEES) of the MSCKF and SWF for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$.}
-  \begin{tabular}{*{7}{c}}
-    \hline
-Feature Count & MSCKF Position RMSE & MSCKF Rotation RMSE & MSCKF NEES & SWF Position RMSE & SWF Rotation RMSE & SWF NEES \\ \hline
-40            & 0.2672              & 0.1378              & 10.179     & 0.1750            & 0.0495            & 2280     \\
-60            & 0.2550              & 0.1247              & 12.03      & 0.1687            & 0.0377            & 2093     \\
-100           & 0.2304              & 0.0952              & 16.755     & 0.1755            & 0.0481            & 2013     \\ \hline
+    \caption{Comparison of Average Root Mean Squared Error (ARMSE), Average Normalized Estimation Error Squared (ANEES), and Compute Time of the MSCKF and SWF on synthetic datasets.}
+  \begin{tabular}{*{11}{c}}
+              && \multicolumn{4}{c}{MSCKF} & & \multicolumn{4}{c}{SWF} \B \\ \cline{3-6} \cline{8-11}
+Feature Count && Pos. ARMSE    & Rot. ARMSE & ANEES     & Compute Time && Pos. ARMSE   & Rot. ARMSE     & ANEES & Compute Time \T\B \\ \hline
+40            && 0.2672        & 0.1378        & 10.18  & 12.19 s      && 0.1750        & 0.0495        & 2280  & 114.3 s   \T \\
+60            && 0.2550        & 0.1247        & 12.03  & 14.64 s      && 0.1687        & 0.0377        & 2093  & 175.9 s   \\
+100           && 0.2304        & 0.0952        & 16.76  & 20.58 s      && 0.1755        & 0.0481        & 2013  & 245.3 s   \B \\ \hline
   \end{tabular}
+  \label{tab:rmse_nees}
 \end{table*}
-
-\begin{table}[t]
-  \centering
-  \caption{Compute times.}
-\begin{tabular}{*{3}{c}}
-\hline
-Map Size & MSCKF Run Time [s] & SWF 25 Run Time [s]   \\ \hline
-40       & 12.19          & 114.3            \\
-60       & 14.64          & 175.9            \\
-100      & 20.58          & 245.3           \\ \hline
-\end{tabular}
-\end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
-In environments with more features, both algorithms provide substantial gains over pure IMU integration, although the SWF significantly outperformed the MSCKF on the datasets we tested.
+In environments with more features, both algorithms provide substantial gains over pure IMU integration, al though the SWF significantly outperformed the MSCKF in terms of accuracy on the datasets we tested.
 However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
-It is unclear from these results which algorithm would perform best in the limit of infinite features.
+It is unclear from these results which algorithm would perform best as the number of features grows very large.
 
-[Something something consistency NEES]
-
-It is worth noting that although the SWF achieved superior accuracy in most cases, the computational effort it required was significantly greater than for the MSCKF.
-The MSCKF may therefore be better suited to vehicles with limited computational resources, particularly if they are operating in feature-rich environments.
+Although the SWF appears to be more accurate than the MSCKF, 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
