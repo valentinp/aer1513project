@@ -504,6 +504,7 @@ fontSize = 14;
 
 
 figure
+set(gcf, 'Position', [100 100 600 200]);
 plot(t(kStart:kEnd), sqrt(sum(imu.msckf_trans_err.^2, 1)/3), '-k', 'LineWidth', 2)
 hold on
 plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_trans_err.^2, 1)/3), '-b', 'LineWidth', 2)
@@ -519,6 +520,7 @@ ylim(transLim)
 h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
 set(h_legend,'FontSize',10);
 title(sprintf('Feature Density Comparison: Position RMSE'))
+xlabel('t_k [s]');
 ylabel('RMSE [m]')
 set(gca,'FontSize',fontSize)
 grid on
@@ -528,6 +530,7 @@ filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Trans.pdf');
 export_fig(gcf, filename, '-transparent');
 
 figure
+set(gcf, 'Position', [100 100 600 200]);
 plot(t(kStart:kEnd), sqrt(sum(imu.msckf_rot_err.^2, 1)/3), '-k', 'LineWidth', 2)
 hold on
 plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_rot_err.^2, 1)/3), '-b', 'LineWidth', 2)
@@ -538,9 +541,10 @@ plot(t(kStart:kEnd), sqrt(sum(swf60.swf_rot_err.^2, 1)/3), '--g', 'LineWidth', 2
 plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 2)
 
 xlim([t(kStart) t(kEnd) ]);
-ylim(rotLim)
+ylim([0 0.25])
 title(sprintf('Feature Density Comparison: Rotation RMSE'))
-ylabel('RMSE')
+ylabel('RMSE [m]')
+xlabel('t_k [s]');
 h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
 set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
