@@ -418,7 +418,7 @@ The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{di
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
 Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly.
 Figure \ref{fig:nullspace} shows the effect of attempting to use this error directly in the EKF.
-The correlation between the measurement error and the state causes the filter to behave very poorly after a small number of time steps.
+The correlation between the measurement error and the state causes the filter estimates to drift further from the true values.
 
 \begin{figure}
     \centering
@@ -432,7 +432,7 @@ The correlation between the measurement error and the state causes the filter to
         \label{fig:nullspace:rot_err}
     }
     
-    \caption{Effect of nullspace projection on MSCKF performance. The correlation between the measurement error and the state causes the filter to behave very poorly after a small number of time steps.}
+    \caption{Effect of nullspace projection on MSCKF performance in a synthetic 100-feature dataset. The correlation between the measurement error and the state causes the filter estimates to drift further from the true values.}
     \label{fig:nullspace}
 \end{figure}
 
