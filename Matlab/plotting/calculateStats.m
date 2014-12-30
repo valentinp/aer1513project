@@ -32,6 +32,14 @@ mean(sqrt(sum(swf60.swf_rot_err.^2, 1)/3))
 mean(sqrt(sum(swf100.swf_rot_err.^2, 1)/3))
 
 %Calculate Average NEES
+stateErr = [imu.msckf_trans_err; imu.msckf_rot_err];
+stateVar = imu.err_sigma.^2;
+avgNEES = 0;
+stepNum = size(stateErr, 2);
+for i = 1:stepNum
+    avgNEES = avgNEES + 1/stepNum*stateErr(:,i)'*inv(diag(stateVar(:,i)))*stateErr(:,i);
+end
+avgNEES
 
 stateErr = [msckf40.msckf_trans_err; msckf40.msckf_rot_err];
 stateVar = msckf40.err_sigma.^2;

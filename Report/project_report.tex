@@ -74,7 +74,7 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Accurate and consistent state estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides
+Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Each approach is motivated and outlined in detail with.
 \end{abstract}
 
 
@@ -611,7 +611,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
   \centering
     \caption{Comparison of Average Root Mean Squared Error (ARMSE), Average Normalized Estimation Error Squared (ANEES), and Compute Time of the MSCKF and SWF on synthetic datasets.}
   \begin{tabular}{*{11}{c}}
-              && \multicolumn{4}{c}{MSCKF} & & \multicolumn{4}{c}{SWF} \B \\ \cline{3-6} \cline{8-11}
+              && \multicolumn{4}{c}{MSCKF} & & \multicolumn{4}{c}{SWF (25)} \B \\ \cline{3-6} \cline{8-11}
 Feature Count && Pos. ARMSE    & Rot. ARMSE & ANEES     & Compute Time && Pos. ARMSE   & Rot. ARMSE     & ANEES & Compute Time \T\B \\ \hline
 40            && 0.2672        & 0.1378        & 10.18  & 12.19 s      && 0.1750        & 0.0495        & 2280  & 114.3 s   \T \\
 60            && 0.2550        & 0.1247        & 12.03  & 14.64 s      && 0.1687        & 0.0377        & 2093  & 175.9 s   \\
@@ -619,6 +619,7 @@ Feature Count && Pos. ARMSE    & Rot. ARMSE & ANEES     & Compute Time && Pos. A
   \end{tabular}
   \label{tab:rmse_nees}
 \end{table*}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}

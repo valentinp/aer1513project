@@ -14,8 +14,8 @@ tic
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_10lessnoisy.mat')
 %load('../datasets/dataset3_fresh_20lessnoisy.mat')
-load('../datasets/dataset3_fresh_40lessnoisy.mat')
-%load('../datasets/dataset3_fresh_60lessnoisy.mat')
+%load('../datasets/dataset3_fresh_40lessnoisy.mat')
+load('../datasets/dataset3_fresh_60lessnoisy.mat')
 %load('../datasets/dataset3_fresh_80lessnoisy.mat')
 %load('../datasets/dataset3_fresh_100lessnoisy.mat')
 
@@ -46,7 +46,7 @@ noiseParams.Q_imu = 0.1*diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
 noiseParams.initialIMUCovar = 1e-4 * eye(12);
     
 %MSCKF parameters
-msckfParams.minTrackLength = 20;     % Set to inf to dead-reckon only
+msckfParams.minTrackLength = Inf;     % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = 10;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 0;
