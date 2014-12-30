@@ -5,9 +5,9 @@ clc
 clear
 close all
 addpath('utils')
-%fileName = '60lessnoisy';
-%load(['../datasets/dataset3_fresh_' fileName '.mat'])
-load('../datasets/dataset3.mat');
+fileName = '40lessnoisy';
+load(['../datasets/dataset3_fresh_' fileName '.mat'])
+%load('../datasets/dataset3.mat');
 
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -28,8 +28,8 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 500;
-kEnd = 1000; 
+kStart = 1215;
+kEnd = 1715; 
 kappa = 25; %Sliding window size
 maxOptIter = 25;
 
@@ -351,9 +351,9 @@ end
 
 
 % Save estimates
- swf_trans_err = transErrVec;
- swf_rot_err = rotErrVec;
- save(sprintf('swf_%d_%d_%d.mat',kStart,kEnd, kappa), 'swf_trans_err', 'swf_rot_err', 'stateSigmaHistMat');
+swf_trans_err = transErrVec;
+swf_rot_err = rotErrVec;
+save(sprintf('swf_%d_%d_%d_%s.mat',kStart,kEnd, kappa, fileName), 'swf_trans_err', 'swf_rot_err', 'stateSigmaHistMat');
 
 
 transLim = 0.5;

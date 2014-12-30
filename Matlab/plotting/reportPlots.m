@@ -335,38 +335,38 @@ export_fig(gcf, filename, '-transparent');
 %% Less Noisy Dataset
 
 
-swf20 = load('swf_1215_1715_50_20lessnoisy.mat');
-swf40 = load('swf_1215_1715_50_40lessnoisy.mat');
-swf60 = load('swf_1215_1715_50_60lessnoisy.mat');
 msckf20 = load('msckf_1215_1715_min20_max100_20lessnoisy.mat');
-msckf40 = load('msckf_1215_1715_min20_max100_40lessnoisy.mat');
+%msckf40 = load('msckf_1215_1715_min20_max100_40lessnoisy.mat');
 msckf60 = load('msckf_1215_1715_min20_max100_60lessnoisy.mat');
+%msckf80 = load('msckf_1215_1715_min20_max100_60lessnoisy.mat');
+msckf100 = load('msckf_1215_1715_min20_max100_100lessnoisy.mat');
+
 imu = load('imu_1215_1715.mat');
 
 load('../datasets/dataset3.mat');
 kStart = 1215;
 kEnd = 1715;
 plotAbsErr = true;
-transLim = [-1 1];
-rotLim = [-0.5 0.5];
+transLim = [0 1];
+rotLim = [0 1];
 fontSize = 14;
 
 if plotAbsErr
     imu.msckf_trans_err = abs(imu.msckf_trans_err);
     msckf20.msckf_trans_err = abs(msckf20.msckf_trans_err);
-    msckf40.msckf_trans_err = abs(msckf40.msckf_trans_err);
+    msckf100.msckf_trans_err = abs(msckf100.msckf_trans_err);
     msckf60.msckf_trans_err = abs(msckf60.msckf_trans_err);
-    swf20.swf_trans_err = abs(swf20.swf_trans_err);
-    swf40.swf_trans_err = abs(swf40.swf_trans_err);
-    swf60.swf_trans_err = abs(swf60.swf_trans_err);
+%     swf20.swf_trans_err = abs(swf20.swf_trans_err);
+%     swf40.swf_trans_err = abs(swf40.swf_trans_err);
+%     swf60.swf_trans_err = abs(swf60.swf_trans_err);
 
     imu.msckf_rot_err = abs(imu.msckf_rot_err);
     msckf20.msckf_rot_err = abs(msckf20.msckf_rot_err);
-    msckf40.msckf_rot_err = abs(msckf40.msckf_rot_err);
+    msckf100.msckf_rot_err = abs(msckf100.msckf_rot_err);
     msckf60.msckf_rot_err = abs(msckf60.msckf_rot_err);
-    swf20.swf_rot_err = abs(swf20.swf_rot_err);
-    swf40.swf_rot_err = abs(swf40.swf_rot_err);
-    swf60.swf_rot_err = abs(swf60.swf_rot_err);
+%     swf20.swf_rot_err = abs(swf20.swf_rot_err);
+%     swf40.swf_rot_err = abs(swf40.swf_rot_err);
+%     swf60.swf_rot_err = abs(swf60.swf_rot_err);
     
     transLim = transLim - transLim(1);
     rotLim = rotLim - rotLim(1);
@@ -377,15 +377,11 @@ subplot(3,1,1)
 plot(t(kStart:kEnd), imu.msckf_trans_err(1,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_trans_err(1,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_trans_err(1,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_trans_err(1,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_trans_err(1,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_trans_err(1,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_trans_err(1,:), '--g', 'LineWidth', 1.2)
-
+plot(t(kStart:kEnd), msckf100.msckf_trans_err(1,:), '-.b', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
 ylim(transLim)
-h_legend = legend('IMU Only','MSCKF 20', 'MSCKF 40', 'MSCKF 60', 'SWF 20', 'SWF 40', 'SWF 60','Location', 'northwest');
+h_legend = legend('IMU Only','MSCKF 20', 'MSCKF 60', 'MSCKF 100', 'Location', 'northwest');
 set(h_legend,'FontSize',10);
 
 title(sprintf('Feature Density Comparison: Absolute Translational Error'))
@@ -399,11 +395,8 @@ subplot(3,1,2)
 plot(t(kStart:kEnd), imu.msckf_trans_err(2,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_trans_err(2,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_trans_err(2,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_trans_err(2,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_trans_err(2,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_trans_err(2,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_trans_err(2,:), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf100.msckf_trans_err(2,:), '-.b', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim(transLim)
@@ -418,11 +411,8 @@ subplot(3,1,3)
 plot(t(kStart:kEnd), imu.msckf_trans_err(3,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_trans_err(3,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_trans_err(3,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_trans_err(3,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_trans_err(3,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_trans_err(3,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_trans_err(3,:), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf100.msckf_trans_err(3,:), '-.b', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim(transLim)
@@ -442,16 +432,13 @@ subplot(3,1,1)
 plot(t(kStart:kEnd), imu.msckf_rot_err(1,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_rot_err(1,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_rot_err(1,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_rot_err(1,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_rot_err(1,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_rot_err(1,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_rot_err(1,:), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf100.msckf_rot_err(1,:), '-.b', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
 ylim(rotLim)
 title(sprintf('Feature Density Comparison: Absolute Rotational Error'))
 ylabel('\delta\theta_x')
-h_legend = legend('IMU Only','MSCKF 20', 'MSCKF 40', 'MSCKF 60', 'SWF 20', 'SWF 40', 'SWF 60','Location', 'northwest');
+h_legend = legend('IMU Only','MSCKF 20', 'MSCKF 60', 'MSCKF 100', 'Location', 'northwest');
 set(h_legend,'FontSize',10);
 set(gca,'FontSize',fontSize)
 grid on
@@ -463,12 +450,9 @@ subplot(3,1,2)
 plot(t(kStart:kEnd), imu.msckf_rot_err(2,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_rot_err(2,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_rot_err(2,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_rot_err(2,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_rot_err(2,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_rot_err(2,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_rot_err(2,:), '--g', 'LineWidth', 1.2)
-xlim([t(kStart) t(kEnd) ]);
+plot(t(kStart:kEnd), msckf100.msckf_rot_err(2,:), '-.b', 'LineWidth', 1.2)
+xlim([t(kStart) t(kEnd)]);
 ylim(rotLim)
 ylabel('\delta\theta_y')
 set(gca,'FontSize',fontSize)
@@ -480,11 +464,8 @@ subplot(3,1,3)
 plot(t(kStart:kEnd), imu.msckf_rot_err(3,:), '-k', 'LineWidth', 1.2)
 hold on
 plot(t(kStart:kEnd), msckf20.msckf_rot_err(3,:), '-b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), msckf40.msckf_rot_err(3,:), '-.b', 'LineWidth', 1.2)
 plot(t(kStart:kEnd), msckf60.msckf_rot_err(3,:), '--b', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf20.swf_rot_err(3,:), '-g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf40.swf_rot_err(3,:), '-.g', 'LineWidth', 1.2)
-plot(t(kStart:kEnd), swf60.swf_rot_err(3,:), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf100.msckf_rot_err(3,:), '-.b', 'LineWidth', 1.2)
 xlim([t(kStart) t(kEnd) ]);
 ylim(rotLim)
 ylabel('\delta\theta_z')
@@ -497,4 +478,77 @@ set(gca,'FontSize',fontSize)
 set(findall(gcf,'type','text'),'FontSize',fontSize)
 
 filename = sprintf('6-Way-Comparison-Feat-Density-1215-1715-Rot.pdf');
+export_fig(gcf, filename, '-transparent');
+
+%% RMSE
+
+msckf20 = load('msckf_1215_1715_min20_max100_20lessnoisy.mat');
+msckf40 = load('msckf_1215_1715_min20_max100_40lessnoisy.mat');
+msckf60 = load('msckf_1215_1715_min20_max100_60lessnoisy.mat');
+msckf100 = load('msckf_1215_1715_min20_max100_100lessnoisy.mat');
+swf40 = load('swf_1215_1715_25_40lessnoisy.mat');
+swf60 = load('swf_1215_1715_25_60lessnoisy.mat');
+swf100 = load('swf_1215_1715_25_100lessnoisy.mat');
+
+
+
+imu = load('imu_1215_1715.mat');
+
+load('../datasets/dataset3.mat');
+kStart = 1215;
+kEnd = 1715;
+plotAbsErr = true;
+transLim = [0 0.7];
+rotLim = [0 0.5];
+fontSize = 14;
+
+
+figure
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_trans_err.^2, 1)/3), '-k', 'LineWidth', 2)
+hold on
+plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_trans_err.^2, 1)/3), '-b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_trans_err.^2, 1)/3), '--b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_trans_err.^2, 1)/3), '-.b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_trans_err.^2, 1)/3), '-g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_trans_err.^2, 1)/3), '--g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_trans_err.^2, 1)/3), '-.g', 'LineWidth', 2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(transLim)
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',10);
+title(sprintf('Feature Density Comparison: Position RMSE'))
+ylabel('RMSE [m]')
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Trans.pdf');
+export_fig(gcf, filename, '-transparent');
+
+figure
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_rot_err.^2, 1)/3), '-k', 'LineWidth', 2)
+hold on
+plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_rot_err.^2, 1)/3), '-b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_rot_err.^2, 1)/3), '--b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_rot_err.^2, 1)/3), '-.b', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_rot_err.^2, 1)/3), '-g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_rot_err.^2, 1)/3), '--g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 2)
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(rotLim)
+title(sprintf('Feature Density Comparison: Rotation RMSE'))
+ylabel('RMSE')
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',10);
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+set(gca,'FontSize',fontSize)
+set(findall(gcf,'type','text'),'FontSize',fontSize)
+
+filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Rot.pdf');
 export_fig(gcf, filename, '-transparent');
