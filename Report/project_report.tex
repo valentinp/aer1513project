@@ -613,6 +613,19 @@ Feature Count & MSCKF Position RMSE & MSCKF Rotation RMSE & MSCKF NEES & SWF Pos
 100           & 0.2304              & 0.0952              & 16.755     & 0.1755            & 0.0481            & 2013     \\ \hline
   \end{tabular}
 \end{table*}
+
+\begin{table}[t]
+  \centering
+  \caption{Compute times.}
+\begin{tabular}{*{3}{c}}
+\hline
+Map Size & MSCKF Run Time [s] & SWF 25 Run Time [s]   \\ \hline
+40       & 12.19          & 114.3            \\
+60       & 14.64          & 175.9            \\
+100      & 20.58          & 245.3           \\ \hline
+\end{tabular}
+\end{table}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.

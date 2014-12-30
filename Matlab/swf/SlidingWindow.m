@@ -5,10 +5,10 @@ clc
 clear
 close all
 addpath('utils')
-fileName = 'dataset3';
-%load(['../datasets/dataset3_fresh_' fileName '.mat'])
-load('../datasets/dataset3.mat');
-
+fileName = '100lessnoisy';
+load(['../datasets/dataset3_fresh_' fileName '.mat'])
+%load('../datasets/dataset3.mat');
+tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
 
@@ -82,8 +82,7 @@ stateVecHistStruct = {};
 stateSigmaHistMat = [];
 
 
-for k1 = kStart:kEnd    
-tic    
+for k1 = kStart:kEnd        
 k2 = k1+kappa;
 
 %How many exteroceptive measurements do we have?
@@ -324,8 +323,10 @@ if ~all(stateVar > 0)
 end
 stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{2};
 stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
-toc
+
 end %End Sliding window
+
+toc
 
 sigma_x = (stateSigmaHistMat(1,:));
 sigma_y = (stateSigmaHistMat(2,:));
@@ -336,7 +337,7 @@ sigma_th3 = (stateSigmaHistMat(6,:));
 
 
 %% Plot error and variances
-addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
+%addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
 
 rotErrVxec = zeros(3, length(stateVecHistStruct));
 transErrVec = zeros(3, length(stateVecHistStruct));
