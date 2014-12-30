@@ -51,7 +51,7 @@
 \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
 
 \title{\LARGE \bf
-The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constraint Kalman Filter and Sliding Window Filter
+The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constraint Kalman Filter and the Sliding Window Filter
 }
 
 
@@ -74,7 +74,7 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a monocular camera and then correct this motion with image observations of salient features. The SWF includes the feature positions in the state estimate itself, while the MSCKF estimates the feature positions in a separate optimization routine. Herein, we compare the performance of the MSCKF and SWF, in error bounds and consistency, on two different datasets with real and synthetic features. We analyze the effect of feature track length and feature density. In general, the SWF is found to be more accurate than the MSCKF. The MSCKF, however, is signficantly faster to compute, has good consistency, and its performance improves with more tracked features. 
+Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a monocular camera and then correct this motion with image observations of salient features. The SWF includes the feature positions in the state estimate itself, while the MSCKF estimates the feature positions in a separate optimization routine. Herein, we compare the performance of the MSCKF and SWF, in error bounds and consistency, on several datasets with real and synthetic features. We analyze the effect of feature track length and feature density. In general, the SWF is found to be more accurate than the MSCKF. The MSCKF, however, is signficantly faster to compute, has good consistency, and its performance improves with more tracked features. 
 \end{abstract}
 
 
@@ -85,16 +85,16 @@ The combination of visual and inertial sensors is a powerful tool for autonomous
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
 Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
 However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
-The addition of a camera is an excellent way to bound this cumulative drift error since the camera's signal-to-noise ratio is highest when the camera is moving slowly.
+The addition of a camera is an excellent way to bound this cumulative drift error because the camera's signal-to-noise ratio is highest when the camera is moving slowly.
 On the other hand, cameras are not robust to motion blur induced by large accelerations.
-In these cases, the strength of the IMU's signal far exceeds its baseline noise and can be relied upon more heavily in estimating pose changes.
+In these cases, IMU data can be relied upon more heavily in estimating pose changes.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast three modern solutions, the Extended Kalman Filter (EKF), the Sliding Window Filter (SWF), and a hybrid solution, the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}, that combines the strengths of both.
-We present an experimental comparison of the SWF and MSCKF using a dataset consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
+In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF.
+We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions. To motivate the MSCKF, we first outline a more commmon approach of the EKF.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}
@@ -114,7 +114,7 @@ Although the recursive nature of EKF-SLAM allows it to operate online, the compu
 This behavior is due to the fact that the dimension of the state grows linearly with the number of features, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
 Consequently, the spatial extent over which EKF-SLAM can be used online is limited by the necessarily finite compute envelope available to it.
 
-Another limitation of EKF-SLAM is that it is forgetful.
+Another limitation of EKF-SLAM is that it is \textit{forgetful}.
 Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later feature measurements ought to constrain them.
 By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optimally estimating both vehicle motion and feature positions.
 
