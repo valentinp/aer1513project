@@ -37,7 +37,7 @@ plot(tPlot, swf_trans_err(1,:), '-r', 'LineWidth', 1.2)
 
 xlim([tPlot(1) tPlot(end)]);
 ylim(transLim)
-legend('With Nullspace Projection', 'Without Nullspace Projection', 'Location','northwest');
+legend('Noise Correlated to State', 'Noise De-correlated from State', 'Location','northwest');
 title(sprintf('Absolute Translational Error'))
 ylabel('\delta r_x [m]')
 set(gca,'FontSize',fontSize)
@@ -92,7 +92,7 @@ xlim([tPlot(1) tPlot(end)]);
 ylim(rotLim)
 title(sprintf('Absolute Rotational Error'))
 ylabel('\delta\theta_x')
-legend('With Nullspace Projection', 'Without Nullspace Projection', 'Location','northwest');
+legend('Noise Correlated to State', 'Noise De-correlated from State', 'Location','northwest');
 set(gca,'FontSize',fontSize)
 grid on; grid minor;
 box on;

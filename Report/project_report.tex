@@ -323,7 +323,7 @@ Next, we define a vector of three parameters:
 \begin{align}
 \hat{\Vec{y}} &= \bbm \alpha & \beta & \gamma \ebm^T = \frac{1}{\hat{Z}^{(j)}_{C_1}} \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & 1 \ebm ^T
 \end{align}
-The feature position in camera frame $C_i$ can be expressed as
+We can express the feature position in camera frame $C_i$ in terms of its position in camera frame $C_1$:
 \begin{align}
 \hat{\Vec{p}}_{C_i}^{f_j C_i} = \hat{\Vec{C}}_{i1} \hat{\Vec{p}}_{C_1}^{f_j C_1}  + \hat{\Vec{p}}_{C_i}^{C_1 C_i}
 \end{align}
@@ -415,10 +415,10 @@ By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M
 \end{align}
 The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
 
-However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the error in the state.
-Since the error in the feature positions \textit{is} correlated to the error in the state, $\Vec{r}^{(j)}$ cannot be used in the EKF directly.
-Figure \ref{fig:nullspace} shows the effect of attempting to use this error directly in the EKF.
-The correlation between the measurement error and the state causes the filter estimates to drift further from the true values.
+However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the state.
+Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state.
+Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$ directly in the EKF.
+The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
 
 \begin{figure}
     \centering
@@ -432,7 +432,7 @@ The correlation between the measurement error and the state causes the filter es
         \label{fig:nullspace:rot_err}
     }
     
-    \caption{Effect of nullspace projection on MSCKF performance in a synthetic 100-feature dataset. The correlation between the measurement error and the state causes the filter estimates to drift further from the true values.}
+    \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement error and the state causes the filter estimates to drift further from the true values than with a modified, de-corellated measurement error.}
     \label{fig:nullspace}
 \end{figure}
 
@@ -490,7 +490,7 @@ Since our algorithms are designed to make use of a monocular camera, we artifici
 \begin{figure}
     \centering
     \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth}
-    \caption{Vicon ground truth for sensor head motion (blue) and feature positions (red) in the ``Starry Night'' dataset.}
+    \caption{Vicon ground truth for sensor head motion and feature positions in the ``Starry Night'' dataset.}
     \label{fig:trajectory_groundtruth}
 \end{figure}
 
@@ -551,6 +551,19 @@ Moreover, the features that are visible do not remain in view of the camera for 
     \label{fig:comp_2}
 \end{figure}
 
+
+\subsection{Experiment 3: Effect of feature density}
+Finally, we investigated the effect of feature density on the performance of both the MSCKF and SWF.
+For this experiment, we modified the ``Starry Night'' dataset by creating synthetic feature distributions with larger spatial extents and more features than the original dataset.
+We retained the original IMU data, but simulated camera measurements with lower measurement noise.
+Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribution for the 100-feature synthetic dataset.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth_100lessnoisy}
+    \caption{Modified ``Starry Night'' dataset with 100 synthetic features. The sensor trajectory is identical to the original dataset.}
+    \label{fig:trajectory_groundtruth_100lessnoisy}
+\end{figure}
 
 \begin{figure}
     \centering
