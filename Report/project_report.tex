@@ -580,9 +580,9 @@ By generating longer feature tracks and increasing the number of features visibl
 \end{figure}
 
 Figure \ref{fig:comp_3} compares translational and rotational root mean squared error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
-On all three datasets, the SWF outperforms the MSCKF by a wide margin, although the MSCKF's performance improves as more features are added.
-
-
+With additional features, both algorithms consistently outperform pure IMU integration, and the SWF outperforms the MSCKF by a wide margin on all three datasets.
+Note that the MSCKF's performance improves as the number of features increases while the SWF's performance is not significantly affected by increasing feature count.
+This result indicates that the MSCKF is much more sensitive to feature density than the SWF.
 
 \begin{figure}
     \centering
@@ -600,11 +600,20 @@ On all three datasets, the SWF outperforms the MSCKF by a wide margin, although 
     \label{fig:comp_3}
 \end{figure}
 
+Table [TABLETABLETABLE] provides summary statistics of each algorithm's performance on the synthetic datasets.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS} \label{sec:conclusions}
-Things quickly got out of hand when Matlab achieved sentience. 
-We were forced to abandon our lab and have been surviving in the harsh environment of the MarsDome for weeks.
-If this ever gets published, please send help!
+Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
+In environments with more features, both algorithms provide substantial gains over pure IMU integration, although the SWF significantly outperformed the MSCKF on the datasets we tested.
+However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
+It is unclear from these results which algorithm would perform best in the limit of infinite features.
+
+[Something something consistency NEES]
+
+It is worth noting that although the SWF achieved superior accuracy in most cases, the computational effort it required was significantly greater than for the MSCKF.
+The MSCKF may therefore be better suited to vehicles with limited computational resources, particularly if they are operating in feature-rich environments.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
