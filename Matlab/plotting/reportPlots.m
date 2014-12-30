@@ -507,14 +507,14 @@ fontSize = 14;
 
 figure
 set(gcf, 'Position', [100 100 600 200]);
-plot(t(kStart:kEnd), sqrt(sum(imu.msckf_trans_err.^2, 1)/3), '-k', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_trans_err.^2, 1)/3), '-k', 'LineWidth', 1.2)
 hold on
-plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_trans_err.^2, 1)/3), '-b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_trans_err.^2, 1)/3), '--b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_trans_err.^2, 1)/3), '-.b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf40.swf_trans_err.^2, 1)/3), '-g', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf60.swf_trans_err.^2, 1)/3), '--g', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf100.swf_trans_err.^2, 1)/3), '-.g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_trans_err.^2, 1)/3), '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_trans_err.^2, 1)/3), '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_trans_err.^2, 1)/3), '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_trans_err.^2, 1)/3), '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_trans_err.^2, 1)/3), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_trans_err.^2, 1)/3), '-.g', 'LineWidth', 1.2)
 
 
 xlim([t(kStart) t(kEnd) ]);
@@ -533,14 +533,14 @@ export_fig(gcf, filename, '-transparent');
 
 figure
 set(gcf, 'Position', [100 100 600 200]);
-plot(t(kStart:kEnd), sqrt(sum(imu.msckf_rot_err.^2, 1)/3), '-k', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_rot_err.^2, 1)/3), '-k', 'LineWidth', 1.2)
 hold on
-plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_rot_err.^2, 1)/3), '-b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_rot_err.^2, 1)/3), '--b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_rot_err.^2, 1)/3), '-.b', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf40.swf_rot_err.^2, 1)/3), '-g', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf60.swf_rot_err.^2, 1)/3), '--g', 'LineWidth', 2)
-plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 2)
+plot(t(kStart:kEnd), sqrt(sum(msckf40.msckf_rot_err.^2, 1)/3), '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(msckf60.msckf_rot_err.^2, 1)/3), '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(msckf100.msckf_rot_err.^2, 1)/3), '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_rot_err.^2, 1)/3), '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_rot_err.^2, 1)/3), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 1.2)
 
 xlim([t(kStart) t(kEnd) ]);
 ylim([0 0.25])
