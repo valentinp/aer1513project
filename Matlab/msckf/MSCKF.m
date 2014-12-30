@@ -37,23 +37,22 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
 y_var = [1,1,1,1];
-noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
-noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
+noiseParams.u_var_prime = 0.01;%y_var(1)/camera.f_u^2;
+noiseParams.v_var_prime = 0.01;%y_var(2)/camera.f_v^2;
 
 % [w, w bias change, v, v bias change]
-noiseParams.Q_imu = diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
+noiseParams.Q_imu = 0.1*diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
 % [q, w bias, v bias, p]
 noiseParams.initialIMUCovar = 1e-4 * eye(12);
     
 %MSCKF parameters
-msckfParams.minTrackLength = Inf;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
-msckfParams.maxGNCost      = inf;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.minTrackLength = 10;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 50;     % Set to inf to wait for features to go out of view
+msckfParams.maxGNCost      = 10;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 0;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;
 
-LMLambda = 1;
 
 % IMU state for plotting etc. Structures indexed in a cell array
 imuStates = cell(1,numel(t));
@@ -227,7 +226,7 @@ for state_k = kStart:(kEnd-1)
             %optimization
             [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
-%             p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; RCOND = 1;
+             %p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; RCOND = 1;
             
             if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND
                 break;
@@ -350,14 +349,16 @@ for k = 1:kNum
     tPlot(k) = t(state_k);
 end
 
-rotLim = [-0.3 0.3];
-transLim = [-0.4 0.4];
+rotLim = [-0.5 0.5];
+transLim = [-0.5 0.5];
 
 % Save estimates
 msckf_trans_err = p_C_G_est - p_C_G_GT;
 msckf_rot_err = theta_CG_err;
-
 save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
+
+mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
+mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
 
 % Translation Errors
 figure
