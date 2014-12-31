@@ -175,10 +175,10 @@ The weight matrix $\mbf T$ is given by:
 \end{equation}
 where
 \begin{equation}
-\mbf{T}_k := \bbm \mbf H_{\mbf w, k} \mbf Q_k \mbf H_{\mbf w, k}^T & \mbf 0 \\
-\mbf 0 & \mbf G_{\mbf n, k} \mbf R_k \mbf G_{\mbf n, k}^T \ebm,
+\Vec{T}_k := \bbm \Vec H_{\mbf w, k} \Vec Q_k \Vec H_{\Vec w, k}^T & \Vec 0 \\
+\Vec 0 & \Vec G_{\Vec n, k} \Vec R_k \Vec G_{\Vec n, k}^T \ebm,
 \end{equation}
-and $\mbf R_k$, $\mbf Q_k$ are observation and motion model noise covariances, and $\mbf G_{\mbf n, k}$, $\mbf H_{\mbf w, k}$ are the observation and motion model Jacobians with respect to the noise.
+and $\mbf R_k$, $\mbf Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise.
 
 The update is performed repeatedly until convergence (in this work we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $).
 An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
