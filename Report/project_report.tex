@@ -610,9 +610,7 @@ This result indicates that the MSCKF is much more sensitive to feature density t
 This may be due to the fact that the MSCKF updates its state whenever a feature goes out of view and does not associate tracks corresponding to the same feature.
 If observations of a given feature are frequently interrupted, each track will not constrain the full set of poses from which the feature is visible.
 As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF estimates benefit from more high-quality motion constraints.
-
 Since the SWF always associates all observations of each feature in a given window, it is not sensitive to the contiguity of the feature observations.
-However, [EXPLANATION ABOUT WHY IT DOESN'T IMPROVE MUCH WITH MORE FEATURES]
 
 \begin{figure}
     \centering
@@ -684,13 +682,15 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
+We stress that our inertial data was obtained from a high-quality IMU and has been sanitized to account for gravity, biases, and integration error.
+Using raw data from a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and the benefit of the SWF and MSCKF would have been more apparent.
+
 In environments with more features, both algorithms provided substantial gains in accuracy over pure IMU integration, although the SWF significantly outperformed the MSCKF on the datasets we tested.
 However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
 It is unclear from these results which algorithm would perform best as the number of features grows very large.
 
 Although the SWF appears to produce more accurate pose estimates than the MSCKF in many cases, the MSCKF has the advantage of being less computationally intensive than the SWF, and of having better consistency properties.
 The MSCKF may be a better choice of algorithm in applications where computational resources are limited, or where a consistent estimate of state uncertainty is desirable.
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
