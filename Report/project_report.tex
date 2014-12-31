@@ -101,7 +101,8 @@ The question, then, is how best to fuse measurements from these two sensor types
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF) \cite{Sibley:2010:JFR}, the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF.
+In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF. The MSCKF has recently been used successfully in real-time, accurate position tracking onboard a smartphone \cite{Li:2013:ICRA}, while the SWF has been applied to planetary landing \cite{Sibley:2010:JFR}.
+
 We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions. To motivate the MSCKF, we first outline a more commmon approach of the EKF.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -621,7 +622,7 @@ This result indicates that the MSCKF is much more sensitive to feature density t
 Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
 As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
 It is worth noting, however, that, on average, the MSCKF achieves low Normalized Estimation Error Squared (NEES) values, which indicates that the filter scores well on consistency if not on accuracy.
-The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window.
+The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes the proper procedure using marginalization of old poses).
 The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so the SWF may be considered inconsistent in the absence of a known map.
 
 Another point in favour of the MSCKF is that the computational effort required was significantly smaller than for the SWF.

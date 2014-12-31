@@ -545,7 +545,7 @@ plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 
 xlim([t(kStart) t(kEnd) ]);
 ylim([0 0.25])
 title(sprintf('Feature Density Comparison: Rotation RMSE'))
-ylabel('RMSE [m]')
+ylabel('RMSE')
 xlabel('t_k [s]');
 h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
 set(h_legend,'FontSize',10);
