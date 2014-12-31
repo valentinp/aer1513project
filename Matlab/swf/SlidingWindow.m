@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-fileName = '100lessnoisy';
+fileName = '100noisy';
 load(['../datasets/dataset3_fresh_' fileName '.mat'])
 %load('../datasets/dataset3.mat');
 tic
@@ -49,7 +49,7 @@ initialStateStruct = {};
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
-    R = eye(2);
+    R = 5*eye(2);
     %R = diag(y_var(1:2));
 else
     R = diag(y_var);
