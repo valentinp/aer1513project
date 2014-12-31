@@ -134,7 +134,7 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses observing $M$ features: 
 \begin{equation}
-\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & {\Vec {p}_G^{f_1G}}^T & \hdots & {\Vec {p}_G^{f_MG}}^T \ebm ^T.
+\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & {\Vec {p}_G^{f_1G \hspace{0.3em} T}} & \hdots & {\Vec {p}_G^{f_MG \hspace{0.3em} T}} \ebm ^T.
 \end{equation}
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
@@ -155,30 +155,30 @@ where
 \Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
 \\[0.5em]
 \Vec G_{\Vec{x}, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}}
-    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec p_G^{IG,k} ) )^\times  \ebm ^T
+    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec p_{G,k}^{IG} ) )^\times  \ebm ^T
 \\[0.5em]
 \Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j\in[1,M]$}} \\[0.5em]
 \Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k}
 \end{align}
 with
 \begin{equation}
-\bar{\Vec p}_{C_k}^{f_j C_k} := \bbm x \\ y \\ z \ebm = \Vec C_{CI} \left( \Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec{p}_G^{IG,k} )   - \Vec p_I^{CI} \right),
+\bar{\Vec p}_{C_k}^{f_j C_k} := \bbm x \\ y \\ z \ebm = \Vec C_{CI} \left( \Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec{p}_{G,k}^{IG} )   - \Vec p_I^{CI} \right),
 \end{equation}
 
 \begin{equation}
 \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
 
-The weight matrix $\mbf T$ is given by:
+The weight matrix $\Vec T$ is given by:
 \begin{equation}
 \Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\}
 \end{equation}
 where
 \begin{equation}
-\Vec{T}_k := \bbm \Vec H_{\mbf w, k} \Vec Q_k \Vec H_{\Vec w, k}^T & \Vec 0 \\
+\Vec{T}_k := \bbm \Vec H_{\Vec w, k} \Vec Q_k \Vec H_{\Vec w, k}^T & \Vec 0 \\
 \Vec 0 & \Vec G_{\Vec n, k} \Vec R_k \Vec G_{\Vec n, k}^T \ebm,
 \end{equation}
-and $\mbf R_k$, $\mbf Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise.
+and $\Vec R_k$, $\Vec Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise.
 
 The update is performed repeatedly until convergence (in this work we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $).
 An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
