@@ -121,24 +121,22 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Sliding Window Filter (SWF)} \label{sec:SWF}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
-The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton optimization or some other algorithm.
+The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization which acts on a sliding window of $K$ poses and $N$ features: 
+\begin{equation}
+\delta\Vec{x} := \bbm \delta \Vec x_0^T & \hdots & \delta \Vec x_K^T & \delta \Vec f_1^T & \hdots & \delta \Vec f_N^T\ebm ^T.
+\end{equation}
+The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
 (\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}})
 \end{equation}
-\begin{equation}
-\delta\Vec{x} := \bbm \delta \Vec x_0 & \hdots & \delta \Vec x_K & \delta \Vec f_1 & \hdots & \delta \Vec f_N\ebm ^T,
-\end{equation}
-where $N$ is the number of unique features observed in the window.
 The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
 \begin{equation}
 \mathbf{H} = \left[\begin{array}{cccccc}
- -\Vec H_{\Vec x, 1} & \Vec 1 & &  & &   \\ 
- & -\Vec G_{\Vec x, 1} &  &  &  &   -\Vec G_{\Vec f, 1} \\ \hline
- & -\Vec H_{\Vec x, 2} & \Vec 1 & & &    \\ 
- & & -\Vec G_{\Vec x, 2} &  & &  -\Vec G_{\Vec f, 2}   \\ \hline
- &  & \ddots & \ddots & & \vdots  \\  \hline
-  & & & -\Vec H_{\Vec x, K} & \Vec 1 & \\ 
- & & & & -\Vec G_{\Vec x, K} &  -\Vec G_{\Vec f, K}   \\  
+ -\Vec H_{\Vec x, 1} & \Vec 1 & & &   \\ 
+ & -\Vec G_{\Vec x, 1} &  &   -\Vec G_{\Vec f, 1} \\ \hline
+ & \ddots & \ddots & \vdots  \\  \hline
+ & -\Vec H_{\Vec x, K} & \Vec 1 & \\ 
+ & & -\Vec G_{\Vec x, K} &  -\Vec G_{\Vec f, K}   \\  
 \end{array}\right], 
 \end{equation}
 where
@@ -161,9 +159,7 @@ with
 \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
 
-
-
-An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
+The update is performed repeatedly, until convergence (in this work, we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $). An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
 However, the hard cut-off of the SWF may result in only some measurements of a particular feature contributing to the optimization.
