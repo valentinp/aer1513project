@@ -74,7 +74,15 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Accurate and consistent egomotion estimation is an important part of autonomous vehicles. The combination of visual and inertial sensors provides a relatively inexpensive, compact and complementary hardware suite that can be used on many ground and aerial vehicles. In this work, we compare two modern approaches to egomotion estimation: the Multi-State Costraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF). Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a monocular camera and then correct this motion with image observations of salient features. The SWF includes the feature positions in the state estimate itself, while the MSCKF estimates the feature positions in a separate optimization routine. Herein, we compare the performance of the MSCKF and SWF, in error bounds and consistency, on several datasets with real and synthetic features. We analyze the effect of feature track length and feature density. In general, the SWF is found to be more accurate than the MSCKF. The MSCKF, however, is signficantly faster to compute, has good consistency, and its performance improves with more tracked features. 
+Accurate and consistent egomotion estimation is an important part of autonomous navigation.
+For this task, the combination of visual and inertial sensors is an inexpensive, compact, and complementary hardware suite that can be used on many ground and aerial vehicles.
+In this work, we compare two modern approaches to egomotion estimation: the Multi-State Constraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF).
+Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a vehicle and then correct this motion with observations of salient features from a monocular camera.
+While the SWF estimates feature positions as part of the filter state itself, the MSCKF optimizes feature positions in a separate procedure without including them in the filter state.
+We present experimental comparisons of the performance of the MSCKF and SWF on several datasets with real and synthetic features.
+In particular, we compare the accuracy and consistency of the two filters, and analyze the effect of feature track length and feature density on the performance of each filter.
+In general, our results show the SWF to be more accurate than the MSCKF.
+However, the MSCKF is significantly more computationally efficient, has good consistency properties, and improves in accuracy as more features are tracked. 
 \end{abstract}
 
 
