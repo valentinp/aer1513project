@@ -170,7 +170,7 @@ with
 \begin{equation}
 \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
-The weight matrix $\Vec T$ is given by:
+The weight matrix $\Vec T$ is given by
 \begin{equation}
 \Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\}
 \end{equation}
@@ -633,8 +633,8 @@ Since the SWF always associates all observations of each feature in a given wind
     \label{fig:comp_3}
 \end{figure*}
 
-Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
-As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
+Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the interval shown in Figure \ref{fig:comp_3}.
+As expected, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
 It is worth noting, however, that, on average, the MSCKF achieves low Normalized Estimation Error Squared (NEES) values, which indicates that the filter scores well on consistency if not on accuracy.
 The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes how this can be remedied by marginalizing old poses, a technique which was not implemented in this work).
 The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so this form of the SWF may be considered inconsistent in the absence of a known map.
@@ -667,11 +667,11 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
                     & Rotation ARMSE    & 0.1452    & 0.1452    & 0.1452            \\
                     & ANEES             & 0.2850    & 0.2850    & 0.2850            \\
                     & Compute Time\tnote{\dag}      & 8.90 s    & 8.90 s    & 8.90 s    \B      \\ \hline
-        MSCKF       & Position ARMSE    & 0.2672    & 0.2550    & 0.2304    \T      \\
+        MSCKF (20-100)       & Position ARMSE    & 0.2672    & 0.2550    & 0.2304    \T      \\
                     & Rotation ARMSE    & 0.1378    & 0.1247    & 0.0952            \\
                     & ANEES             & 10.18     & 12.03     & 16.76             \\
                     & Compute Time\tnote{\dag}     & 12.19 s   & 14.64 s   & 20.58 s   \B      \\ \hline
-        SWF (25 Poses)         & Position ARMSE    & 0.1750    & 0.1687    & 0.1755    \T      \\
+        SWF (25)         & Position ARMSE    & 0.1750    & 0.1687    & 0.1755    \T      \\
                     & Rotation ARMSE    & 0.0495    & 0.0377    & 0.0481            \\
                     & ANEES             & 2280      & 2093      & 2013              \\
                     & Compute Time\tnote{\dag}     & 114.3 s   & 175.9 s   & 245.3 s   \B      \\ \hline
