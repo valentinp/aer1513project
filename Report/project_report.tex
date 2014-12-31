@@ -590,7 +590,7 @@ Neither filter performs substantially better than pure IMU integration on this i
 \subsection{Experiment 3: Effect of feature density}
 In order to investigate the effect of feature density on the performance of the MSCKF and SWF, we modified the ``Starry Night'' dataset by creating synthetic feature distributions with larger spatial extents and more features than the original dataset.
 We constructed each dataset so that the larger maps contained the same features as the smaller maps, plus additional features to make up the difference.
-Although the camera measurements in these datasets are synthetic, the IMU data are unchanged from the original dataset.
+In each dataset, the IMU data remained unchanged from the original dataset and we corrupted the synthetic camera measurements with zero-mean Gaussian noise.
 Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribution for the 100-feature synthetic dataset.
 By generating longer feature tracks and increasing the number of features visible at each time step, these synthetic datasets allowed for a clearer comparison between the MSCKF and SWF.
 
