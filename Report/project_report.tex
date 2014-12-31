@@ -93,7 +93,7 @@ The question, then, is how best to fuse measurements from these two sensor types
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF.
+In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF) \cite{Sibley:2010:JFR}, the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF.
 We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions. To motivate the MSCKF, we first outline a more commmon approach of the EKF.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,7 +123,7 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization which acts on a sliding window of $K$ poses and $N$ features: 
 \begin{equation}
-\delta\Vec{x} := \bbm \delta \Vec x_0^T & \hdots & \delta \Vec x_K^T & \delta \Vec f_1^T & \hdots & \delta \Vec f_N^T\ebm ^T.
+\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & \Vec f_1^T & \hdots & \Vec f_N^T\ebm ^T.
 \end{equation}
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
@@ -159,6 +159,20 @@ with
 \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
 
+The weight matrix $\mbf T$ is given by:
+\begin{equation}
+\mbf T := \bbm \mbf T_1 &  &  \\ 
+ & \ddots &  \\
+ & & \mbf T_k
+\ebm 
+\end{equation}
+where
+\begin{equation}
+\mbf{T}_k := \bbm \mbf H_{\mbf w, k} \mbf Q_k \mbf H_{\mbf w, k}^T & \mbf 0 \\
+\mbf 0 & \mbf G_{\mbf n, k} \mbf R_k \mbf G_{\mbf n, k}^T \ebm,
+\end{equation}
+and $\mbf R_k$, $\mbf Q_k$ are observation and motion model noise covariances, and $\mbf G_{\mbf n, k}$, $\mbf H_{\mbf w, k}$ are the observation and motion model Jacobians with respect to the noise.
+
 The update is performed repeatedly, until convergence (in this work, we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $). An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
@@ -182,14 +196,14 @@ In our implementation, we parametrize the IMU state at time $k$ as the 13-dimens
 where $\Vec{q}_{IG,k}$ is the unit quaternion representing the rotation from the global frame $\mathcal{F}_G$ to the IMU frame $\mathcal{F}_I$, $\Vec{b}_{\boldsymbol{\omega},k}$ is the bias on the gyro measurements $\boldsymbol{\omega}_m$, $\Vec{b}_{\Vec{v},k}$ is the bias on the velocity measurements $\Vec{v}_m$, and $\Vec{p}_{G,k}^{IG}$ is the vector from the origin of $\mathcal{F}_G$ to the origin of $\mathcal{F}_I$ expressed in $\mathcal{F}_G$ (i.e., the position of the IMU in the global frame).
 
 At time $k$, the full state of the MSCKF consists of the current IMU state estimate, and estimates of $N$ 7-dimensional past camera poses in which active feature tracks were visible:
-\begin{align}
-    \hat{\Vec{x}}_k &:= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
-\end{align}
+\begin{align*}
+    \hat{\Vec{x}}_k &:= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T.
+\end{align*}
 
 We can also define the MSCKF ``error state'' at time $k$:
-\begin{align}
+\begin{align*}
     \widetilde{\Vec{x}}_k &:= \bbm \widetilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \widetilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \widetilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
-\end{align}
+\end{align*}
 where
 \begin{align}
     \widetilde{\Vec{x}}_{I,k} &:= \bbm \boldsymbol{\delta\theta}_I^T & \widetilde{\Vec{b}}_{\boldsymbol{\omega},k}^T & \widetilde{\Vec{b}}_{\Vec{v},k}^T & \widetilde{\Vec{p}}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
@@ -417,7 +431,7 @@ By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M
 The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
 
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the state.
-Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state.
+Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state (note that the SWF does not have this problem because feature positions are part of the state itself, and optimized jointly with the poses).
 Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$ directly in the EKF.
 The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
 
@@ -478,8 +492,8 @@ Finally, we can formulate the Kalman gain and correction equations to arrive at 
 \section{EXPERIMENTS} \label{sec:experiments}
 We compared the performance of the MSCKF and SWF algorithms on two intervals in the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
 The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 features while moving along an arbitrary 3D path.
-This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
-Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
+This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system was available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
+Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only. For both approaches, the filter window was bootstrapped with one ground truth pose, and for SWF, feature positions were intialized through triangulation.
 
 
 
