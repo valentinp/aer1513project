@@ -122,7 +122,7 @@ This technique, sometimes referred to as EKF-SLAM, attempts to track pose change
 %In this paper we consider only the three-dimensional parametrization and two-view initialization scheme.
 
 Although the recursive nature of EKF-SLAM allows it to operate online, the computational cost of the filter grows cubically with map size.
-This behavior is due to the fact that the dimension of the state grows linearly with the number of features, and the computational cost of inverting the state covariance matrix while computing the Kalman gain is cubic in the dimension of the state.
+This behavior is due to the fact that the dimension of the state grows linearly with the number of features, and the computational cost of inverting the state covariance matrix (during the Kalman gain computation) is cubic in the dimension of the state.
 Consequently, the spatial extent over which EKF-SLAM can be used online is limited by the necessarily finite compute envelope available to it.
 
 Another limitation of EKF-SLAM is that it is \textit{forgetful}.
@@ -631,7 +631,7 @@ Since the SWF always associates all observations of each feature in a given wind
 Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
 As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
 It is worth noting, however, that, on average, the MSCKF achieves low Normalized Estimation Error Squared (NEES) values, which indicates that the filter scores well on consistency if not on accuracy.
-The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes the proper procedure using marginalization of old poses).
+The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes the proper procedure of using marginalization of old poses which was not implemented in this work).
 The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so the SWF may be considered inconsistent in the absence of a known map.
 
 Another point in favour of the MSCKF is that the computational effort required was significantly smaller than for the SWF.
