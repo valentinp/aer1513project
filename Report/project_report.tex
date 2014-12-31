@@ -134,7 +134,7 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
 The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses observing $M$ features: 
 \begin{equation}
-\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & \Vec f_1^T & \hdots & \Vec f_M^T\ebm ^T.
+\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & {\Vec {p}_G^{f_1G}}^T & \hdots & {\Vec {p}_G^{f_MG}}^T \ebm ^T.
 \end{equation}
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
@@ -155,14 +155,14 @@ where
 \Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
 \\[0.5em]
 \Vec G_{\Vec{x}, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}}
-    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\boldsymbol{\rho}_i^{f_j G} - \Vec r_G^{IG,k} ) )^\times  \ebm ^T
+    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec p_G^{IG,k} ) )^\times  \ebm ^T
 \\[0.5em]
 \Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j\in[1,M]$}} \\[0.5em]
 \Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k}
 \end{align}
 with
 \begin{equation}
-\bar{\Vec p}_{C_k}^{f_j C_k} := \bbm x \\ y \\ z \ebm = \Vec C_{CI} \left( \Vec C_{IG,k} (\boldsymbol{\rho}_G^{f_j G} - \Vec r_G^{IG,k} )   - \boldsymbol \rho_I^{CI} \right),
+\bar{\Vec p}_{C_k}^{f_j C_k} := \bbm x \\ y \\ z \ebm = \Vec C_{CI} \left( \Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec{p}_G^{IG,k} )   - \Vec p_I^{CI} \right),
 \end{equation}
 
 \begin{equation}
