@@ -444,6 +444,7 @@ Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$
 The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
 As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized along with the poses.
 
+\setcounter{figure}{3}
 \begin{figure*}
     \centering
     \subfigure {
@@ -508,8 +509,7 @@ We implemented and tested both algorithms in MATLAB 2014b on a MacBook Pro Retin
 For both algorithms, we bootstrapped the filter window with one ground truth pose.
 For the SWF, we initialized feature positions using two-view triangulation.
 
-
-
+\setcounter{figure}{1}
 \begin{figure}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/trajectory_groundtruth}
@@ -522,6 +522,7 @@ In the first experiment, we compared the SWF and MSCKF for various parameter set
 Figure \ref{fig:nVisible_int1} shows the number of visible features in the first interval.
 At least three features are visible in $64\%$ of this interval, and the number of visible features is frequently in excess of ten.
 
+\setcounter{figure}{4}
 \begin{figure}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/nVisible_500_1000}
@@ -537,6 +538,7 @@ These parameters did not significantly affect the accuracy of either filter, how
 On this interval, the SWF slightly outperforms the MSCKF in terms of translational accuracy in the $y$- and $z$-directions, and significantly outperforms the MSCKF in terms of rotational accuracy about the $x$- and $y$-axes.
 The MSCKF does not perform much better than pure IMU integration on this interval, likely due to the overall low number of feature tracks in this dataset.
 
+\setcounter{figure}{6}
 \begin{figure*}
     \centering
     \subfigure {
@@ -564,6 +566,7 @@ Figure \ref{fig:comp_2} shows absolute translational and rotational errors for p
 Compared to Interval 1, the difference in performance between the MSCKF and SWF is less pronounced, with the exception of the SWF's clearly superior translational accuracy in the $y$-direction.
 Neither filter performs substantially better than pure IMU integration on this interval, again likely due to the overall low number of feature tracks in this dataset.
 
+\setcounter{figure}{5}
 \begin{figure}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/nVisible_1215_1715}
@@ -571,6 +574,7 @@ Neither filter performs substantially better than pure IMU integration on this i
     \label{fig:nVisible_int2}
 \end{figure}
 
+\setcounter{figure}{7}
 \begin{figure*}
     \centering
     \subfigure {
@@ -595,6 +599,7 @@ In each dataset, the IMU data remained unchanged from the original dataset and w
 Figure \ref{fig:trajectory_groundtruth_100lessnoisy} shows the feature distribution for the 100-feature synthetic dataset.
 By generating longer feature tracks and increasing the number of features visible at each time step, these synthetic datasets allowed for a clearer comparison between the MSCKF and SWF.
 
+\setcounter{figure}{9}
 \begin{figure}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/trajectory_groundtruth_100lessnoisy}
@@ -611,7 +616,7 @@ This may be due to the fact that the MSCKF updates its state whenever a feature 
 If observations of a given feature are frequently interrupted, each track will not constrain the full set of poses from which the feature is visible.
 As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF benefits from more high-quality motion constraints.
 Since the SWF always associates all observations of each feature in a given window, it is not sensitive to the contiguity of the feature observations.
-
+\setcounter{figure}{8}
 \begin{figure*}
     \centering
     \subfigure {
@@ -676,7 +681,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
     \end{tablenotes}
     \end{threeparttable}
     \label{tab:rmse_nees}
-    \vspace{-0.5cm}
+    \vspace{-0.4cm}
 \end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
