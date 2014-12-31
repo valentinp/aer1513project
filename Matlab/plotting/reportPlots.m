@@ -558,3 +558,67 @@ set(findall(gcf,'type','text'),'FontSize',fontSize)
 
 filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Rot.pdf');
 export_fig(gcf, filename, '-transparent');
+
+%% RMSE Noisy
+
+swf40 = load('swf_1215_1715_10_40noisy.mat');
+swf60 = load('swf_1215_1715_10_60noisy.mat');
+swf100 = load('swf_1215_1715_10_100noisy.mat');
+imu = load('imu_1215_1715.mat');
+
+load('../datasets/dataset3.mat');
+kStart = 1215;
+kEnd = 1715;
+plotAbsErr = true;
+transLim = [0 0.7];
+rotLim = [0 0.5];
+fontSize = 14;
+
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_trans_err.^2, 1)/3), '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_trans_err.^2, 1)/3), '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_trans_err.^2, 1)/3), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_trans_err.^2, 1)/3), '-.g', 'LineWidth', 1.2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(transLim)
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',10);
+title(sprintf('Feature Density Comparison: Position RMSE'))
+xlabel('t_k [s]');
+ylabel('RMSE [m]')
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Noisy-Trans.pdf');
+export_fig(gcf, filename, '-transparent');
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), sqrt(sum(imu.msckf_rot_err.^2, 1)/3), '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), sqrt(sum(swf40.swf_rot_err.^2, 1)/3), '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf60.swf_rot_err.^2, 1)/3), '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), sqrt(sum(swf100.swf_rot_err.^2, 1)/3), '-.g', 'LineWidth', 1.2)
+
+xlim([t(kStart) t(kEnd) ]);
+ylim([0 0.25])
+title(sprintf('Feature Density Comparison: Rotation RMSE'))
+ylabel('RMSE')
+xlabel('t_k [s]');
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',10);
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+set(gca,'FontSize',fontSize)
+set(findall(gcf,'type','text'),'FontSize',fontSize)
+
+filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Noisy-Rot.pdf');
+export_fig(gcf, filename, '-transparent');

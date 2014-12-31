@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-fileName = '60noisy';
+fileName = '100noisy';
 load(['../datasets/dataset3_fresh_' fileName '.mat'])
 %load('../datasets/dataset3.mat');
 tic
@@ -28,9 +28,9 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 500;
-kEnd = 1000; 
-kappa = 10; %Sliding window size
+kStart = 1215;
+kEnd = 1715; 
+kappa = 25; %Sliding window size
 maxOptIter = 25;
 
 k1 = kStart;

@@ -87,23 +87,25 @@ However, the MSCKF is significantly more computationally efficient, has good con
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{INTRODUCTION} \label{sec:introduction}
+\section{Introduction} \label{sec:introduction}
 
 The combination of visual and inertial sensors is a powerful tool for autonomous navigation in unknown environments.
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
-Since an IMU directly measures accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
+Since an IMU directly measures linear accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
 However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
 The addition of a camera is an excellent way to bound this cumulative drift error because the camera's signal-to-noise ratio is highest when the camera is moving slowly.
-On the other hand, cameras are not robust to motion blur induced by large accelerations.
+On the other hand, cameras are not robust to motion blur induced by rapid motions.
 In these cases, IMU data can be relied upon more heavily in estimating pose changes.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast two modern solutions the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}. The MSCKF is a hybrid approach that combines the computational efficiency of an Extended Kalman Filter (EKF) with the accuracy of the SWF. The MSCKF has recently been used successfully in real-time, accurate position tracking onboard a smartphone \cite{Li:2013:ICRA}, while the SWF has been applied to planetary landing \cite{Sibley:2010:JFR}.
-
-We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions. To motivate the MSCKF, we first outline a more commmon approach of the EKF.
+In this work, we compare and contrast two modern solutions: the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}.
+The MSCKF is a hybrid approach that combines the accuracy of the SWF with the computational efficiency of an Extended Kalman Filter (EKF).
+The MSCKF has recently been used successfully in accurate, online position tracking onboard a smartphone \cite{Li:2013:ICRA}, while the SWF has been applied to planetary landing \cite{Sibley:2010:JFR}.
+We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
+In order to provide context for the MSCKF and SWF, we first outline the EKF approach to the SLAM problem.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}
@@ -130,9 +132,9 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Sliding Window Filter (SWF)} \label{sec:SWF}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
-The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization which acts on a sliding window of $K$ poses and $N$ features: 
+The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses observing $M$ features: 
 \begin{equation}
-\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & \Vec f_1^T & \hdots & \Vec f_N^T\ebm ^T.
+\Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & \Vec f_1^T & \hdots & \Vec f_M^T\ebm ^T.
 \end{equation}
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
@@ -150,14 +152,13 @@ The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
 \end{equation}
 where
 \begin{align}
+\Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
+\\[0.5em]
 \Vec G_{\Vec{x}, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}}
     \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\boldsymbol{\rho}_i^{f_j G} - \Vec r_G^{IG,k} ) )^\times  \ebm ^T
 \\[0.5em]
-\Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
-\\[0.5em]
+\Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j\in[1,M]$}} \\[0.5em]
 \Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k}
-\\[0.5em]
-\Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j$}}
 \end{align}
 with
 \begin{equation}
@@ -170,10 +171,7 @@ with
 
 The weight matrix $\mbf T$ is given by:
 \begin{equation}
-\mbf T := \bbm \mbf T_1 &  &  \\ 
- & \ddots &  \\
- & & \mbf T_k
-\ebm 
+\Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\}
 \end{equation}
 where
 \begin{equation}
@@ -182,17 +180,18 @@ where
 \end{equation}
 and $\mbf R_k$, $\mbf Q_k$ are observation and motion model noise covariances, and $\mbf G_{\mbf n, k}$, $\mbf H_{\mbf w, k}$ are the observation and motion model Jacobians with respect to the noise.
 
-The update is performed repeatedly, until convergence (in this work, we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $). An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
+The update is performed repeatedly until convergence (in this work we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $).
+An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
 However, the hard cut-off of the SWF may result in only some measurements of a particular feature contributing to the optimization.
 As a result, the filter may not maximally constrain some vehicle poses, and hence localization may be less accurate than we could expect from the full batch solution.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{MULTI-STATE CONSTRAINT KALMAN FILTER} \label{sec:MSCKF}
+\section{Multi-State Constraint Kalman Filter (MSCKF)} \label{sec:MSCKF}
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
-The key idea of the MSCKF is to maintain a sliding window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
-This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the number of vehicle states in the window exceeds some preset threshold.
+The key idea of the MSCKF is to maintain a variable window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
+This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds some preset threshold.
 
 \subsection{MSCKF State Parametrization}
 We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
@@ -221,8 +220,9 @@ is the 12-dimensional IMU error state.
 In the above, $\widetilde{x}$ denotes the difference between the true value and the estimated value of the quantity $x$.
 The rotational errors $\boldsymbol{\delta\theta}$ are defined according to
 \begin{align}
-    \boldsymbol{\delta}\Vec{q} &:= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T.
+    \boldsymbol{\delta}\Vec{q} &:= \hat{\Vec{q}}^{-1} \otimes \Vec{q} \simeq \bbm \frac{1}{2}\boldsymbol{\delta\theta}^T & 1 \ebm^T
 \end{align}
+where $\otimes$ denotes quaternion multiplication.
 
 Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12+6N)$ matrix that may be partitioned as
 \begin{align} \label{eq:covariance}
@@ -237,14 +237,13 @@ We obtain the camera pose by applying the known transformation $\left(\Vec{q}_{C
     \hat{\Vec{q}}_{C_{N+1} G} &= \Vec{q}_{CI} \otimes \hat{\Vec{q}}_{IG,k} \\
     \hat{\Vec{p}}_G^{C_{N+1}G} &= \hat{\Vec{p}}_G^{IG} + \hat{\Vec{C}}_{IG,k}^T \hat{\Vec{p}}_I^{CI}
 \end{align}
-where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG,k}$ and $\otimes$ denotes quaternion multiplication.
+where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{q}}_{IG,k}$.
 
-Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state as follows:
+Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state according to
 \begin{align}
     \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T .
 \end{align}
-
-We must also augment the MSCKF state covariance:
+and augment the MSCKF state covariance according to
 \begin{align}
     \hat{\Vec{P}}_k &\leftarrow \bbm \Vec{1}_{12+6N} \\ \Vec{J}_k \ebm \hat{\Vec{P}}_k \bbm \Vec{1}_{12+6N} \\ \Vec{J}_k \ebm^T
 \end{align}
@@ -315,7 +314,7 @@ with the initial condition $\boldsymbol{\Phi}\left(t_k, t_k \right) = \Vec{1}_{1
 We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
 \begin{align} \label{eq:imucovar}
     \dot{\hat{\Vec{P}}}_{II}\left(t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) 
-                \hat{x}_{C_i}^{C_1 C_i} + \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) \Vec{F}^T \notag \\ 
+                 + \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) \Vec{F}^T \notag \\ 
                 & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
 \end{align}
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{II,k}$. 
@@ -324,9 +323,9 @@ with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{
 When a feature $f_j$ goes out of view of the camera, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
 The procedure takes as input $N$ camera poses and $N$ sets of ``ideal'' pixel measurements, where ``ideal'' means that the pixel measurements have been corrected for the camera intrinsics:
 \begin{align}
-\hat{\Vec{z}}_i^{(j)} &= \bbm u'_i & v'_i \ebm ^T = \bbm (u_i - c_u)/f_u & (v_i - c_v)/f_v \ebm ^T
+\hat{\Vec{z}}_i^{(j)} &= \bbm u'_i & v'_i \ebm ^T = \bbm (u_i - c_u)/f_u & (v_i - c_v)/f_v \ebm ^T.
 \end{align}
-We initialize the optimization by estimating the position of feature $f_j$ in camera frame $C_1$ using a linear least squares method with measurements from the first two camera frames, $C_1$ and $C_2$:
+We initialize the optimization by estimating the position of feature $f_j$ in camera frame $C_1$ using a linear least-squares method with measurements from the first two camera frames, $C_1$ and $C_2$:
 \begin{align}
 \hat{\Vec{p}}_{C_1}^{f_j C_1} := \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & \hat{Z}^{(j)}_{C_1} \ebm ^T = \lambda \boldsymbol{\rho}_{C_1}^{f_j}
 \end{align}
@@ -392,7 +391,7 @@ The Jacobian elements are given by
     \frac{1}{h_3^2} \bbm -\frac{\partial h_1}{\partial \gamma} h_3 + \frac{\partial h_3}{\partial \gamma} h_1 \\[0.5em] 
                         -\frac{\partial h_2}{\partial \gamma} h_3 + \frac{\partial h_3}{\partial \gamma} h_2 \ebm
 \end{align}
-with
+where
 \begin{align}
 \frac{\partial h_1}{\partial \alpha} &= C_{11}, & \frac{\partial h_1}{\partial \beta} &= C_{12}, & \frac{\partial h_1}{\partial \gamma} &= \hat{x}_{C_i}^{C_1 C_i} \notag \\
 \frac{\partial h_2}{\partial \alpha} &= C_{21}, & \frac{\partial h_2}{\partial \beta} &= C_{22}, & \frac{\partial h_2}{\partial \gamma} &= \hat{y}_{C_i}^{C_1 C_i} \\
@@ -440,9 +439,10 @@ By stacking the errors $\Vec{r}_i^{(j)}$, we arrive at an expression for the $2M
 The noise vector $\Vec{n}^{(j)}$ has covariance matrix $\Vec{R}^{(j)} = \text{diag}\left\{\Vec{R}_1^{(j)}, \hdots, \Vec{R}_{M_j}^{(j)}\right\}$.
 
 However, the EKF assumes that measurement errors are linear in the error in the state and have an additive zero-mean Gaussian noise component that is \textit{uncorrelated} to the state.
-Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state (note that the SWF does not have this problem because feature positions are part of the state itself, and optimized jointly with the poses).
+Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state.
 Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$ directly in the EKF.
 The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
+As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized with the poses.
 
 \begin{figure}
     \centering
@@ -456,7 +456,7 @@ The correlation between the measurement noise and the state causes the filter es
         \label{fig:nullspace:rot_err}
     }
     
-    \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement error and the state causes the filter estimates to drift further from the true values than with a modified, de-corellated measurement error.}
+    \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement noise.}
     \label{fig:nullspace}
 \end{figure}
 
@@ -498,10 +498,10 @@ Finally, we can formulate the Kalman gain and correction equations to arrive at 
 \end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EXPERIMENTS} \label{sec:experiments}
+\section{Experiments} \label{sec:experiments}
 We compared the performance of the MSCKF and SWF algorithms on two intervals in the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
 The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 features while moving along an arbitrary 3D path.
-This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system was available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
+This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
 
 We implemented and tested both algorithms on a MacBook Pro with an Intel i7 processor and 16 GB of RAM running MATLAB 2014b.
@@ -682,14 +682,14 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{CONCLUSIONS} \label{sec:conclusions}
+\section{Conclusions} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
-In environments with more features, both algorithms provide substantial gains over pure IMU integration, although the SWF significantly outperformed the MSCKF in terms of accuracy on the datasets we tested.
+In environments with more features, both algorithms provided substantial gains in accuracy over pure IMU integration, although the SWF significantly outperformed the MSCKF on the datasets we tested.
 However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
 It is unclear from these results which algorithm would perform best as the number of features grows very large.
 
 Although the SWF appears to produce more accurate pose estimates than the MSCKF in many cases, the MSCKF has the advantage of being less computationally intensive than the SWF, and of having better consistency properties.
-The MSCKF may be a better choice of algorithm in situations where computational resources are limited, or where a consistent estimate of state uncertainty is desirable.
+The MSCKF may be a better choice of algorithm in applications where computational resources are limited, or where a consistent estimate of state uncertainty is desirable.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
