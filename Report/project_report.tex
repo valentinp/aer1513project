@@ -101,8 +101,8 @@ The question, then, is how best to fuse measurements from these two sensor types
 This problem is often complicated by the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
-In this work, we compare and contrast two modern solutions: the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}.
-The MSCKF is a hybrid approach that combines the accuracy of the SWF with the computational efficiency of an Extended Kalman Filter (EKF).
+In this work, we compare and contrast two modern solutions: the Sliding Window Filter (SWF) and the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}.
+The MSCKF is a hybrid estimator that combines the accuracy of the SWF with the computational efficiency of an Extended Kalman Filter (EKF).
 The MSCKF has recently been used to achieve accurate, online position tracking onboard a smartphone \cite{Li:2013:ICRA}, while the SWF has been applied to planetary landing \cite{Sibley:2010:JFR}.
 We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
 In order to provide context for the MSCKF and SWF, we first outline the EKF approach to the SLAM problem.
@@ -117,7 +117,7 @@ In order to provide context for the MSCKF and SWF, we first outline the EKF appr
 
 \section{Extended Kalman Filter (EKF)} \label{sec:EKF}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and feature positions are simultaneously estimated at each time step by augmenting the filter state with feature positions.
-This technique, sometimes referred to as EKF-SLAM, attempts to track pose changes and create a globally consistent map of features by recursively updating the state as new measurements become available.
+This technique, sometimes referred to as EKF-SLAM, attempts to track vehicle motion and create a globally consistent map of features by recursively updating the state as new measurements become available.
 %Features are commonly parametrized as three-dimensional vectors and are initialized using two-view geometry, but alternative parametrization and initialization schemes exist \cite{Sola:2011:IJCV}.
 %In this paper we consider only the three-dimensional parametrization and two-view initialization scheme.
 
@@ -132,10 +132,12 @@ By locking in past poses, the EKF-SLAM formulation condemns itself to sub-optima
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Sliding Window Filter (SWF)} \label{sec:SWF}
 In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
-The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses observing $M$ features: 
+The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses $\Vec x_{k\in[1,K]}$ observing $M$ features $f_{j\in[1,M]}$: 
 \begin{equation}
 \Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & {\Vec {p}_G^{f_1G \hspace{0.3em} T}} & \hdots & {\Vec {p}_G^{f_MG \hspace{0.3em} T}} \ebm ^T.
 \end{equation}
+In our notation, $\Vec p^{BA}_A$ is the vector from the origin of frame $\mathcal{F}_A$ to the origin of frame $\mathcal{F}_B$ expressed in $\mathcal{F}_A$, and $\Vec C_{BA}$ is the rotation matrix from $\mathcal{F}_A$ to $\mathcal{F}_B$.
+
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
 (\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}})
@@ -168,7 +170,6 @@ with
 \begin{equation}
 \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} = \frac{1}{z^2} \bbm f_u z & 0 & - f_u x \\  0 & f_v z & -f_v y \ebm.
 \end{equation}
-
 The weight matrix $\Vec T$ is given by:
 \begin{equation}
 \Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\}
@@ -179,8 +180,8 @@ where
 \Vec 0 & \Vec G_{\Vec n, k} \Vec R_k \Vec G_{\Vec n, k}^T \ebm,
 \end{equation}
 and $\Vec R_k$, $\Vec Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise.
-
 The update is performed repeatedly until convergence (in this work we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $).
+
 An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
@@ -300,7 +301,7 @@ where the Jacobians $\Vec{F}$, $\Vec{G}$ are given by
 and $\Vec{n}_I = \bbm \Vec{n}_{\boldsymbol{\omega}}^T & \Vec{n}_{\Vec{b}_{\boldsymbol{\omega}}}^T & \Vec{n}_{\Vec{v}}^T & \Vec{n}_{\Vec{b}_{\Vec{v}}}^T \ebm^T$ is the IMU process noise, which has covariance matrix $\Vec{Q}_I$.
 
 \subsection{MSCKF State Covariance Propagation}
-With reference to the partitions defined in (\ref{eq:covariance}), we compute the predicted camera-camera and IMU-camera state covariances as follows:
+With reference to the partitions defined in (\ref{eq:covariance}), we compute the predicted camera state covariances and IMU-camera cross-correlations as follows:
 \begin{align}
     \hat{\Vec{P}}^-_{CC,k+1} &= \hat{\Vec{P}}_{CC,k} \\
     \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + T, t_k \right) \hat{\Vec{P}}_{IC,k}
@@ -311,7 +312,7 @@ where $T$ is the IMU sampling period, and the state transition matrix $\boldsymb
 \end{align}
 with the initial condition $\boldsymbol{\Phi}\left(t_k, t_k \right) = \Vec{1}_{12}$.
 
-We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
+We obtain the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
 \begin{align} \label{eq:imucovar}
     \dot{\hat{\Vec{P}}}_{II}\left(t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) 
                  + \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) \Vec{F}^T \notag \\ 
@@ -333,7 +334,7 @@ where
 \begin{align}
 \boldsymbol{\rho}_{C_i}^{f_j} &:= \frac{1}{\sqrt{u'^2_i + v'^2_i + 1}}\bbm u'_i & v'_i & 1\ebm^T
 \end{align}
-and
+is the direction of the ray emanating from camera $C_i$ along which feature $f_j$ must lie, and
 \begin{align}
 \lambda &= \left[(\Vec A^T \Vec A)^{-1} \Vec A^T \hat{\Vec{p}}_{C_1}^{C_2 C_1} \right]_1
 \end{align}
@@ -350,20 +351,20 @@ By forming the vector
 \begin{align}
 \hat{\Vec{y}} &:= \bbm \alpha & \beta & \gamma \ebm^T := \frac{1}{\hat{Z}^{(j)}_{C_1}} \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & 1 \ebm ^T ,
 \end{align}
-we can define three functions:
+we can define three functions
 \begin{align}
     \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \\ h_3 (\hat{\Vec{y}}) \ebm 
     & = \hat{\Vec{C}}_{i1} \bbm \alpha \\ \beta \\ 1 \ebm + \gamma  \hat{\Vec{p}}_{C_i}^{C_1 C_i} \notag \\
     & = \bbm C_{11} \alpha + C_{12} \beta + C_{13} + \gamma \hat{x}_{C_i}^{C_1 C_i} \\[0.5em]
             C_{21} \alpha + C_{22} \beta + C_{23} + \gamma \hat{y}_{C_i}^{C_1 C_i} \\[0.5em]
             C_{31} \alpha + C_{32} \beta + C_{33} + \gamma \hat{z}_{C_i}^{C_1 C_i} 
-        \ebm .
+        \ebm
 \end{align}
-The camera measurement error can then be written as
+and rewrite the camera measurement error as
 \begin{align}
-\Vec e(\hat{\Vec{y}}) = \hat{\Vec{z}}_i^{(j)} - \frac{1}{h_3 (\hat{\Vec{y}}) } \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \ebm
+\Vec e(\hat{\Vec{y}}) = \hat{\Vec{z}}_i^{(j)} - \frac{1}{h_3 (\hat{\Vec{y}}) } \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \ebm .
 \end{align}
-and the linear least-squares system then becomes
+The linear least-squares system then becomes
 \begin{align}
 (\Vec  E^T \Vec W ^{-1} \Vec E ) \delta \Vec{y}^*  = - \Vec{E}^T\Vec{W}^{-1}\Vec{e}(\hat{\Vec{y}})
 \end{align}
@@ -399,7 +400,7 @@ where
 
 \subsection{MSCKF State Correction Equations}
 Now that we have estimated the positions of any features to be used in the state update, we can apply the corresponding motion constraints to the window of poses from which each feature was observed.
-We begin by forming the exteroceptive measurement error corresponding to an observation $\Vec{z}_i^{(j)}$ of feature $f_j$ from the $i^\text{th}$ camera pose $C_i$ in the window:
+We begin by forming the exteroceptive measurement error corresponding to an observation $\Vec{z}_i^{(j)}$ of feature $f_j$ from camera pose $C_i$:
 \begin{align} \label{eq:residual_def}
     \Vec{r}_i^{(j)} &:= \Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}
 \end{align}
@@ -416,7 +417,7 @@ If we linearize (\ref{eq:residual_def}) about the estimates for the camera pose 
 \begin{align}
     \Vec{r}_i^{(j)} &\simeq \Vec{H}_{\Vec{x}, i}^{(j)} \widetilde{\Vec{x}}_i + \Vec{H}_{f, i}^{(j)} \widetilde{\Vec{p}}_G^{f_j G} + \Vec{n}_i^{(j)}
 \end{align}
-where $\Vec{H}_{\Vec{x}, i}^{(j)}$ and $\Vec{H}_{f, i}^{(j)}$ are the Jacobians of the measurement of feature $f_j$ from camera pose $i$ with respect to the filter state and the position of the feature, respectively.
+where $\Vec{H}_{\Vec{x}, i}^{(j)}$ and $\Vec{H}_{f, i}^{(j)}$ are the Jacobians of the measurement of feature $f_j$ from camera pose $C_i$ with respect to the filter state and the position of the feature, respectively.
 These are given by
 \begin{align}
     \Vec{H}_{\Vec{x}, i}^{(j)} &= \bbm \Vec{0} & \Vec{J}^{\left(j\right)}_i \left(\hat{\Vec{p}}_{C_i}^{f_j C_i}\right)^\times & -\Vec{J}^{\left(j\right)}_i \hat{\Vec{C}}_{C_i G} & \Vec{0} \ebm \\
@@ -503,7 +504,7 @@ The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fi
 This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
 
-We implemented and tested both algorithms on a MacBook Pro with an Intel i7 processor and 16 GB of RAM running MATLAB 2014b.
+We implemented and tested both algorithms in MATLAB 2014b on a MacBook Pro Retina (11,3) with a 2.3GHz Intel Core i7 processor and 16 GB of DDR3L RAM.
 For both algorithms, we bootstrapped the filter window with one ground truth pose.
 For the SWF, we initialized feature positions using two-view triangulation.
 
