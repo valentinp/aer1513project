@@ -502,7 +502,11 @@ Finally, we can formulate the Kalman gain and correction equations to arrive at 
 We compared the performance of the MSCKF and SWF algorithms on two intervals in the ``Starry Night'' dataset from the University of Toronto Institute for Aerospace Studies (UTIAS).
 The dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 features while moving along an arbitrary 3D path.
 This dataset is well-suited to evaluating SLAM algorithms since accurate ground truth from a Vicon motion capture system was available for both the sensor head motion and the feature positions (Figure \ref{fig:trajectory_groundtruth}).
-Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only. For both approaches, the filter window was bootstrapped with one ground truth pose, and for SWF, feature positions were intialized through triangulation.
+Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using measurements from the left camera only.
+
+We implemented and tested both algorithms on a MacBook Pro with an Intel i7 processor and 16 GB of RAM running MATLAB 2014b.
+For both algorithms, we bootstrapped the filter window with one ground truth pose.
+For the SWF, we initialized feature positions using two-view triangulation.
 
 
 
@@ -600,8 +604,15 @@ By generating longer feature tracks and increasing the number of features visibl
 
 Figure \ref{fig:comp_3} compares translational and rotational Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
 With additional features, both algorithms consistently outperform pure IMU integration, and the SWF outperforms the MSCKF by a wide margin on all three datasets.
-Note that the MSCKF's performance improves as the number of features increases while the SWF's performance is not significantly affected by increasing feature count.
+
+Note that the MSCKF's performance improves as the number of features increases, while the SWF's performance is not significantly affected by increasing feature count.
 This result indicates that the MSCKF is much more sensitive to feature density than the SWF.
+This may be due to the fact that the MSCKF updates its state whenever a feature goes out of view and does not associate tracks corresponding to the same feature.
+If observations of a given feature are frequently interrupted, each track will not constrain the full set of poses from which the feature is visible.
+As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF estimates benefit from more high-quality motion constraints.
+
+Since the SWF always associates all observations of each feature in a given window, it is not sensitive to the contiguity of the feature observations.
+However, [EXPLANATION ABOUT WHY IT DOESN'T IMPROVE MUCH WITH MORE FEATURES]
 
 \begin{figure}
     \centering
