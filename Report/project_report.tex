@@ -77,7 +77,7 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 Accurate and consistent egomotion estimation is an important part of autonomous navigation.
 For this task, the combination of visual and inertial sensors is an inexpensive, compact, and complementary hardware suite that can be used on many ground and aerial vehicles.
 In this work, we compare two modern approaches to egomotion estimation: the Multi-State Constraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF).
-Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a vehicle and then correct this motion with observations of salient features from a monocular camera.
+Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a vehicle and then correct this estimate with observations of salient features from a monocular camera.
 While the SWF estimates feature positions as part of the filter state itself, the MSCKF optimizes feature positions in a separate procedure without including them in the filter state.
 We present experimental comparisons of the performance of the MSCKF and SWF on several datasets with real and synthetic features.
 In particular, we compare the accuracy and consistency of the two filters, and analyze the effect of feature track length and feature density on the performance of each filter.
@@ -98,7 +98,7 @@ On the other hand, cameras are not robust to motion blur induced by rapid motion
 In these cases, IMU data can be relied upon more heavily in estimating pose changes.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
-A complicating factor in the general form of this problem is the absence of a known map of features from which the camera can generate measurements.
+This problem is often complicated by the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
 In this work, we compare and contrast two modern solutions: the Sliding Window Filter (SWF), the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}.
