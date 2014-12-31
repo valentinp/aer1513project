@@ -444,21 +444,21 @@ Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$
 The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
 As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized along with the poses.
 
-\begin{figure}
+\begin{figure*}
     \centering
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/NST_trans}
+        \includegraphics[width=0.45\textwidth]{figs/NST_trans}
         \label{fig:nullspace:trans_err}
     }
-
+    ~
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/NST_rot}
+        \includegraphics[width=0.45\textwidth]{figs/NST_rot}
         \label{fig:nullspace:rot_err}
     }
     
     \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement noise.}
     \label{fig:nullspace}
-\end{figure}
+\end{figure*}
 
 In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form (to first order):
 \begin{align}
@@ -512,7 +512,7 @@ For the SWF, we initialized feature positions using two-view triangulation.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth}
+    \includegraphics[width=0.45\textwidth]{figs/trajectory_groundtruth}
     \caption{Vicon ground truth for sensor head motion and feature positions in the ``Starry Night'' dataset.}
     \label{fig:trajectory_groundtruth}
 \end{figure}
@@ -524,7 +524,7 @@ At least three features are visible in $64\%$ of this interval, and the number o
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{figs/nVisible_500_1000}
+    \includegraphics[width=0.45\textwidth]{figs/nVisible_500_1000}
     \caption{Number of visible features in the interval $k\in[500,1000]$. Red points indicate that fewer than three features were visible, while green points indicate at least three features were visible.}
     \label{fig:nVisible_int1}
 \end{figure}
@@ -537,21 +537,21 @@ These parameters did not significantly affect the accuracy of either filter, how
 On this interval, the SWF slightly outperforms the MSCKF in terms of translational accuracy in the $y$- and $z$-directions, and significantly outperforms the MSCKF in terms of rotational accuracy about the $x$- and $y$-axes.
 The MSCKF does not perform much better than pure IMU integration on this interval, likely due to the overall low number of feature tracks in this dataset.
 
-\begin{figure}
+\begin{figure*}
     \centering
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-500-1000-Trans}
+        \includegraphics[width=0.45\textwidth]{figs/6-Way-Comparison-500-1000-Trans}
         \label{fig:comp_1:trans_err}
     }
-
+    ~
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-500-1000-Rot}
+        \includegraphics[width=0.45\textwidth]{figs/6-Way-Comparison-500-1000-Rot}
         \label{fig:comp_1:rot_err}
     }
 
     \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[500,1000]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_1}
-\end{figure}
+\end{figure*}
 
 
 \subsection{Experiment 2: Fewer visible features}
@@ -566,26 +566,26 @@ Neither filter performs substantially better than pure IMU integration on this i
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{figs/nVisible_1215_1715}
+    \includegraphics[width=0.45\textwidth]{figs/nVisible_1215_1715}
     \caption{Number of visible features in the interval $k\in[1215,1715]$. Red points indicate that fewer than three features were visible, while green points indicate at least three features were visible.}
     \label{fig:nVisible_int2}
 \end{figure}
 
-\begin{figure}
+\begin{figure*}
     \centering
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-1215-1715-Trans}
+        \includegraphics[width=0.45\textwidth]{figs/6-Way-Comparison-1215-1715-Trans}
         \label{fig:comp_2:trans_err}
     }
-
+    ~
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/6-Way-Comparison-1215-1715-Rot}
+        \includegraphics[width=0.45\textwidth]{figs/6-Way-Comparison-1215-1715-Rot}
         \label{fig:comp_2:rot_err}
     }
 
     \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the number next to ``SWF'' refers to the number of states in the sliding window.}
     \label{fig:comp_2}
-\end{figure}
+\end{figure*}
 
 
 \subsection{Experiment 3: Effect of feature density}
@@ -597,7 +597,7 @@ By generating longer feature tracks and increasing the number of features visibl
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\textwidth]{figs/trajectory_groundtruth_100lessnoisy}
+    \includegraphics[width=0.45\textwidth]{figs/trajectory_groundtruth_100lessnoisy}
     \caption{Modified ``Starry Night'' dataset with 100 synthetic features. The sensor trajectory is identical to the original dataset.}
     \label{fig:trajectory_groundtruth_100lessnoisy}
 \end{figure}
@@ -612,21 +612,21 @@ If observations of a given feature are frequently interrupted, each track will n
 As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF benefits from more high-quality motion constraints.
 Since the SWF always associates all observations of each feature in a given window, it is not sensitive to the contiguity of the feature observations.
 
-\begin{figure}
+\begin{figure*}
     \centering
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/RMSE-Comparison-Feat-Density-1215-1715-Trans}
+        \includegraphics[width=0.45\textwidth]{figs/RMSE-Comparison-Feat-Density-1215-1715-Trans}
         \label{fig:comp_3:trans_err}
     }
-
+    ~
     \subfigure {
-        \includegraphics[width=0.48\textwidth]{figs/RMSE-Comparison-Feat-Density-1215-1715-Rot}
+        \includegraphics[width=0.45\textwidth]{figs/RMSE-Comparison-Feat-Density-1215-1715-Rot}
         \label{fig:comp_3:rot_err}
     }
 
     \caption{Comparison of Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration for three different synthetic maps generated based on the IMU data in the dataset interval $k\in[1215,1715]$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
-\end{figure}
+\end{figure*}
 
 Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
 As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
