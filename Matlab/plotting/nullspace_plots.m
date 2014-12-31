@@ -4,12 +4,12 @@ nst_off = load('msckf_NST_off.mat');
 
 plotAbsErr = true;
 
-msckf_trans_err = nst_on.msckf_trans_err;
-msckf_rot_err = nst_on.msckf_rot_err;
-msckf_err_sigma = nst_on.err_sigma;
-swf_trans_err = nst_off.msckf_trans_err;
-swf_rot_err = nst_off.msckf_rot_err;
-swf_err_sigma = nst_off.err_sigma;
+msckf_trans_err = nst_off.msckf_trans_err;
+msckf_rot_err = nst_off.msckf_rot_err;
+msckf_err_sigma = nst_off.err_sigma;
+swf_trans_err = nst_on.msckf_trans_err;
+swf_rot_err = nst_on.msckf_rot_err;
+swf_err_sigma = nst_on.err_sigma;
 tPlot = nst_on.tPlot;
 
 transLim = [-0.4 0.4];
@@ -28,12 +28,12 @@ end
 figure
 subplot(3,1,1)
 hold on
-plot(tPlot, msckf_trans_err(1,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(4,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(4,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_trans_err(1,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(4,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(4,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_trans_err(1,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(4,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(4,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_trans_err(1,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(4,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(4,:), '--b', 'LineWidth', 1.2)
 
 xlim([tPlot(1) tPlot(end)]);
 ylim(transLim)
@@ -46,12 +46,12 @@ box on;
 
 subplot(3,1,2)
 hold on
-plot(tPlot, msckf_trans_err(2,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(5,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(5,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_trans_err(2,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(5,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(5,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_trans_err(2,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(5,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(5,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_trans_err(2,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(5,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(5,:), '--b', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim(transLim)
 ylabel('\delta r_y [m]')
@@ -61,12 +61,12 @@ box on;
 
 subplot(3,1,3)
 hold on
-plot(tPlot, msckf_trans_err(3,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(6,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(6,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_trans_err(3,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(6,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(6,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_trans_err(3,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(6,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(6,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_trans_err(3,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(6,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(6,:), '--b', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim(transLim)
 ylabel('\delta r_z [m]')
@@ -82,12 +82,12 @@ export_fig(gcf, filename, '-transparent');
 figure
 subplot(3,1,1)
 hold on
-plot(tPlot, msckf_rot_err(1,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(1,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(1,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_rot_err(1,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(1,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(1,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_rot_err(1,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(1,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(1,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_rot_err(1,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(1,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(1,:), '--b', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim(rotLim)
 title(sprintf('Absolute Rotational Error'))
@@ -99,12 +99,12 @@ box on;
  
 subplot(3,1,2)
 hold on
-plot(tPlot, msckf_rot_err(2,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(2,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(2,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_rot_err(2,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(2,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(2,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_rot_err(2,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(2,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(2,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_rot_err(2,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(2,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(2,:), '--b', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim(rotLim)
 ylabel('\delta\theta_y')
@@ -114,12 +114,12 @@ box on;
 
 subplot(3,1,3)
 hold on
-plot(tPlot, msckf_rot_err(3,:), '-b', 'LineWidth', 1.2)
-% plot(tPlot, -3*msckf_err_sigma(3,:), '--b', 'LineWidth', 1.2)
-% plot(tPlot, 3*msckf_err_sigma(3,:), '--b', 'LineWidth', 1.2)
-plot(tPlot, swf_rot_err(3,:), '-r', 'LineWidth', 1.2)
-% plot(tPlot, -3*swf_err_sigma(3,:), '--r', 'LineWidth', 1.2)
-% plot(tPlot, 3*swf_err_sigma(3,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, msckf_rot_err(3,:), '-r', 'LineWidth', 1.2)
+% plot(tPlot, -3*msckf_err_sigma(3,:), '--r', 'LineWidth', 1.2)
+% plot(tPlot, 3*msckf_err_sigma(3,:), '--r', 'LineWidth', 1.2)
+plot(tPlot, swf_rot_err(3,:), '-b', 'LineWidth', 1.2)
+% plot(tPlot, -3*swf_err_sigma(3,:), '--b', 'LineWidth', 1.2)
+% plot(tPlot, 3*swf_err_sigma(3,:), '--b', 'LineWidth', 1.2)
 xlim([tPlot(1) tPlot(end)]);
 ylim(rotLim)
 ylabel('\delta\theta_z')

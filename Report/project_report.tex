@@ -195,7 +195,7 @@ This update step typically occurs when a tracked feature goes out of view of the
 
 \subsection{MSCKF State Parametrization}
 We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
-In order to accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2007:ICRA}.
+In order to accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2006:TechReport} and \cite{Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
@@ -241,7 +241,7 @@ where $\hat{\Vec{C}}_{IG,k}$ is the rotation matrix corresponding to $\hat{\Vec{
 
 Assuming the MSCKF state has already been augmented by $N$ camera poses, we add the $\left(N+1\right)^\text{th}$ camera pose to the state according to
 \begin{align}
-    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T .
+    \hat{\Vec{x}}_k &\leftarrow \bbm \hat{\Vec{x}}_k^T & \hat{\Vec{q}}_{C_{N+1} G}^T & \hat{\Vec{p}}_G^{C_{N+1} G \hspace{0.3em} T} \ebm^T 
 \end{align}
 and augment the MSCKF state covariance according to
 \begin{align}
@@ -320,7 +320,7 @@ We obtain the predicted IMU-IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by i
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{II,k}$. 
 
 \subsection{Feature Position Estimation}
-When a feature $f_j$ goes out of view of the camera, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
+When a tracked feature $f_j$ is selected for a state update, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
 The procedure takes as input $N$ camera poses and $N$ sets of ``ideal'' pixel measurements, where ``ideal'' means that the pixel measurements have been corrected for the camera intrinsics:
 \begin{align}
 \hat{\Vec{z}}_i^{(j)} &= \bbm u'_i & v'_i \ebm ^T = \bbm (u_i - c_u)/f_u & (v_i - c_v)/f_v \ebm ^T.
@@ -342,28 +342,28 @@ with
 \Vec A &:= \bbm \boldsymbol{\rho}_{C_1}^{f_j} & -\boldsymbol{\rho}_{C_2}^{f_j} \ebm.
 \end{align}
 
-Next, we define a vector of three parameters:
+We can express the feature position in camera frame $C_i$ in terms of its position in camera frame $C_1$ as
 \begin{align}
-\hat{\Vec{y}} &= \bbm \alpha & \beta & \gamma \ebm^T = \frac{1}{\hat{Z}^{(j)}_{C_1}} \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & 1 \ebm ^T
+\hat{\Vec{p}}_{C_i}^{f_j C_i} = \hat{\Vec{C}}_{i1} \hat{\Vec{p}}_{C_1}^{f_j C_1}  + \hat{\Vec{p}}_{C_i}^{C_1 C_i} .
 \end{align}
-We can express the feature position in camera frame $C_i$ in terms of its position in camera frame $C_1$:
+By forming the vector
 \begin{align}
-\hat{\Vec{p}}_{C_i}^{f_j C_i} = \hat{\Vec{C}}_{i1} \hat{\Vec{p}}_{C_1}^{f_j C_1}  + \hat{\Vec{p}}_{C_i}^{C_1 C_i}
+\hat{\Vec{y}} &:= \bbm \alpha & \beta & \gamma \ebm^T := \frac{1}{\hat{Z}^{(j)}_{C_1}} \bbm \hat{X}^{(j)}_{C_1} & \hat{Y}^{(j)}_{C_1} & 1 \ebm ^T ,
 \end{align}
-With our state parameters, we can use this equation to define three functions:
+we can define three functions:
 \begin{align}
     \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \\ h_3 (\hat{\Vec{y}}) \ebm 
     & = \hat{\Vec{C}}_{i1} \bbm \alpha \\ \beta \\ 1 \ebm + \gamma  \hat{\Vec{p}}_{C_i}^{C_1 C_i} \notag \\
     & = \bbm C_{11} \alpha + C_{12} \beta + C_{13} + \gamma \hat{x}_{C_i}^{C_1 C_i} \\[0.5em]
             C_{21} \alpha + C_{22} \beta + C_{23} + \gamma \hat{y}_{C_i}^{C_1 C_i} \\[0.5em]
             C_{31} \alpha + C_{32} \beta + C_{33} + \gamma \hat{z}_{C_i}^{C_1 C_i} 
-        \ebm 
+        \ebm .
 \end{align}
 The camera measurement error can then be written as
 \begin{align}
 \Vec e(\hat{\Vec{y}}) = \hat{\Vec{z}}_i^{(j)} - \frac{1}{h_3 (\hat{\Vec{y}}) } \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \ebm
 \end{align}
-The least squares linear system then becomes
+and the linear least-squares system then becomes
 \begin{align}
 (\Vec  E^T \Vec W ^{-1} \Vec E ) \delta \Vec{y}^*  = - \Vec{E}^T\Vec{W}^{-1}\Vec{e}(\hat{\Vec{y}})
 \end{align}
@@ -376,7 +376,6 @@ where
 \Vec W &= \text{diag}\left\{ \Vec{R}_1^{(j)}, \hdots, \Vec{R}_N^{(j)} \right\}
 \end{align}
 with $\Vec{R}_i^{(j)} = \text{diag}\left\{\sigma^2_{u'}, \sigma^2_{v'}\right\}$.
-
 The Jacobian elements are given by
 \begin{align}
 \frac{\partial \Vec e}{\partial \alpha} &= 
@@ -399,7 +398,7 @@ where
 \end{align}
 
 \subsection{MSCKF State Correction Equations}
-Now that we have estimated the positions of any features that have gone out of view, we can apply the corresponding motion constraints to the window of poses from which each feature was observed.
+Now that we have estimated the positions of any features to be used in the state update, we can apply the corresponding motion constraints to the window of poses from which each feature was observed.
 We begin by forming the exteroceptive measurement error corresponding to an observation $\Vec{z}_i^{(j)}$ of feature $f_j$ from the $i^\text{th}$ camera pose $C_i$ in the window:
 \begin{align} \label{eq:residual_def}
     \Vec{r}_i^{(j)} &:= \Vec{z}_i^{(j)} - \hat{\Vec{z}}_i^{(j)}
@@ -442,7 +441,7 @@ However, the EKF assumes that measurement errors are linear in the error in the 
 Since the term $\Vec{H}_{f}^{(j)} \widetilde{\Vec{p}}_G^{f_j G}$ \textit{is} correlated to the state, $\Vec{r}^{(j)}$ is not of the correct form for the EKF and must be modified to de-correlate it from the state.
 Figure \ref{fig:nullspace} shows the effect of attempting to use $\Vec{r}^{(j)}$ directly in the EKF.
 The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement error.
-As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized with the poses.
+As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized along with the poses.
 
 \begin{figure}
     \centering
@@ -603,13 +602,13 @@ By generating longer feature tracks and increasing the number of features visibl
 \end{figure}
 
 Figure \ref{fig:comp_3} compares translational and rotational Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration on three synthetic datasets with 40, 60, and 100 features.
-With additional features, both algorithms consistently outperform pure IMU integration, and the SWF outperforms the MSCKF by a wide margin on all three datasets.
+With more features, both algorithms consistently outperform pure IMU integration, and the SWF outperforms the MSCKF by a wide margin on all three datasets.
 
 Note that the MSCKF's performance improves as the number of features increases, while the SWF's performance is not significantly affected by increasing feature count.
 This result indicates that the MSCKF is much more sensitive to feature density than the SWF.
 This may be due to the fact that the MSCKF updates its state whenever a feature goes out of view and does not associate tracks corresponding to the same feature.
 If observations of a given feature are frequently interrupted, each track will not constrain the full set of poses from which the feature is visible.
-As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF estimates benefit from more high-quality motion constraints.
+As feature density increases, the number of long feature tracks is likely to increase, and so the MSCKF benefits from more high-quality motion constraints.
 Since the SWF always associates all observations of each feature in a given window, it is not sensitive to the contiguity of the feature observations.
 
 \begin{figure}
@@ -631,10 +630,10 @@ Since the SWF always associates all observations of each feature in a given wind
 Table \ref{tab:rmse_nees} provides summary statistics of each algorithm's performance on the synthetic datasets.
 As expected from Figure \ref{fig:comp_3}, the SWF outperforms the MSCKF in terms of average RMSE on both rotation estimation and position estimation.
 It is worth noting, however, that, on average, the MSCKF achieves low Normalized Estimation Error Squared (NEES) values, which indicates that the filter scores well on consistency if not on accuracy.
-The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes the proper procedure of using marginalization of old poses which was not implemented in this work).
-The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so the SWF may be considered inconsistent in the absence of a known map.
+The average NEES values for the SWF are substantially higher because the SWF treats each window independently and has no built-in mechanism for propagating uncertainty from window to window (\cite{Sibley:2010:JFR} describes the proper procedure of using marginalization of old poses, which was not implemented in this work).
+The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so this form of the SWF may be considered inconsistent in the absence of a known map.
 
-Another point in favour of the MSCKF is that the computational effort required was significantly smaller than for the SWF.
+Another point in favour of the MSCKF is that the computational effort required was an order of magnitude smaller than for the SWF.
 The MSCKF may therefore be better suited to vehicles with limited computational resources, particularly if they are operating in feature-rich environments.
 
 
@@ -683,9 +682,9 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 \section{Conclusions} \label{sec:conclusions}
 Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
 We stress that our inertial data was obtained from a high-quality IMU and has been sanitized to account for gravity, biases, and integration error.
-Using raw data from a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and the benefit of the SWF and MSCKF would have been more apparent.
+Using raw data from a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and that the benefit of the SWF and MSCKF would have been more apparent.
 
-In environments with more features, both algorithms provided substantial gains in accuracy over pure IMU integration, although the SWF significantly outperformed the MSCKF on the datasets we tested.
+In environments with more features, both algorithms provided substantial gains in accuracy over pure IMU integration, with the SWF significantly outperforming the MSCKF on the datasets we tested.
 However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
 It is unclear from these results which algorithm would perform best as the number of features grows very large.
 
