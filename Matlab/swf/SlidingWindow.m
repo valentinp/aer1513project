@@ -5,7 +5,7 @@ clc
 clear
 close all
 addpath('utils')
-fileName = '100noisy';
+fileName = '60noisy';
 load(['../datasets/dataset3_fresh_' fileName '.mat'])
 %load('../datasets/dataset3.mat');
 tic
