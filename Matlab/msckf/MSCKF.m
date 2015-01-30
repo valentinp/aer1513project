@@ -236,7 +236,8 @@ for state_k = kStart:(kEnd-1)
 %             [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
              %p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; RCOND = 1;
-             p_f_G = triangulate(
+             p_f_C = triangulate(squeeze(y_k_j(:, track.camStates{1}.state_k, track.featureId)), camera);
+             Jcost = 0; RCOND = 1;
             
             fprintf('Jcost = %f\n',Jcost);
             if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND || norm(p_f_G) > 50
