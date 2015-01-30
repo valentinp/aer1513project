@@ -9,18 +9,23 @@ clear;
 close all;
 clc;
 addpath('utils');
+addpath('stereoCamProject.m');
+
 tic
 % load('../datasets/dataset3.mat')
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_10lessnoisy.mat')
 %load('../datasets/dataset3_fresh_20lessnoisy.mat')
 %load('../datasets/dataset3_fresh_40lessnoisy.mat')
-load('../datasets/dataset3_fresh_60lessnoisy.mat')
+% load('../datasets/dataset3_fresh_60lessnoisy.mat')
 %load('../datasets/dataset3_fresh_80lessnoisy.mat')
-%load('../datasets/dataset3_fresh_100lessnoisy.mat')
+% load('../datasets/dataset3_fresh_100lessnoisy.mat')
+% load('../datasets/2015-01-28-16-19-56_2loops.mat')
+% load('../datasets/2015-01-30-16-08-22_overtable.mat')
+load('../datasets/2015-01-30-16-35-49.mat')
 
 %Dataset window bounds
-kStart = 500; kEnd = 1000;
+kStart = 2; kEnd = 275;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -37,21 +42,23 @@ camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
 y_var = [1,1,1,1];
-noiseParams.u_var_prime = 0.01;%y_var(1)/camera.f_u^2;
-noiseParams.v_var_prime = 0.01;%y_var(2)/camera.f_v^2;
+noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
+noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
 % [w, w bias change, v, v bias change]
-noiseParams.Q_imu = 0.1*diag([w_var', 1e-4*ones(1,3), v_var', 1e-4*ones(1,3)]);
+w_var = 1e-2*ones(3,1);
+v_var = w_var;
+noiseParams.Q_imu = diag([w_var', 1e-2*ones(1,3), v_var', 1e-2*ones(1,3)]);
 % [q, w bias, v bias, p]
 noiseParams.initialIMUCovar = 1e-4 * eye(12);
     
 %MSCKF parameters
-msckfParams.minTrackLength = Inf;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 100;     % Set to inf to wait for features to go out of view
+msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = 20;     % Set to inf to wait for features to go out of view
 msckfParams.maxGNCost      = 10;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 0;
-msckfParams.doNullSpaceTrick = false;
-msckfParams.doQRdecomp = false;
+msckfParams.doNullSpaceTrick = true;
+msckfParams.doQRdecomp = true;
 
 
 % IMU state for plotting etc. Structures indexed in a cell array
@@ -80,8 +87,8 @@ prunedStates = {};
 % Measurements as structures all indexed in a cell array
 dT = [0, diff(t)];
 measurements = cell(1,numel(t));
-groundTruthStates = cell(1,numel(t));
-groundTruthMap = rho_i_pj_i;
+% groundTruthStates = cell(1,numel(t));
+% groundTruthMap = rho_i_pj_i;
 
 % Important: Because we're idealizing our pixel measurements and the
 % idealized measurements could legitimately be -1, replace our invalid
@@ -100,19 +107,19 @@ for state_k = kStart:kEnd
     measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
     
     %Ground Truth
-    q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,state_k)));
-    p_I_G = r_i_vk_i(:,state_k);
-    
-    groundTruthStates{state_k}.imuState.q_IG = q_IG;
-    groundTruthStates{state_k}.imuState.p_I_G =p_I_G ;
-    
-    % Compute camera pose from current IMU pose
-    C_IG = quatToRotMat(q_IG);
-    q_CG = quatLeftComp(camera.q_CI) * q_IG;
-    p_C_G = p_I_G + C_IG' * camera.p_C_I;
-    
-    groundTruthStates{state_k}.camState.q_CG = q_CG;
-    groundTruthStates{state_k}.camState.p_C_G = p_C_G;
+%     q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,state_k)));
+%     p_I_G = r_i_vk_i(:,state_k);
+%     
+%     groundTruthStates{state_k}.imuState.q_IG = q_IG;
+%     groundTruthStates{state_k}.imuState.p_I_G =p_I_G ;
+%     
+%     % Compute camera pose from current IMU pose
+%     C_IG = quatToRotMat(q_IG);
+%     q_CG = quatLeftComp(camera.q_CI) * q_IG;
+%     p_C_G = p_I_G + C_IG' * camera.p_C_I;
+%     
+%     groundTruthStates{state_k}.camState.q_CG = q_CG;
+%     groundTruthStates{state_k}.camState.p_C_G = p_C_G;
     
 end
 
@@ -132,8 +139,10 @@ trackedFeatureIds = [];
 %feature observations
 %Use ground truth for the first state
 
-firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
-firstImuState.p_I_G = r_i_vk_i(:,kStart);
+% firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
+% firstImuState.p_I_G = r_i_vk_i(:,kStart);
+firstImuState.q_IG = [0;0;0;1];
+firstImuState.p_I_G = [0;0;0];
 
 [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart, noiseParams);
 imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
@@ -142,10 +151,10 @@ imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
 %% ============================MAIN LOOP========================== %%
 
 numFeatureTracksResidualized = 0;
+map = [];
 
 for state_k = kStart:(kEnd-1)
     fprintf('state_k = %4d\n', state_k);
-    
     
     %% ==========================STATE PROPAGATION======================== %%
     
@@ -224,13 +233,16 @@ for state_k = kStart:(kEnd-1)
 
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
-            [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
+%             [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
             % Uncomment to use ground truth map instead
              %p_f_G = groundTruthMap(:, track.featureId); Jcost = 0; RCOND = 1;
+             p_f_G = triangulate(
             
-            if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND
+            fprintf('Jcost = %f\n',Jcost);
+            if Jcost > msckfParams.maxGNCost || RCOND < msckfParams.minRCOND || norm(p_f_G) > 50
                 break;
             else
+                map(:,end+1) = p_f_G;
                 numFeatureTracksResidualized = numFeatureTracksResidualized + 1;
                 fprintf('Using new feature track with %d observations. Total track count = %d.\n',...
                     size(track.observations,2), numFeatureTracksResidualized);
@@ -317,6 +329,7 @@ for state_k = kStart:(kEnd-1)
             disp('omgbroken');
         end
         
+        plot_traj;
 %     figure(1); imagesc(msckfState.imuCovar(1:12,1:12)); axis equal; axis ij; colorbar;
 %     drawnow;
 end %for state_K = ...
@@ -325,101 +338,101 @@ toc
 
 
 %% ==========================PLOT ERRORS======================== %%
-kNum = length(prunedStates);
-p_C_G_est = NaN(3, kNum);
-p_C_G_GT = NaN(3, kNum);
-theta_CG_err = NaN(3,kNum);
-err_sigma = NaN(6,kNum); % cam state is ordered as [rot, trans]
-
-tPlot = NaN(1, kNum);
-
-for k = 1:kNum
-    state_k = prunedStates{k}.state_k;
-    
-    p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
-    p_C_G_est(:,k) = prunedStates{k}.p_C_G;
-    q_CG_est  = prunedStates{k}.q_CG;    
-    
-    theta_CG_err(:,k) = crossMatToVec( eye(3) ...
-                    - quatToRotMat(q_CG_est) ...
-                        * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
-      
-    err_sigma(:,k) = prunedStates{k}.sigma;
-                    
-    tPlot(k) = t(state_k);
-end
-
-rotLim = [-0.5 0.5];
-transLim = [-0.5 0.5];
-
-% Save estimates
-msckf_trans_err = p_C_G_est - p_C_G_GT;
-msckf_rot_err = theta_CG_err;
-save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
-
-mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
-mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
-
-% Translation Errors
-figure
-subplot(3,1,1)
-plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(4,:), '--r')
-plot(tPlot, -3*err_sigma(4,:), '--r')
-ylim(transLim)
-xlim([tPlot(1) tPlot(end)])
-title('Translational Error')
-ylabel('\delta r_x')
-
-
-subplot(3,1,2)
-plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(5,:), '--r')
-plot(tPlot, -3*err_sigma(5,:), '--r')
-ylim(transLim)
-xlim([tPlot(1) tPlot(end)])
-ylabel('\delta r_y')
-
-subplot(3,1,3)
-plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(6,:), '--r')
-plot(tPlot, -3*err_sigma(6,:), '--r')
-ylim(transLim)
-xlim([tPlot(1) tPlot(end)])
-ylabel('\delta r_z')
-xlabel('t_k')
-
-% Rotation Errors
-figure
-subplot(3,1,1)
-plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(1,:), '--r')
-plot(tPlot, -3*err_sigma(1,:), '--r')
-ylim(rotLim)
-xlim([tPlot(1) tPlot(end)])
-title('Rotational Error')
-ylabel('\delta \theta_x')
-
-
-subplot(3,1,2)
-plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(2,:), '--r')
-plot(tPlot, -3*err_sigma(2,:), '--r')
-ylim(rotLim)
-xlim([tPlot(1) tPlot(end)])
-ylabel('\delta \theta_y')
-
-subplot(3,1,3)
-plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
-hold on
-plot(tPlot, 3*err_sigma(3,:), '--r')
-plot(tPlot, -3*err_sigma(3,:), '--r')
-ylim(rotLim)
-xlim([tPlot(1) tPlot(end)])
-ylabel('\delta \theta_z')
-xlabel('t_k')
+% kNum = length(prunedStates);
+% p_C_G_est = NaN(3, kNum);
+% p_C_G_GT = NaN(3, kNum);
+% theta_CG_err = NaN(3,kNum);
+% err_sigma = NaN(6,kNum); % cam state is ordered as [rot, trans]
+% 
+% tPlot = NaN(1, kNum);
+% 
+% for k = 1:kNum
+%     state_k = prunedStates{k}.state_k;
+%     
+%     p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
+%     p_C_G_est(:,k) = prunedStates{k}.p_C_G;
+%     q_CG_est  = prunedStates{k}.q_CG;    
+%     
+%     theta_CG_err(:,k) = crossMatToVec( eye(3) ...
+%                     - quatToRotMat(q_CG_est) ...
+%                         * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
+%       
+%     err_sigma(:,k) = prunedStates{k}.sigma;
+%                     
+%     tPlot(k) = t(state_k);
+% end
+% 
+% rotLim = [-0.5 0.5];
+% transLim = [-0.5 0.5];
+% 
+% % Save estimates
+% msckf_trans_err = p_C_G_est - p_C_G_GT;
+% msckf_rot_err = theta_CG_err;
+% save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
+% 
+% mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
+% mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
+% 
+% % Translation Errors
+% figure
+% subplot(3,1,1)
+% plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(4,:), '--r')
+% plot(tPlot, -3*err_sigma(4,:), '--r')
+% ylim(transLim)
+% xlim([tPlot(1) tPlot(end)])
+% title('Translational Error')
+% ylabel('\delta r_x')
+% 
+% 
+% subplot(3,1,2)
+% plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(5,:), '--r')
+% plot(tPlot, -3*err_sigma(5,:), '--r')
+% ylim(transLim)
+% xlim([tPlot(1) tPlot(end)])
+% ylabel('\delta r_y')
+% 
+% subplot(3,1,3)
+% plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(6,:), '--r')
+% plot(tPlot, -3*err_sigma(6,:), '--r')
+% ylim(transLim)
+% xlim([tPlot(1) tPlot(end)])
+% ylabel('\delta r_z')
+% xlabel('t_k')
+% 
+% % Rotation Errors
+% figure
+% subplot(3,1,1)
+% plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(1,:), '--r')
+% plot(tPlot, -3*err_sigma(1,:), '--r')
+% ylim(rotLim)
+% xlim([tPlot(1) tPlot(end)])
+% title('Rotational Error')
+% ylabel('\delta \theta_x')
+% 
+% 
+% subplot(3,1,2)
+% plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(2,:), '--r')
+% plot(tPlot, -3*err_sigma(2,:), '--r')
+% ylim(rotLim)
+% xlim([tPlot(1) tPlot(end)])
+% ylabel('\delta \theta_y')
+% 
+% subplot(3,1,3)
+% plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
+% hold on
+% plot(tPlot, 3*err_sigma(3,:), '--r')
+% plot(tPlot, -3*err_sigma(3,:), '--r')
+% ylim(rotLim)
+% xlim([tPlot(1) tPlot(end)])
+% ylabel('\delta \theta_z')
+% xlabel('t_k')
