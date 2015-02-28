@@ -12,12 +12,12 @@ calibParams.f_v = fv;
 calibParams.b = b;
 
 %Noise parameters
-% y_var = [1,1,1,1];
+y_var = [1,1,1,1];
 mu = zeros(4,1);
 sigma = diag(y_var);
 
 %Generate new landmarks
-newLmNum = 100;
+newLmNum = 500;
 
 if exist('newLmPos', 'var')
     oldLmNum = size(newLmPos,2);
@@ -34,7 +34,7 @@ end
 
 xRange = [min(rho_i_pj_i(1,:)) - 5, max(rho_i_pj_i(1,:)) + 5];
 yRange = [min(rho_i_pj_i(2,:)) - 5, max(rho_i_pj_i(2,:)) + 5];
-zRange = [min(rho_i_pj_i(3,:)) - 5, max(rho_i_pj_i(3,:)) ];
+zRange = [min(rho_i_pj_i(3,:)) - 5, max(rho_i_pj_i(3,:)) + 5];
 
 newLmPosX = range(xRange)*rand(1,newLmNum - oldLmNum) + xRange(1);
 newLmPosY = range(yRange)*rand(1,newLmNum - oldLmNum) + yRange(1);
@@ -57,7 +57,9 @@ for k = 1:length(t)
         p_li_i = newLmPos(:,lm_i);
         p_lc_c = homo2cart(T_ci*cart2homo(p_li_i));
         [yMeas] = stereoCamProject(p_lc_c, calibParams);
-        if all(yMeas > 0) && all(yMeas([1,3]) <= 640) && all(yMeas([2,4]) <= 480)
+        if all(yMeas > 0) ...
+            && all(yMeas([1,3]) <= 640) && all(yMeas([2,4]) <= 480)...
+            && p_lc_c(3) > 0    % in view and in front of camera
                 noise = mvnrnd(mu, sigma)';
                 y_k_j(:,k, lm_i) = yMeas + noise;
         else
@@ -67,4 +69,4 @@ for k = 1:length(t)
 end
 
 
-save(['../datasets/dataset3_fresh_',num2str(newLmNum),'noisy.mat']);
+save(['../datasets/dataset3_fresh2_',num2str(newLmNum),'lessnoisy.mat']);
