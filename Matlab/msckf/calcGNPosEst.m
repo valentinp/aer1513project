@@ -112,10 +112,10 @@ end
            v_1 = v_1/norm(v_1);
            v_2 = v_2/norm(v_2);
 
-           EWE = [v_1 -C_12*v_2];
-           b = t_21_1;
+           EWE_t = [v_1 -C_12*v_2];
+           b_t = t_21_1;
 
-           scalar_consts = EWE\b;
+           scalar_consts = EWE_t\b_t;
            p_f1_1 = scalar_consts(1)*v_1;
     end
 

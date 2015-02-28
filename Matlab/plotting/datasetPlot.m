@@ -1,5 +1,5 @@
 % load('../datasets/dataset3.mat');
-load('../datasets/dataset3_fresh_100lessnoisy.mat');
+load('../datasets/dataset3_fresh2_500noisy.mat');
 
 fontSize = 14;
 markerSize = 50;
