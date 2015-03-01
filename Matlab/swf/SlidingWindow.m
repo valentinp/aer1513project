@@ -7,16 +7,13 @@ close all
 addpath('utils')
 addpath('../msckf')
 
-%Set up the noise parameters for MSCKF calcGNPosEst
-y_var = 1^2 * ones(1,4);                 % pixel coord var
-noiseParams.u_var_prime = y_var(1)/fu^2;
-noiseParams.v_var_prime = y_var(2)/fv^2;
+
 
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
 load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-v_var = 0.1*ones(3,1);
-w_var = 0.1*ones(3,1);
+v_var = 0.5*ones(3,1);
+w_var = 0.5*ones(3,1);
 tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -30,9 +27,15 @@ calibParams.b = b;
 
 vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
+T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
+
+%Set up the noise parameters for MSCKF calcGNPosEst
+y_var = 4^2 * ones(2,1);                 % pixel coord var
+noiseParams.u_var_prime = y_var(1)/fu^2;
+noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
-LMLambda = 1e-5;
+LMLambda = 1e-3;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 
@@ -57,7 +60,7 @@ initialStateStruct = {};
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
-    R = 1*eye(2);
+    R = diag(y_var);
     %R = diag(y_var(1:2));
 else
     R = 1*eye(4);
@@ -73,8 +76,8 @@ if isnan(firstState.C_vi(1,1))
 end
 firstState.r_vi_i = r_i_vk_i(:,k1);
 firstState.k = k1;
-
 initialStateStruct{1} = firstState;
+
 
 %There are K + 1 states (there is a '0' state)
 for kIdx = 1:K
@@ -82,35 +85,37 @@ for kIdx = 1:K
     imuMeasurement.omega = w_vk_vk_i(:, k-1);
     imuMeasurement.v = v_vk_vk_i(:, k-1);
     deltaT = t(k) - t(k-1);
-    
     %Propagate the state forward
     initialStateStruct{kIdx+1} = propagateState(initialStateStruct{kIdx}, imuMeasurement, deltaT);
 end
+
 
 %%
 
 %Slide the window along
 stateVecHistStruct = {};
-stateSigmaHistMat = [];
+stateVecHistStruct{1} = firstState;
+
+%stateSigmaHistMat = [];
 
 
 for k1 = kStart:kEnd        
 k2 = k1+kappa;
 
-%How many exteroceptive measurements do we have?
-%NOTE: k1 is the 0th state
-totalLandmarkObs = 0;
-observedBinaryFlags = zeros(numLandmarks, 1);
-lmObsVec = zeros(1, K);
-
-for k = (k1+1):k2
-    validObs = squeeze(y_k_j(1, k, :) > -1);
-    lmObsVec(k-k1) = sum(validObs);
-    observedBinaryFlags(validObs') = ones(1, sum(validObs==1));
-    totalLandmarkObs = totalLandmarkObs + sum(y_k_j(1, k, :) > -1);
-end
-totalUniqueObservedLandmarks = sum(observedBinaryFlags);
-observedLandmarkIds = find(observedBinaryFlags);
+% %How many exteroceptive measurements do we have?
+% %NOTE: k1 is the 0th state
+% totalLandmarkObs = 0;
+% observedBinaryFlags = zeros(numLandmarks, 1);
+% lmObsVec = zeros(1, K);
+% 
+% for k = (k1+1):k2
+%     validObs = squeeze(y_k_j(1, k, :) > -1);
+%     lmObsVec(k-k1) = sum(validObs);
+%     observedBinaryFlags(validObs') = ones(1, sum(validObs==1));
+%     totalLandmarkObs = totalLandmarkObs + sum(y_k_j(1, k, :) > -1);
+% end
+% totalUniqueObservedLandmarks = sum(observedBinaryFlags);
+% observedLandmarkIds = find(observedBinaryFlags);
 
 
 %To initialize G-N, we propagate all the states for the first window
@@ -132,10 +137,19 @@ end
 
 % Initialize the landmark positions (start fresh each window)
 rho_i_pj_i_est = NaN(3, numLandmarks);
+observedLandmarkStructs = {};
+for l_i = 1:numLandmarks
+       observedLandmarkStructs{l_i}.camStates = {};
+       observedLandmarkStructs{l_i}.observations = [];
+end
 for kIdx = 1:K
         k = kIdx + k1;
         validLmObsId = find(y_k_j(1, k, :) > -1);
         kState = currentStateStruct{kIdx+1};
+        T_vi = [kState.C_vi -kState.C_vi*kState.r_vi_i; 0 0 0 1];
+        T_ci = T_cv*T_vi;
+        T_ic = inv(T_ci);
+            
         % camStates{k}.q_CG        4x1 Global to camera rotation quaternion
         % camStates{k}.p_C_G       3x1 Camera Position in the Global frame
         % camStates{k}.trackedFeatureIds  1xM List of feature ids that are currently being tracked from that camera state
@@ -143,31 +157,43 @@ for kIdx = 1:K
         for lmId = validLmObsId'
 
             yMeas = y_k_j(:, k, lmId);
-            observedLandmarkStructs{}
-            observedLandmarkStructs
+            camState = {};
+            camState.q_CG = rotMatToQuat(T_ci(1:3,1:3));
+            camState.p_C_G = T_ic(1:3,4);
+            observedLandmarkStructs{lmId}.camStates{end+1} = camState;
+            observedLandmarkStructs{lmId}.observations(:, end+1) = [(yMeas(1) - calibParams.c_u)/calibParams.f_u; (yMeas(2) - calibParams.c_v)/calibParams.f_v];
+
             %Find the ground truth position of the observed landmark
             %rho_pi_i_check = rho_i_pj_i(:, lmId);
 
-            if (isnan(rho_i_pj_i_est(1, lmId)))
-                %Use triangulation to find the position of the landmark
-                 rho_pc_c = triangulate(yMeas, calibParams);
-                 
-                 rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
-                 rho_i_pj_i_est(:, lmId) = rho_pi_i;
-                 
-                 %Use ground truth for now
-                 %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
-            end
+%             if (isnan(rho_i_pj_i_est(1, lmId)))
+%                 %Use triangulation to find the position of the landmark
+%                  rho_pc_c = triangulate(yMeas, calibParams);
+%                  
+%                  rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
+%                  rho_i_pj_i_est(:, lmId) = rho_pi_i;
+%                  
+%                  %Use ground truth for now
+%                  %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
+%             end
         end
 end
 
-%Triangulate all landmarks
-for lmStructIdx = 1:length(observedLandmarkStructs)
-    lmId = observedLandmarkStructs{lmStructIdx}.lmId;
-    camStates = observedLandmarkStructs{lmStructIdx}.camStates;
-    [rho_pi_i, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
-    Jnew
-    rho_i_pj_i_est(:, lmId) = rho_pi_i;
+%Triangulate all landmarks and keep track of which ones we are
+%triangulating
+totalLandmarkObs = 0;
+observedLandmarkIds = [];
+totalUniqueObservedLandmarks = 0;
+for lmId = 1:length(observedLandmarkStructs)
+    if length(observedLandmarkStructs{lmId}.camStates) > 1
+        camStates = observedLandmarkStructs{lmId}.camStates;
+        observations = observedLandmarkStructs{lmId}.observations;
+        [rho_pi_i, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
+        rho_i_pj_i_est(:, lmId) = rho_pi_i;
+        totalLandmarkObs = totalLandmarkObs + length(observedLandmarkStructs{lmId}.camStates);
+        totalUniqueObservedLandmarks = totalUniqueObservedLandmarks + 1;
+        observedLandmarkIds(end+1) = lmId;
+    end
 end
 
 
@@ -211,7 +237,7 @@ for kIdx = 1:K
     
     
     %==== Build the exteroceptive error and Jacobians=====%
-    validLmObsId = find(y_k_j(1, k, :) > -1);
+    validLmObsId = intersect(find(y_k_j(1, k, :) > -1), observedLandmarkIds);
     
     if kIdx == 1 && optIdx == 1
         fprintf('Tracking %d features. \n', length(validLmObsId));
@@ -348,7 +374,7 @@ fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
 % if ~all(stateVar > 0)
 %     warning('Variances not positive');
 % end
-stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{2};
+stateVecHistStruct{end+1} = currentStateStruct{2};
 %stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
 
 end %End Sliding window
@@ -366,17 +392,17 @@ toc
 %% IMU Only
 imuOnlyStateStruct{1} = firstState;
 %There are K + 1 states (there is a '0' state)
-for k = kStart:kEnd-1   
-    imuMeasurement.omega = w_vk_vk_i(:, k);
-    imuMeasurement.v = v_vk_vk_i(:, k);
-    deltaT = t(k+1) - t(k);
+for k = kStart+1:kEnd+1
+    imuMeasurement.omega = w_vk_vk_i(:, k-1);
+    imuMeasurement.v = v_vk_vk_i(:, k-1);
+    deltaT = t(k) - t(k-1);
     %Propagate the state forward
-    imuOnlyStateStruct{k+1} = propagateState(imuOnlyStateStruct{k}, imuMeasurement, deltaT);
+    imuOnlyStateStruct{k} = propagateState(imuOnlyStateStruct{k-1}, imuMeasurement, deltaT);
 end
 
 %% Plot error and variances
 %addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
-
+addpath('../msckf/utils')
 rotErrVec = zeros(3, length(stateVecHistStruct));
 transErrVec = zeros(3, length(stateVecHistStruct));
 transErrVecImu = zeros(3, length(stateVecHistStruct));
@@ -386,15 +412,14 @@ translation = zeros(3, length(stateVecHistStruct));
 translation_imuonly = zeros(3, length(stateVecHistStruct));
  
 for stIdx = 1:length(stateVecHistStruct)
-    k = kStart+stIdx;
     translation(:, stIdx) = stateVecHistStruct{stIdx}.r_vi_i;
     translation_imuonly(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i;
-    transErrVec(:,stIdx) = stateVecHistStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
-    transErrVecImu(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
-    eRotMat = eye(3) - stateVecHistStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
+    transErrVec(:,stIdx) = stateVecHistStruct{stIdx}.r_vi_i - r_i_vk_i(:,stIdx);
+    transErrVecImu(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i - r_i_vk_i(:,stIdx);
+    eRotMat = eye(3) - stateVecHistStruct{stIdx}.C_vi*axisAngleToRotMat(theta_vk_i(:,stIdx))';
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
     
-    eRotMat = eye(3) - imuOnlyStateStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
+    eRotMat = eye(3) - imuOnlyStateStruct{stIdx}.C_vi*axisAngleToRotMat(theta_vk_i(:,stIdx))';
     rotErrVecImu(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
@@ -403,14 +428,14 @@ end
 figure
 plot3(-translation(2,:),translation(1,:),translation(3,:), '-b');
 hold on
-plot3(-r_i_vk_i(2,1:length(stateVecHistStruct)),r_i_vk_i(1,1:length(stateVecHistStruct)),r_i_vk_i(3,1:length(stateVecHistStruct)), '-k');
 plot3(-translation_imuonly(2,:),translation_imuonly(1,:),translation_imuonly(3,:), '-r');
-
+plot3(-r_i_vk_i(2,1:length(stateVecHistStruct)),r_i_vk_i(1,1:length(stateVecHistStruct)),r_i_vk_i(3,1:length(stateVecHistStruct)), '-k');
+legend('Opt', 'IMU', 'Ground Truth')
 armse_imu = mean(sqrt(sum(transErrVecImu.^2,1)/3))
-armse_imu_rot = mean(sqrt(sum(rotErrVecImu.^2,1)/3))
+armse_imu_rot = mean(sqrt(sum(rotErrVecImu(:,2:end).^2,1)/3))
 
 armse = mean(sqrt(sum(transErrVec.^2,1)/3))
-armse_rot = mean(sqrt(sum(rotErrVec.^2,1)/3))
+armse_rot = mean(sqrt(sum(rotErrVec(:,2:end).^2,1)/3))
 
 
 % Save estimates
