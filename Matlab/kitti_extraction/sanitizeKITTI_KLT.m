@@ -45,7 +45,8 @@ imuDataHist = [];
 
 seenFeatureVectors = [];
 seenFeatureStructs = {};
-trackedFeatureIdx = [];
+allFeaturesStructIdx = []; % All of the features you have ever seen
+observedIdx = [];
 oldLeftPoints = [];
 oldRightPoints = [];
 oldFeatureIdx = [];
@@ -107,25 +108,25 @@ for i=1:skipFrames:numFrames
          pointTrackerR = vision.PointTracker('MaxBidirectionalError', 5);
          initialize(pointTrackerR, trackingPointsRight, viRightImage);
 
-
-          %For all new features,add a new struct
+            %Old features
             fCount = length(seenFeatureStructs) + 1;
-            trackedFeatureIdx = [];
             for f_i = 1:size(oldLeftPoints,1)
                 struct_i = oldFeatureIdx(f_i);
-                seenFeatureStructs{struct_i}.leftPixels(:, end+1) = oldLeftPoints(f_i, :)';
-                seenFeatureStructs{struct_i}.rightPixels(:, end+1) = oldRightPoints(f_i, :)';
+                seenFeatureStructs{struct_i}.leftPixels(:, end+1) = trackingPointsLeft(f_i, :)';
+                seenFeatureStructs{struct_i}.rightPixels(:, end+1) = trackingPointsRight(f_i, :)';
                 seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
             end
             
+            %New features
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
                 seenFeatureStructs{fCount}.rightPixels = trackingPointsRight(obs_i, :)';
                 seenFeatureStructs{fCount}.imageIndex = i;
-                trackedFeatureIdx(end+1) = fCount;
+                allFeaturesStructIdx(end+1) = fCount;
+                observedIdx(end+1) = fCount;
                 fCount = fCount + 1;
             end
-            trackedFeatureIdx = [oldFeatureIdx, trackedFeatureIdx];
+            allFeaturesStructIdx = [oldFeatureIdx, allFeaturesStructIdx];
     else
        
          [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
@@ -135,11 +136,13 @@ for i=1:skipFrames:numFrames
              & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
              & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
 
+         observedIdx = observedIdx(trackedIdx);
+         
          if length(trackedIdx) < 50
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
-             oldFeatureIdx = trackedFeatureIdx;
+             oldFeatureIdx = observedIdx;
          end
          if isempty(trackedIdx)
             continue;
@@ -150,8 +153,6 @@ for i=1:skipFrames:numFrames
            setPoints(pointTrackerL, validLeftPoints(trackedIdx,:));
            setPoints(pointTrackerR, validRightPoints(trackedIdx,:)); 
 
-         observedIdx = trackedFeatureIdx(trackedIdx);
-         trackedFeatureIdx= trackedFeatureIdx(trackedIdx);
         %For all previously seen features, update the feature struct to account
         %for new observation
             for f_i = 1:length(observedIdx)
