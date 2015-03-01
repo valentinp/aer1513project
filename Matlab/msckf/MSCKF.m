@@ -28,7 +28,7 @@ tic
 % load('../datasets/2015-02-04-12-53-41_chairwall.mat')
 % load('../datasets/2015-01-28-16-11-17_1loop_5hz.mat');
 % load('../datasets/2015-01-28-16-11-17_1loop_KLT.mat');
-load('../datasets/2015-01-28-16-19-56_2loops_KLT.mat');
+% load('../datasets/2015-01-28-16-19-56_2loops_KLT.mat');
 % load('../datasets/2015-02-04-16-24-21_checkerboardsquare.mat');
 % load('../datasets/2015-02-04-16-24-21_checkerboardsquare_5hz_checkerCorners.mat')
 % load('../datasets/2015-02-04-16-24-21_checkerboardsquare_planarMeas.mat')
@@ -38,11 +38,12 @@ load('../datasets/2015-01-28-16-19-56_2loops_KLT.mat');
 % load('../datasets/2011_09_26_drive_0005_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0095_sync_KLT.mat')
+load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
 %Dataset window bounds
-kStart = 2; kEnd = 550;
+kStart = 2; kEnd = 130;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -58,7 +59,7 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-y_var = 4^2 * ones(1,4);                 % pixel coord var
+y_var = 2^2 * ones(1,4);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
@@ -67,16 +68,16 @@ noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 % w_var = [1e-12, 1e-4, 1e-12];
 % v_var = [1e-4, 1e-12, 1e-4];
 % w_var = w_var'; v_var = v_var';
-w_var = 4e-3 * ones(1,3);
-v_var = 4e-3 * ones(1,3);
+w_var = 4e-2 * ones(1,3);
+v_var = 4e-2 * ones(1,3);
 dbg_var = 1e-6 * ones(1,3);             % gyro bias change var
 dbv_var = 1e-6 * ones(1,3);             % vel bias change var
 noiseParams.Q_imu = diag([w_var, dbg_var, v_var, dbv_var]);
 
-q_var_init = 1e-6 * ones(1,3);         % init rot var
-p_var_init = 1e-6 * ones(1,3);         % init pos var
-bg_var_init = 1e-4 * ones(1,3);%1e-6 * ones(1,3);         % init gyro bias var
-bv_var_init = 1e-4 * ones(1,3);%1e-6 * ones(1,3);         % init vel bias var
+q_var_init = 1e-4 * ones(1,3);         % init rot var
+p_var_init = 1e-4 * ones(1,3);         % init pos var
+bg_var_init = 1e-6 * ones(1,3);         % init gyro bias var
+bv_var_init = 1e-6 * ones(1,3);         % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
     
 %MSCKF parameters
@@ -134,19 +135,19 @@ for state_k = kStart:kEnd
     measurements{state_k}.y(2,validMeas) = (measurements{state_k}.y(2,validMeas) - camera.c_v)/camera.f_v;
     
     %Ground Truth
-%     q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,state_k)));
-%     p_I_G = r_i_vk_i(:,state_k);
-%     
-%     groundTruthStates{state_k}.imuState.q_IG = q_IG;
-%     groundTruthStates{state_k}.imuState.p_I_G = p_I_G;
-%     
-%     % Compute camera pose from current IMU pose
-%     C_IG = quatToRotMat(q_IG);
-%     q_CG = quatLeftComp(camera.q_CI) * q_IG;
-%     p_C_G = p_I_G + C_IG' * camera.p_C_I;
-%     
-%     groundTruthStates{state_k}.camState.q_CG = q_CG;
-%     groundTruthStates{state_k}.camState.p_C_G = p_C_G;
+    q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,state_k)));
+    p_I_G = r_i_vk_i(:,state_k);
+    
+    groundTruthStates{state_k}.imuState.q_IG = q_IG;
+    groundTruthStates{state_k}.imuState.p_I_G = p_I_G;
+    
+    % Compute camera pose from current IMU pose
+    C_IG = quatToRotMat(q_IG);
+    q_CG = quatLeftComp(camera.q_CI) * q_IG;
+    p_C_G = p_I_G + C_IG' * camera.p_C_I;
+    
+    groundTruthStates{state_k}.camState.q_CG = q_CG;
+    groundTruthStates{state_k}.camState.p_C_G = p_C_G;
     
 end
 
@@ -166,11 +167,11 @@ trackedFeatureIds = [];
 %feature observations
 %Use ground truth for the first state
 
-% firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
-% firstImuState.p_I_G = r_i_vk_i(:,kStart);
+firstImuState.q_IG = rotMatToQuat(axisAngleToRotMat(theta_vk_i(:,kStart)));
+firstImuState.p_I_G = r_i_vk_i(:,kStart);
 % firstImuState.q_IG = [0;0;0;1];
-firstImuState.q_IG = rotMatToQuat(rotx(90));
-firstImuState.p_I_G = [0;0;0];
+% firstImuState.q_IG = rotMatToQuat(rotx(90));
+% firstImuState.p_I_G = [0;0;0];
 
 [msckfState, featureTracks, trackedFeatureIds] = initializeMSCKF(firstImuState, measurements{kStart}, camera, kStart, noiseParams);
 imuStates = updateStateHistory(imuStates, msckfState, camera, kStart);
@@ -372,105 +373,107 @@ toc
 
 
 %% ==========================PLOT ERRORS======================== %%
-% kNum = length(prunedStates);
-% p_C_G_est = NaN(3, kNum);
-% p_C_G_imu = NaN(3, kNum);
-% p_C_G_GT = NaN(3, kNum);
-% theta_CG_err = NaN(3,kNum);
-% err_sigma = NaN(6,kNum); % cam state is ordered as [rot, trans]
+kNum = length(prunedStates);
+p_C_G_est = NaN(3, kNum);
+p_C_G_imu = NaN(3, kNum);
+p_C_G_GT = NaN(3, kNum);
+theta_CG_err = NaN(3,kNum);
+err_sigma = NaN(6,kNum); % cam state is ordered as [rot, trans]
 % 
-% tPlot = NaN(1, kNum);
+tPlot = NaN(1, kNum);
 % 
-% for k = 1:kNum
-%     state_k = prunedStates{k}.state_k;
-%     
-% %     p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
-%     p_C_G_est(:,k) = prunedStates{k}.p_C_G;
-% %     q_CG_est  = prunedStates{k}.q_CG;    
-% %     
-% %     theta_CG_err(:,k) = crossMatToVec( eye(3) ...
-% %                     - quatToRotMat(q_CG_est) ...
-% %                         * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
-%       
-%     err_sigma(:,k) = prunedStates{k}.sigma;
-%                     
-%     tPlot(k) = t(state_k);
-% end
-% 
+for k = 1:kNum
+    state_k = prunedStates{k}.state_k;
+    
+    p_C_G_GT(:,k) = groundTruthStates{state_k}.camState.p_C_G;
+    p_C_G_est(:,k) = prunedStates{k}.p_C_G;
+    q_CG_est  = prunedStates{k}.q_CG;    
+    
+    theta_CG_err(:,k) = crossMatToVec( eye(3) ...
+                    - quatToRotMat(q_CG_est) ...
+                        * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
+      
+    err_sigma(:,k) = prunedStates{k}.sigma;
+                    
+    tPlot(k) = t(state_k);
+end
+
 % p_I_G_GT = p_vi_i(:,kStart:kEnd);
-% p_C_G_GT = p_I_G_GT + repmat(rho_v_c_v,[1,size(p_I_G_GT,2)]);
-% 
-% rotLim = [-0.5 0.5];
-% transLim = [-0.5 0.5];
-% 
-% % Save estimates
-% msckf_trans_err = p_C_G_est - p_C_G_GT;
-% msckf_rot_err = theta_CG_err;
-% save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
-% 
-% mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
-% mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
-% 
-% % Translation Errors
-% figure
-% subplot(3,1,1)
-% plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(4,:), '--r')
-% plot(tPlot, -3*err_sigma(4,:), '--r')
-% % ylim(transLim)
-% xlim([tPlot(1) tPlot(end)])
-% title('Translational Error')
-% ylabel('\delta r_x')
-% 
-% 
-% subplot(3,1,2)
-% plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(5,:), '--r')
-% plot(tPlot, -3*err_sigma(5,:), '--r')
-% % ylim(transLim)
-% xlim([tPlot(1) tPlot(end)])
-% ylabel('\delta r_y')
-% 
-% subplot(3,1,3)
-% plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(6,:), '--r')
-% plot(tPlot, -3*err_sigma(6,:), '--r')
-% % ylim(transLim)
-% xlim([tPlot(1) tPlot(end)])
-% ylabel('\delta r_z')
-% xlabel('t_k')
-% 
-% % Rotation Errors
-% figure
-% subplot(3,1,1)
-% plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(1,:), '--r')
-% plot(tPlot, -3*err_sigma(1,:), '--r')
-% ylim(rotLim)
-% xlim([tPlot(1) tPlot(end)])
-% title('Rotational Error')
-% ylabel('\delta \theta_x')
-% 
-% 
-% subplot(3,1,2)
-% plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(2,:), '--r')
-% plot(tPlot, -3*err_sigma(2,:), '--r')
-% ylim(rotLim)
-% xlim([tPlot(1) tPlot(end)])
-% ylabel('\delta \theta_y')
-% 
-% subplot(3,1,3)
-% plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
-% hold on
-% plot(tPlot, 3*err_sigma(3,:), '--r')
-% plot(tPlot, -3*err_sigma(3,:), '--r')
-% ylim(rotLim)
-% xlim([tPlot(1) tPlot(end)])
-% ylabel('\delta \theta_z')
-% xlabel('t_k')
+p_I_G_GT = r_i_vk_i(:,kStart:kEnd);
+p_C_G_GT = p_I_G_GT + repmat(rho_v_c_v,[1,size(p_I_G_GT,2)]);
+
+rotLim = [-0.5 0.5];
+transLim = [-0.5 0.5];
+
+% Save estimates
+msckf_trans_err = p_C_G_est - p_C_G_GT;
+msckf_rot_err = theta_CG_err;
+save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
+
+armse_trans = mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
+armse_rot = mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
+final_trans_err = norm(msckf_trans_err(:,end))
+
+% Translation Errors
+figure
+subplot(3,1,1)
+plot(tPlot, p_C_G_est(1,:) - p_C_G_GT(1,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(4,:), '--r')
+plot(tPlot, -3*err_sigma(4,:), '--r')
+% ylim(transLim)
+xlim([tPlot(1) tPlot(end)])
+title('Translational Error')
+ylabel('\delta r_x')
+
+
+subplot(3,1,2)
+plot(tPlot, p_C_G_est(2,:) - p_C_G_GT(2,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(5,:), '--r')
+plot(tPlot, -3*err_sigma(5,:), '--r')
+% ylim(transLim)
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta r_y')
+
+subplot(3,1,3)
+plot(tPlot, p_C_G_est(3,:) - p_C_G_GT(3,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(6,:), '--r')
+plot(tPlot, -3*err_sigma(6,:), '--r')
+% ylim(transLim)
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta r_z')
+xlabel('t_k')
+
+% Rotation Errors
+figure
+subplot(3,1,1)
+plot(tPlot, theta_CG_err(1,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(1,:), '--r')
+plot(tPlot, -3*err_sigma(1,:), '--r')
+ylim(rotLim)
+xlim([tPlot(1) tPlot(end)])
+title('Rotational Error')
+ylabel('\delta \theta_x')
+
+
+subplot(3,1,2)
+plot(tPlot, theta_CG_err(2,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(2,:), '--r')
+plot(tPlot, -3*err_sigma(2,:), '--r')
+ylim(rotLim)
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta \theta_y')
+
+subplot(3,1,3)
+plot(tPlot, theta_CG_err(3,:), 'LineWidth', 2)
+hold on
+plot(tPlot, 3*err_sigma(3,:), '--r')
+plot(tPlot, -3*err_sigma(3,:), '--r')
+ylim(rotLim)
+xlim([tPlot(1) tPlot(end)])
+ylabel('\delta \theta_z')
+xlabel('t_k')
