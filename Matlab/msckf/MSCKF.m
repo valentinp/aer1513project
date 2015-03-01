@@ -20,30 +20,15 @@ tic
 % load('../datasets/dataset3_fresh_80lessnoisy.mat')
 % load('../datasets/dataset3_fresh_100lessnoisy.mat')
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
-% load('../datasets/2015-01-28-16-19-56_2loops.mat')
-% load('../datasets/2015-01-30-16-08-22_overtable.mat')
-% load('../datasets/2015-01-30-16-35-49.mat')
-% load('../datasets/2015-02-04-12-54-12_chairwall2.mat')
-% load('../datasets/2015-02-04-13-40-35_chairwallstudentroom2.mat')
-% load('../datasets/2015-02-04-12-53-41_chairwall.mat')
-% load('../datasets/2015-01-28-16-11-17_1loop_5hz.mat');
-% load('../datasets/2015-01-28-16-11-17_1loop_KLT.mat');
-% load('../datasets/2015-01-28-16-19-56_2loops_KLT.mat');
-% load('../datasets/2015-02-04-16-24-21_checkerboardsquare.mat');
-% load('../datasets/2015-02-04-16-24-21_checkerboardsquare_5hz_checkerCorners.mat')
-% load('../datasets/2015-02-04-16-24-21_checkerboardsquare_planarMeas.mat')
-% load('../datasets/2011_09_26_drive_0005_sync.mat')
-% load('../datasets/2011_09_26_drive_0009_sync.mat')
-% load('../datasets/2011_09_26_drive_0095_sync.mat')
-% load('../datasets/2011_09_26_drive_0005_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
-% load('../datasets/2011_09_26_drive_0095_sync_KLT.mat')
-load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
+% load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
+% load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
+load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
 %Dataset window bounds
-kStart = 2; kEnd = 130;
+kStart = 2; kEnd = 108;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -59,31 +44,26 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-y_var = 2^2 * ones(1,4);                 % pixel coord var
+y_var = 4 * ones(1,4);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
-% w_var   = [4e-5, 1e-3, 5e-5];           % rot vel var
-% v_var   = [4e-4, 1e-5, 1e-4];           % lin vel var
-% w_var = [1e-12, 1e-4, 1e-12];
-% v_var = [1e-4, 1e-12, 1e-4];
-% w_var = w_var'; v_var = v_var';
-w_var = 4e-2 * ones(1,3);
-v_var = 4e-2 * ones(1,3);
-dbg_var = 1e-6 * ones(1,3);             % gyro bias change var
-dbv_var = 1e-6 * ones(1,3);             % vel bias change var
+w_var = 4e-2 * ones(1,3);               % rot vel var
+v_var = 4e-2 * ones(1,3);               % lin vel var
+dbg_var = 1e-12 * ones(1,3);             % gyro bias change var
+dbv_var = 1e-12 * ones(1,3);             % vel bias change var
 noiseParams.Q_imu = diag([w_var, dbg_var, v_var, dbv_var]);
 
 q_var_init = 1e-4 * ones(1,3);         % init rot var
 p_var_init = 1e-4 * ones(1,3);         % init pos var
-bg_var_init = 1e-6 * ones(1,3);         % init gyro bias var
-bv_var_init = 1e-6 * ones(1,3);         % init vel bias var
+bg_var_init = 1e-6 * ones(1,3);        % init gyro bias var
+bv_var_init = 1e-6 * ones(1,3);        % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
     
-%MSCKF parameters
-msckfParams.minTrackLength = 2;     % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = Inf;     % Set to inf to wait for features to go out of view
-msckfParams.maxGNCostNorm  = 1e-2;     % Set to inf to allow any triangulation, no matter how bad
+% MSCKF parameters
+msckfParams.minTrackLength = 2;        % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
+msckfParams.maxGNCostNorm  = 5e-2;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;
@@ -270,7 +250,8 @@ for state_k = kStart:(kEnd-1)
         
             nObs = size(track.observations,2);
             JcostNorm = Jcost / nObs^2;
-            fprintf('Jcost = %f | JcostNorm = %f\n', Jcost, JcostNorm);
+            fprintf('Jcost = %f | JcostNorm = %f | RCOND = %f\n',...
+                Jcost, JcostNorm,RCOND);
             
             if JcostNorm > msckfParams.maxGNCostNorm ...
                     || RCOND < msckfParams.minRCOND
