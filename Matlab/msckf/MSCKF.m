@@ -22,8 +22,8 @@ tic
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-% load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
-load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
+load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
+% load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
@@ -44,7 +44,7 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-y_var = 4 * ones(1,4);                 % pixel coord var
+y_var = 2^2 * ones(1,4);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
@@ -356,9 +356,11 @@ toc
 %% ==========================PLOT ERRORS======================== %%
 kNum = length(prunedStates);
 p_C_G_est = NaN(3, kNum);
+p_I_G_imu = NaN(3, kNum);
 p_C_G_imu = NaN(3, kNum);
 p_C_G_GT = NaN(3, kNum);
 theta_CG_err = NaN(3,kNum);
+theta_CG_err_imu = NaN(3,kNum);
 err_sigma = NaN(6,kNum); % cam state is ordered as [rot, trans]
 % 
 tPlot = NaN(1, kNum);
@@ -375,6 +377,12 @@ for k = 1:kNum
                         * ( C_c_v * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
       
     err_sigma(:,k) = prunedStates{k}.sigma;
+    
+    p_I_G_imu(:,k) = msckfState_imuOnly{state_k}.imuState.p_I_G;
+    C_CG_est_imu = C_CI * quatToRotMat(msckfState_imuOnly{state_k}.imuState.q_IG);
+    theta_CG_err_imu(:,k) = crossMatToVec( eye(3) ...
+                    - C_CG_est_imu ...
+                        * ( C_CI * axisAngleToRotMat(theta_vk_i(:,kStart+k-1)) )' );
                     
     tPlot(k) = t(state_k);
 end
@@ -382,6 +390,7 @@ end
 % p_I_G_GT = p_vi_i(:,kStart:kEnd);
 p_I_G_GT = r_i_vk_i(:,kStart:kEnd);
 p_C_G_GT = p_I_G_GT + repmat(rho_v_c_v,[1,size(p_I_G_GT,2)]);
+p_C_G_imu = p_I_G_imu + repmat(rho_v_c_v,[1,size(p_I_G_imu,2)]);
 
 rotLim = [-0.5 0.5];
 transLim = [-0.5 0.5];
@@ -389,11 +398,21 @@ transLim = [-0.5 0.5];
 % Save estimates
 msckf_trans_err = p_C_G_est - p_C_G_GT;
 msckf_rot_err = theta_CG_err;
+imu_trans_err = p_C_G_imu - p_C_G_GT;
+imu_rot_err = theta_CG_err_imu;
 save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
 
-armse_trans = mean(sqrt(sum(msckf_trans_err.^2, 1)/3))
-armse_rot = mean(sqrt(sum(msckf_rot_err.^2, 1)/3))
-final_trans_err = norm(msckf_trans_err(:,end))
+armse_trans_msckf = mean(sqrt(sum(msckf_trans_err.^2, 1)/3));
+armse_rot_msckf = mean(sqrt(sum(msckf_rot_err.^2, 1)/3));
+final_trans_err_msckf = norm(msckf_trans_err(:,end));
+
+armse_trans_imu = mean(sqrt(sum(imu_trans_err.^2, 1)/3));
+armse_rot_imu = mean(sqrt(sum(imu_rot_err.^2, 1)/3));
+final_trans_err_imu = norm(imu_trans_err(:,end));
+
+fprintf('Trans ARMSE: IMU %f, MSCKF %f\n',armse_trans_imu, armse_trans_msckf);
+fprintf('Rot ARMSE: IMU %f, MSCKF %f\n',armse_rot_imu, armse_rot_msckf);
+fprintf('Final Trans Err: IMU %f, MSCKF %f\n',final_trans_err_imu, final_trans_err_msckf);
 
 % Translation Errors
 figure

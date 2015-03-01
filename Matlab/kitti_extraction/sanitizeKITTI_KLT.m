@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_30/2011_09_30_drive_0027_sync';
-dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_30';
+dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_26/2011_09_26_drive_0001_sync';
+dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_26';
 
 %% Get ground truth and import data
-frameRange = 1:500;
+frameRange = 1:108;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -46,6 +46,8 @@ imuDataHist = [];
 seenFeatureVectors = [];
 seenFeatureStructs = {};
 trackedFeatureIdx = [];
+oldLeftPoints = [];
+oldRightPoints = [];
 
 numFrames = size(leftImageData.rectImages, 3);
 detectNewPoints = false;
@@ -57,40 +59,60 @@ for i=1:skipFrames:numFrames
     viRightImage = uint8(rightImageData.rectImages(:,:,i));
     
    if i == 1 || detectNewPoints
-        detectNewPoints = false;     
-        %Detect strongest corners
-        leftPoints = detectSURFFeatures(viLeftImage);
-        rightPoints = detectSURFFeatures(viRightImage);
+        detectNewPoints = false; 
+        
+        % Binning
+        uBin = 1:round(size(viLeftImage,2)/8):size(viLeftImage,2);
+        vBin = 1:round(size(viLeftImage,1)/2):size(viLeftImage,1);
+        uBinSize = diff([uBin,size(viLeftImage,2)]);
+        vBinSize = diff([vBin,size(viLeftImage,1)]);
+        [UBIN, VBIN] = meshgrid(uBin, vBin);
+        [UBINSIZE, VBINSIZE] = meshgrid(uBinSize, vBinSize);
+        UBIN = UBIN(:);
+        VBIN = VBIN(:);
+        UBINSIZE = UBINSIZE(:);
+        VBINSIZE = VBINSIZE(:);
+        
+        trackingPointsLeft = oldLeftPoints;
+        trackingPointsRight = oldRightPoints;
+        
+        for b = 1:size(UBIN,1)
+            roiVec = [UBIN(b), VBIN(b), UBINSIZE(b), VBINSIZE(b)];
+            
+            %Detect strongest corners
+            leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
+            rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-        leftPoints = leftPoints.selectStrongest(500);
-        rightPoints = rightPoints.selectStrongest(500);
+%             leftPoints = leftPoints.selectStrongest(20);
+%             rightPoints = rightPoints.selectStrongest(20);
 
-        %Extract features and stereo match
-       [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
-       [featuresRight, validRightPoints] = extractFeatures(viRightImage, rightPoints);
+            %Extract features and stereo match
+           [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
+           [featuresRight, validRightPoints] = extractFeatures(viRightImage, rightPoints);
 
-        indexPairs = matchFeatures(featuresLeft, featuresRight);
-        matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
-        featuresLeft = featuresLeft(indexPairs(:, 1), :);
-        matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
+            indexPairs = matchFeatures(featuresLeft, featuresRight);
+            matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
+            featuresLeft = featuresLeft(indexPairs(:, 1), :);
+            matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
 
-        inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 0.5 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 1;
+            inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 0.5 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 1;
 
-        matchedPointsLeft = matchedPointsLeft(inliers, :);
-        matchedPointsRight = matchedPointsRight(inliers, :);
+            trackingPointsLeft = [trackingPointsLeft; matchedPointsLeft(inliers).Location];
+            trackingPointsRight = [trackingPointsRight; matchedPointsRight(inliers).Location];
+        end
 
          pointTrackerL = vision.PointTracker('MaxBidirectionalError', 5);
-         initialize(pointTrackerL, matchedPointsLeft.Location, viLeftImage);
+         initialize(pointTrackerL, trackingPointsLeft, viLeftImage);
          pointTrackerR = vision.PointTracker('MaxBidirectionalError', 5);
-         initialize(pointTrackerR, matchedPointsRight.Location, viRightImage);
+         initialize(pointTrackerR, trackingPointsRight, viRightImage);
 
 
           %For all new features,add a new struct
             fCount = length(seenFeatureStructs) + 1;
             trackedFeatureIdx = [];
-            for obs_i = 1:size(matchedPointsLeft.Location,1)
-                seenFeatureStructs{fCount}.leftPixels = matchedPointsLeft.Location(obs_i, :)';
-                seenFeatureStructs{fCount}.rightPixels = matchedPointsRight.Location(obs_i, :)';
+            for obs_i = 1:size(trackingPointsLeft,1)
+                seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
+                seenFeatureStructs{fCount}.rightPixels = trackingPointsRight(obs_i, :)';
                 seenFeatureStructs{fCount}.imageIndex = i;
                 trackedFeatureIdx(end+1) = fCount;
                 fCount = fCount + 1;
@@ -105,8 +127,10 @@ for i=1:skipFrames:numFrames
              & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
              & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
 
-         if length(trackedIdx) < 20
+         if length(trackedIdx) < 100
              detectNewPoints = true;
+             oldLeftPoints = validLeftPoints(trackedIdx,:);
+             oldRightPoints = validRightPoints(trackedIdx,:);
          end
          if isempty(trackedIdx)
             continue;
