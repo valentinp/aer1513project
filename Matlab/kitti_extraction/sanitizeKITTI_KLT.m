@@ -1,15 +1,16 @@
 %% Clean up and import
 clc;
 close all;
+clear;
 addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '~/Desktop/KITTI/2011_09_26/2011_09_26_drive_0035_sync';
+dataBaseDir = '~/Desktop/KITTI/2011_09_26/2011_09_26_drive_0093_sync';
 dataCalibDir = '~/Desktop/KITTI/2011_09_26';
 
 %% Get ground truth and import data
-frameRange = 1:130;
+frameRange = 1:433;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -55,88 +56,83 @@ for i=1:skipFrames:numFrames
     viLeftImage = uint8(leftImageData.rectImages(:,:,i));
     viRightImage = uint8(rightImageData.rectImages(:,:,i));
     
-    if i == 1 || detectNewPoints
-    detectNewPoints = false;     
-    %Detect strongest corners
-    leftPoints = detectSURFFeatures(viLeftImage);
-    rightPoints = detectSURFFeatures(viRightImage);
-    
-    leftPoints = leftPoints.selectStrongest(500);
-    rightPoints = rightPoints.selectStrongest(500);
-    
-    %Extract features and stereo match
-   [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
-   [featuresRight, validRightPoints] = extractFeatures(viRightImage, rightPoints);
+   if i == 1 || detectNewPoints
+        detectNewPoints = false;     
+        %Detect strongest corners
+        leftPoints = detectSURFFeatures(viLeftImage);
+        rightPoints = detectSURFFeatures(viRightImage);
 
-    indexPairs = matchFeatures(featuresLeft, featuresRight);
-    matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
-    featuresLeft = featuresLeft(indexPairs(:, 1), :);
-    matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
-    
-    inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 0.25 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 3;
-    
-    matchedPointsLeft = matchedPointsLeft(inliers, :);
-    matchedPointsRight = matchedPointsRight(inliers, :);
-   
-     pointTrackerL = vision.PointTracker('MaxBidirectionalError', 5);
-     initialize(pointTrackerL, matchedPointsLeft.Location, viLeftImage);
-     pointTrackerR = vision.PointTracker('MaxBidirectionalError', 5);
-     initialize(pointTrackerR, matchedPointsRight.Location, viRightImage);
-   
-     
-      %For all new features,add a new struct
-        fCount = length(seenFeatureStructs) + 1;
-        trackedFeatureIdx = [];
-        for obs_i = 1:size(matchedPointsLeft.Location,1)
-            seenFeatureStructs{fCount}.leftPixels = matchedPointsLeft.Location(obs_i, :)';
-            seenFeatureStructs{fCount}.rightPixels = matchedPointsRight.Location(obs_i, :)';
-            seenFeatureStructs{fCount}.imageIndex = i;
-            trackedFeatureIdx(end+1) = fCount;
-            fCount = fCount + 1;
-        end
-     
+        leftPoints = leftPoints.selectStrongest(100);
+        rightPoints = rightPoints.selectStrongest(100);
+
+        %Extract features and stereo match
+       [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
+       [featuresRight, validRightPoints] = extractFeatures(viRightImage, rightPoints);
+
+        indexPairs = matchFeatures(featuresLeft, featuresRight);
+        matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
+        featuresLeft = featuresLeft(indexPairs(:, 1), :);
+        matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
+
+        inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 0.5 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 1;
+
+        matchedPointsLeft = matchedPointsLeft(inliers, :);
+        matchedPointsRight = matchedPointsRight(inliers, :);
+
+         pointTrackerL = vision.PointTracker('MaxBidirectionalError', 5);
+         initialize(pointTrackerL, matchedPointsLeft.Location, viLeftImage);
+         pointTrackerR = vision.PointTracker('MaxBidirectionalError', 5);
+         initialize(pointTrackerR, matchedPointsRight.Location, viRightImage);
+
+
+          %For all new features,add a new struct
+            fCount = length(seenFeatureStructs) + 1;
+            trackedFeatureIdx = [];
+            for obs_i = 1:size(matchedPointsLeft.Location,1)
+                seenFeatureStructs{fCount}.leftPixels = matchedPointsLeft.Location(obs_i, :)';
+                seenFeatureStructs{fCount}.rightPixels = matchedPointsRight.Location(obs_i, :)';
+                seenFeatureStructs{fCount}.imageIndex = i;
+                trackedFeatureIdx(end+1) = fCount;
+                fCount = fCount + 1;
+            end
+
     else
        
-     [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
-     [validRightPoints, isFoundR] = step(pointTrackerR, viRightImage);
-     
-     trackedIdx = find(isFoundL==isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
-         & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
-         & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
-     
-     if length(trackedIdx) < 10
-         detectNewPoints = true;
-     end
-     if isempty(trackedIdx)
-        continue;
-     end
-     
-     fprintf('Tracking %d features.', length(trackedIdx));
-     
-        setPoints(pointTrackerL, validLeftPoints(trackedIdx,:));
-        setPoints(pointTrackerR, validRightPoints(trackedIdx,:)); 
-    
-     observedIdx = trackedFeatureIdx(trackedIdx);
-     trackedFeatureIdx= trackedFeatureIdx(trackedIdx);
-    %For all previously seen features, update the feature struct to account
-    %for new observation
-        for f_i = 1:length(observedIdx)
-            struct_i = observedIdx(f_i);
-            obs_i = trackedIdx(f_i);
-            seenFeatureStructs{struct_i}.leftPixels(:, end+1) = validLeftPoints(obs_i, :)';
-            seenFeatureStructs{struct_i}.rightPixels(:, end+1) = validRightPoints(obs_i, :)';
-            seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
-        end
-  
-    
-       showMatchedFeatures(viLeftImage, viRightImage, validLeftPoints(trackedIdx,:), validRightPoints(trackedIdx,:));
-   end
-   
-  
-    %=====Temporal tracking=======
+         [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
+         [validRightPoints, isFoundR] = step(pointTrackerR, viRightImage);
 
-%
-   
+         trackedIdx = find(isFoundL & isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
+             & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
+             & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
+
+         if length(trackedIdx) < 20
+             detectNewPoints = true;
+         end
+         if isempty(trackedIdx)
+            continue;
+         end
+
+         fprintf('Tracking %d features.', length(trackedIdx));
+
+           setPoints(pointTrackerL, validLeftPoints(trackedIdx,:));
+           setPoints(pointTrackerR, validRightPoints(trackedIdx,:)); 
+
+         observedIdx = trackedFeatureIdx(trackedIdx);
+         trackedFeatureIdx= trackedFeatureIdx(trackedIdx);
+        %For all previously seen features, update the feature struct to account
+        %for new observation
+            for f_i = 1:length(observedIdx)
+                struct_i = observedIdx(f_i);
+                obs_i = trackedIdx(f_i);
+                seenFeatureStructs{struct_i}.leftPixels(:, end+1) = validLeftPoints(obs_i, :)';
+                seenFeatureStructs{struct_i}.rightPixels(:, end+1) = validRightPoints(obs_i, :)';
+                seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
+            end
+
+
+           showMatchedFeatures(viLeftImage, viRightImage, validLeftPoints(trackedIdx,:), validRightPoints(trackedIdx,:));
+   end
+    %=====Temporal tracking======
 end
 
 %% Prune points with low observation count
@@ -153,7 +149,7 @@ for p_i = 1:length(seenFeatureStructs)
     maxPixDiff = max([lp rp]);
     minPixDiff = min([lp rp]);
 
-    if length(seenFeatureStructs{p_i}.imageIndex) < minObsNum || trackLength < 5 || maxPixDiff > 50 || minPixDiff < 1
+    if length(seenFeatureStructs{p_i}.imageIndex) < minObsNum  %|| trackLength < 5 || maxPixDiff > 50 || minPixDiff < 1
         pruneIds(end+1) = p_i;
     end
 end

@@ -8,8 +8,8 @@ addpath('utils')
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
 load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-v_var = 0.01*ones(3,1);
-w_var = 0.01*ones(3,1);
+v_var = 0.1*ones(3,1);
+w_var = 0.1*ones(3,1);
 tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -25,15 +25,14 @@ vehicleCamTransform.C_cv = C_c_v;
 vehicleCamTransform.rho_cv_v = rho_v_c_v;
 
 %Set up sliding window
-LMLambda = 0.1;
+LMLambda = 1e-5;
 lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
-imuPropagationOnly = false; %Test again dead-reckoning
 
 kStart = 1;
-kEnd = 125; 
+kEnd = 120; 
 kappa = 5; %Sliding window size
-maxOptIter = 25;
+maxOptIter = 10;
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -51,7 +50,7 @@ initialStateStruct = {};
 % Extract noise values
 Q = diag([v_var; w_var]);
 if useMonoCamera
-    R = 5*eye(2);
+    R = 1*eye(2);
     %R = diag(y_var(1:2));
 else
     R = diag(y_var);
@@ -190,8 +189,8 @@ for kIdx = 1:K
     %==== Build the exteroceptive error and Jacobians=====%
     validLmObsId = find(y_k_j(1, k, :) > -1);
     
-    if imuPropagationOnly
-        validLmObsId = [];
+    if kIdx == 1 && optIdx == 1
+        fprintf('Tracking %d features. \n', length(validLmObsId));
     end
     
     if ~isempty(validLmObsId)
@@ -318,107 +317,129 @@ end
 fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
 
 %Extract variance of states
-stateCov = inv(H'*(T\H) + LMLambda*eye(size(H,2)));
-stateVar = diag(stateCov);
+%stateCov = inv(H'*(T\H) + LMLambda*eye(size(H,2)));
+%stateVar = diag(stateCov);
 
 %Keep track of the first state in the window
-if ~all(stateVar > 0)
-    warning('Variances not positive');
-end
+% if ~all(stateVar > 0)
+%     warning('Variances not positive');
+% end
 stateVecHistStruct{k1 - kStart + 1} = currentStateStruct{2};
-stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
+%stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
 
 end %End Sliding window
 
 toc
 
-sigma_x = (stateSigmaHistMat(1,:));
-sigma_y = (stateSigmaHistMat(2,:));
-sigma_z = (stateSigmaHistMat(3,:));
-sigma_th1 = (stateSigmaHistMat(4,:));
-sigma_th2 = (stateSigmaHistMat(5,:));
-sigma_th3 = (stateSigmaHistMat(6,:));
+% sigma_x = (stateSigmaHistMat(1,:));
+% sigma_y = (stateSigmaHistMat(2,:));
+% sigma_z = (stateSigmaHistMat(3,:));
+% sigma_th1 = (stateSigmaHistMat(4,:));
+% sigma_th2 = (stateSigmaHistMat(5,:));
+% sigma_th3 = (stateSigmaHistMat(6,:));
 
+
+%% IMU Only
+imuOnlyStateStruct{1} = firstState;
+%There are K + 1 states (there is a '0' state)
+for k = kStart:kEnd-1   
+    imuMeasurement.omega = w_vk_vk_i(:, k);
+    imuMeasurement.v = v_vk_vk_i(:, k);
+    deltaT = t(k+1) - t(k);
+    %Propagate the state forward
+    imuOnlyStateStruct{k+1} = propagateState(imuOnlyStateStruct{k}, imuMeasurement, deltaT);
+end
 
 %% Plot error and variances
 %addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
 
 rotErrVxec = zeros(3, length(stateVecHistStruct));
 transErrVec = zeros(3, length(stateVecHistStruct));
-
-
+translation = zeros(3, length(stateVecHistStruct));
+translation_imuonly = zeros(3, length(stateVecHistStruct));
+    
 for stIdx = 1:length(stateVecHistStruct)
     k = kStart+stIdx;
+    translation(:, stIdx) = stateVecHistStruct{stIdx}.r_vi_i;
+    translation_imuonly(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i;
     transErrVec(:,stIdx) = stateVecHistStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
     eRotMat = eye(3) - stateVecHistStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
 
+
+figure
+plot3(-translation(2,:),translation(1,:),translation(3,:), '-b');
+hold on
+plot3(-r_i_vk_i(2,1:length(stateVecHistStruct)),r_i_vk_i(1,1:length(stateVecHistStruct)),r_i_vk_i(3,1:length(stateVecHistStruct)), '-k');
+plot3(-translation_imuonly(2,:),translation_imuonly(1,:),translation_imuonly(3,:), '-r');
+
+armse = mean(sqrt(sum(transErrVec.^2,1)/3))
 % Save estimates
 % swf_trans_err = transErrVec;
 % swf_rot_err = rotErrVec;
 % save(sprintf('swf_%d_%d_%d_%s.mat',kStart,kEnd, kappa, fileName), 'swf_trans_err', 'swf_rot_err', 'stateSigmaHistMat');
 
 
-transLim = 0.5;
-rotLim = 0.5;
-recycleStates = 'Yes';
-
-figure
-subplot(3,1,1)
-plot(t(kStart:kEnd), transErrVec(1,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_x, '--r')
-plot(t(kStart:kEnd), -3*sigma_x, '--r')
-ylim([-transLim transLim])
-title(sprintf('Translational Error (\\kappa = %d, Recycle States? %s)', kappa, recycleStates))
-ylabel('\delta r_x')
-
-
-subplot(3,1,2)
-plot(t(kStart:kEnd), transErrVec(2,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_y, '--r')
-plot(t(kStart:kEnd), -3*sigma_y, '--r')
-ylim([-transLim transLim])
-ylabel('\delta r_y')
-
-subplot(3,1,3)
-plot(t(kStart:kEnd), transErrVec(3,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_z, '--r')
-plot(t(kStart:kEnd), -3*sigma_z, '--r')
-ylim([-transLim transLim])
-ylabel('\delta r_z')
-xlabel('t_k')
-%set(gca,'FontSize',12)
-%set(findall(gcf,'type','text'),'FontSize',12)
-
-figure
-subplot(3,1,1)
-plot(t(kStart:kEnd), rotErrVec(1,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_th1, '--r')
-plot(t(kStart:kEnd), -3*sigma_th1, '--r')
-ylim([-rotLim rotLim])
-title(sprintf('Rotational Error (\\kappa = %d, Recycle States? %s)', kappa, recycleStates))
-ylabel('\delta\theta_x')
-
- 
-subplot(3,1,2)
-plot(t(kStart:kEnd), rotErrVec(2,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_th2, '--r')
-plot(t(kStart:kEnd), -3*sigma_th2, '--r')
-ylim([-rotLim rotLim])
-ylabel('\delta\theta_y')
-
-subplot(3,1,3)
-plot(t(kStart:kEnd), rotErrVec(3,:), 'LineWidth', 1.2)
-hold on
-plot(t(kStart:kEnd), 3*sigma_th3, '--r')
-plot(t(kStart:kEnd), -3*sigma_th3, '--r')
-ylim([-rotLim rotLim])
-ylabel('\delta\theta_z')
-xlabel('t_k')
+% transLim = 0.5;
+% rotLim = 0.5;
+% recycleStates = 'Yes';
+% 
+% figure
+% subplot(3,1,1)
+% plot(t(kStart:kEnd), transErrVec(1,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_x, '--r')
+% plot(t(kStart:kEnd), -3*sigma_x, '--r')
+% ylim([-transLim transLim])
+% title(sprintf('Translational Error (\\kappa = %d, Recycle States? %s)', kappa, recycleStates))
+% ylabel('\delta r_x')
+% 
+% 
+% subplot(3,1,2)
+% plot(t(kStart:kEnd), transErrVec(2,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_y, '--r')
+% plot(t(kStart:kEnd), -3*sigma_y, '--r')
+% ylim([-transLim transLim])
+% ylabel('\delta r_y')
+% 
+% subplot(3,1,3)
+% plot(t(kStart:kEnd), transErrVec(3,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_z, '--r')
+% plot(t(kStart:kEnd), -3*sigma_z, '--r')
+% ylim([-transLim transLim])
+% ylabel('\delta r_z')
+% xlabel('t_k')
+% %set(gca,'FontSize',12)
+% %set(findall(gcf,'type','text'),'FontSize',12)
+% 
+% figure
+% subplot(3,1,1)
+% plot(t(kStart:kEnd), rotErrVec(1,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_th1, '--r')
+% plot(t(kStart:kEnd), -3*sigma_th1, '--r')
+% ylim([-rotLim rotLim])
+% title(sprintf('Rotational Error (\\kappa = %d, Recycle States? %s)', kappa, recycleStates))
+% ylabel('\delta\theta_x')
+% 
+%  
+% subplot(3,1,2)
+% plot(t(kStart:kEnd), rotErrVec(2,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_th2, '--r')
+% plot(t(kStart:kEnd), -3*sigma_th2, '--r')
+% ylim([-rotLim rotLim])
+% ylabel('\delta\theta_y')
+% 
+% subplot(3,1,3)
+% plot(t(kStart:kEnd), rotErrVec(3,:), 'LineWidth', 1.2)
+% hold on
+% plot(t(kStart:kEnd), 3*sigma_th3, '--r')
+% plot(t(kStart:kEnd), -3*sigma_th3, '--r')
+% ylim([-rotLim rotLim])
+% ylabel('\delta\theta_z')
+% xlabel('t_k')
