@@ -5,6 +5,13 @@ clc
 clear
 close all
 addpath('utils')
+addpath('../msckf')
+
+%Set up the noise parameters for MSCKF calcGNPosEst
+y_var = 1^2 * ones(1,4);                 % pixel coord var
+noiseParams.u_var_prime = y_var(1)/fu^2;
+noiseParams.v_var_prime = y_var(2)/fv^2;
+
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
 load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
@@ -53,7 +60,8 @@ if useMonoCamera
     R = 1*eye(2);
     %R = diag(y_var(1:2));
 else
-    R = diag(y_var);
+    R = 1*eye(4);
+    %R = diag(y_var);
 end
 
 %% First create the initial guess using dead reackoning
@@ -128,15 +136,22 @@ for kIdx = 1:K
         k = kIdx + k1;
         validLmObsId = find(y_k_j(1, k, :) > -1);
         kState = currentStateStruct{kIdx+1};
+        % camStates{k}.q_CG        4x1 Global to camera rotation quaternion
+        % camStates{k}.p_C_G       3x1 Camera Position in the Global frame
+        % camStates{k}.trackedFeatureIds  1xM List of feature ids that are currently being tracked from that camera state
+
         for lmId = validLmObsId'
 
             yMeas = y_k_j(:, k, lmId);
+            observedLandmarkStructs{}
+            observedLandmarkStructs
             %Find the ground truth position of the observed landmark
             %rho_pi_i_check = rho_i_pj_i(:, lmId);
 
             if (isnan(rho_i_pj_i_est(1, lmId)))
                 %Use triangulation to find the position of the landmark
                  rho_pc_c = triangulate(yMeas, calibParams);
+                 
                  rho_pi_i = kState.C_vi'*(vehicleCamTransform.C_cv'*rho_pc_c + vehicleCamTransform.rho_cv_v) +  kState.r_vi_i;
                  rho_i_pj_i_est(:, lmId) = rho_pi_i;
                  
@@ -144,6 +159,15 @@ for kIdx = 1:K
                  %rho_i_pj_i_est(:, lmId) = rho_i_pj_i(:, lmId);
             end
         end
+end
+
+%Triangulate all landmarks
+for lmStructIdx = 1:length(observedLandmarkStructs)
+    lmId = observedLandmarkStructs{lmStructIdx}.lmId;
+    camStates = observedLandmarkStructs{lmStructIdx}.camStates;
+    [rho_pi_i, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
+    Jnew
+    rho_i_pj_i_est(:, lmId) = rho_pi_i;
 end
 
 
@@ -353,18 +377,25 @@ end
 %% Plot error and variances
 %addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs
 
-rotErrVxec = zeros(3, length(stateVecHistStruct));
+rotErrVec = zeros(3, length(stateVecHistStruct));
 transErrVec = zeros(3, length(stateVecHistStruct));
+transErrVecImu = zeros(3, length(stateVecHistStruct));
+rotErrVecImu = zeros(3, length(stateVecHistStruct));
+
 translation = zeros(3, length(stateVecHistStruct));
 translation_imuonly = zeros(3, length(stateVecHistStruct));
-    
+ 
 for stIdx = 1:length(stateVecHistStruct)
     k = kStart+stIdx;
     translation(:, stIdx) = stateVecHistStruct{stIdx}.r_vi_i;
     translation_imuonly(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i;
     transErrVec(:,stIdx) = stateVecHistStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
+    transErrVecImu(:,stIdx) = imuOnlyStateStruct{stIdx}.r_vi_i - r_i_vk_i(:,k);
     eRotMat = eye(3) - stateVecHistStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
     rotErrVec(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
+    
+    eRotMat = eye(3) - imuOnlyStateStruct{stIdx}.C_vi*Cfrompsi(theta_vk_i(:,k))';
+    rotErrVecImu(:, stIdx) = [eRotMat(3,2); eRotMat(1,3); eRotMat(2,1)];
 end
 
 
@@ -375,7 +406,13 @@ hold on
 plot3(-r_i_vk_i(2,1:length(stateVecHistStruct)),r_i_vk_i(1,1:length(stateVecHistStruct)),r_i_vk_i(3,1:length(stateVecHistStruct)), '-k');
 plot3(-translation_imuonly(2,:),translation_imuonly(1,:),translation_imuonly(3,:), '-r');
 
+armse_imu = mean(sqrt(sum(transErrVecImu.^2,1)/3))
+armse_imu_rot = mean(sqrt(sum(rotErrVecImu.^2,1)/3))
+
 armse = mean(sqrt(sum(transErrVec.^2,1)/3))
+armse_rot = mean(sqrt(sum(rotErrVec.^2,1)/3))
+
+
 % Save estimates
 % swf_trans_err = transErrVec;
 % swf_rot_err = rotErrVec;

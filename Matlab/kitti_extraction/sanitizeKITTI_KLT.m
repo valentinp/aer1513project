@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '~/Desktop/KITTI/2011_09_26/2011_09_26_drive_0093_sync';
+dataBaseDir = '~/Desktop/KITTI/2011_09_26/2011_09_26_drive_0009_sync';
 dataCalibDir = '~/Desktop/KITTI/2011_09_26';
 
 %% Get ground truth and import data
-frameRange = 1:433;
+frameRange = 1:446;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -62,8 +62,8 @@ for i=1:skipFrames:numFrames
         leftPoints = detectSURFFeatures(viLeftImage);
         rightPoints = detectSURFFeatures(viRightImage);
 
-        leftPoints = leftPoints.selectStrongest(100);
-        rightPoints = rightPoints.selectStrongest(100);
+        leftPoints = leftPoints.selectStrongest(500);
+        rightPoints = rightPoints.selectStrongest(500);
 
         %Extract features and stereo match
        [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
