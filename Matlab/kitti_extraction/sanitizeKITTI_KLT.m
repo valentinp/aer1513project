@@ -111,6 +111,13 @@ for i=1:skipFrames:numFrames
           %For all new features,add a new struct
             fCount = length(seenFeatureStructs) + 1;
             trackedFeatureIdx = [];
+            for f_i = 1:size(oldLeftPoints,1)
+                struct_i = oldFeatureIdx(f_i);
+                seenFeatureStructs{struct_i}.leftPixels(:, end+1) = oldLeftPoints(f_i, :)';
+                seenFeatureStructs{struct_i}.rightPixels(:, end+1) = oldRightPoints(f_i, :)';
+                seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
+            end
+            
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
                 seenFeatureStructs{fCount}.rightPixels = trackingPointsRight(obs_i, :)';
@@ -269,6 +276,7 @@ save(['../datasets/' fileName], 'r_i_vk_i','theta_vk_i','w_vk_vk_i','v_vk_vk_i',
 %%
 for i = 1:size(y_k_j,2)
     numValidFeatures(i) = sum(y_k_j(1,i,:) ~= -1);
+%     find(y_k_j(1,i,:) ~= -1)
 end
 figure; plot(numValidFeatures(numValidFeatures >= 3),'*g'); hold on;
 plot(numValidFeatures(numValidFeatures < 3),'*r');
