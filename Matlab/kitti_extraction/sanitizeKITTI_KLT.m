@@ -62,7 +62,7 @@ for i=1:skipFrames:numFrames
         detectNewPoints = false; 
         
         % Binning
-        uBin = 1:round(size(viLeftImage,2)/8):size(viLeftImage,2);
+        uBin = 1:round(size(viLeftImage,2)/6):size(viLeftImage,2);
         vBin = 1:round(size(viLeftImage,1)/2):size(viLeftImage,1);
         uBinSize = diff([uBin,size(viLeftImage,2)]);
         vBinSize = diff([vBin,size(viLeftImage,1)]);
@@ -83,8 +83,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-%             leftPoints = leftPoints.selectStrongest(20);
-%             rightPoints = rightPoints.selectStrongest(20);
+            leftPoints = leftPoints.selectStrongest(20);
+            rightPoints = rightPoints.selectStrongest(20);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -127,7 +127,7 @@ for i=1:skipFrames:numFrames
              & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
              & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
 
-         if length(trackedIdx) < 100
+         if length(trackedIdx) < 50
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
