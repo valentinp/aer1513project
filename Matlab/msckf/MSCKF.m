@@ -44,7 +44,7 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-y_var = 2^2 * ones(1,4);                 % pixel coord var
+y_var = 10^2 * ones(1,4);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
@@ -63,7 +63,7 @@ noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_
 % MSCKF parameters
 msckfParams.minTrackLength = 2;        % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
-msckfParams.maxGNCostNorm  = 5e-2;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.maxGNCostNorm  = 1e-2;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;

@@ -264,6 +264,12 @@ end
 t = leftImageData.timestamps;
 save(['../datasets/' fileName], 'r_i_vk_i','theta_vk_i','w_vk_vk_i','v_vk_vk_i', 'cu','cv','fu','fv','b', 'y_k_j', 'C_c_v', 'rho_v_c_v', 't');
 
+%%
+for i = 1:size(y_k_j,2)
+    numValidFeatures(i) = sum(y_k_j(1,i,:) ~= -1);
+end
+figure; plot(numValidFeatures);
+
 %% Plot Stuff!
 
 % figure 
