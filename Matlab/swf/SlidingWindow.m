@@ -5,9 +5,11 @@ clc
 clear
 close all
 addpath('utils')
-fileName = '100noisy';
-load(['../datasets/dataset3_fresh_' fileName '.mat'])
-%load('../datasets/dataset3.mat');
+%fileName = '100noisy';
+%load(['../datasets/dataset3_fresh_' fileName '.mat'])
+load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
+v_var = 0.01*ones(3,1);
+w_var = 0.01*ones(3,1);
 tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -28,9 +30,9 @@ lineLambda = 1;
 useMonoCamera = true; %If true, only left camera will be used
 imuPropagationOnly = false; %Test again dead-reckoning
 
-kStart = 1215;
-kEnd = 1715; 
-kappa = 25; %Sliding window size
+kStart = 1;
+kEnd = 125; 
+kappa = 5; %Sliding window size
 maxOptIter = 25;
 
 k1 = kStart;
@@ -59,6 +61,9 @@ end
 
 %Use ground truth for the first state
 firstState.C_vi = Cfrompsi(theta_vk_i(:,k1));
+if isnan(firstState.C_vi(1,1))
+    firstState.C_vi = eye(3);
+end
 firstState.r_vi_i = r_i_vk_i(:,k1);
 firstState.k = k1;
 
@@ -262,7 +267,6 @@ for kIdx = 1:K
     %==== T matrix =====
     T_k = zeros(6+pixMeasDim*length(validLmObsId), 6+pixMeasDim*length(validLmObsId));
     T_k(1:6, 1:6) = H_w_k*Q*deltaT^2*H_w_k';
-    
     %Here, G_n_k is identity, so we can just repeat the variances along the
     %diagonal
     obsVar = diag(R);
@@ -297,13 +301,13 @@ end
    
 end %End optimization iterations
 
-error = 0;
-for i=1:numLandmarks
-    if ~isnan(rho_i_pj_i_est(1,i))
-        error = error + norm(rho_i_pj_i_est(:,i) - rho_i_pj_i(:,i));
-    end
-end
-error = error/numLandmarks
+% error = 0;
+% for i=1:numLandmarks
+%     if ~isnan(rho_i_pj_i_est(1,i))
+%         error = error + norm(rho_i_pj_i_est(:,i) - rho_i_pj_i(:,i));
+%     end
+% end
+% error = error/numLandmarks
 currentStateStruct = optimalStateStruct;
 
 
@@ -352,9 +356,9 @@ end
 
 
 % Save estimates
-swf_trans_err = transErrVec;
-swf_rot_err = rotErrVec;
-save(sprintf('swf_%d_%d_%d_%s.mat',kStart,kEnd, kappa, fileName), 'swf_trans_err', 'swf_rot_err', 'stateSigmaHistMat');
+% swf_trans_err = transErrVec;
+% swf_rot_err = rotErrVec;
+% save(sprintf('swf_%d_%d_%d_%s.mat',kStart,kEnd, kappa, fileName), 'swf_trans_err', 'swf_rot_err', 'stateSigmaHistMat');
 
 
 transLim = 0.5;

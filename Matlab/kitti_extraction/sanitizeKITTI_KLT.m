@@ -227,12 +227,22 @@ size(v_vk_vk_i)
 size(y_k_j)
 
 r_i_vk_i = NaN(3, size(T_wIMU_GT,3));
+theta_vk_i = NaN(3, size(T_wIMU_GT,3));
+
 for j = 1:size(T_wIMU_GT,3)
 r_i_vk_i(:,j) = T_wIMU_GT(1:3, 4, j);
+R_wIMU = T_wIMU_GT(1:3,1:3,j);
+theta = acos((trace(R_wIMU)-1)*0.5);
+if theta < eps
+    w = zeros(3,1);
+else
+    w = 1/(2*sin(theta))*[R_wIMU(3,2) - R_wIMU(2,3); R_wIMU(1,3) - R_wIMU(3,1); R_wIMU(2,1) - R_wIMU(1,2)];
+end
+theta_vk_i(:,j) = theta*w;
 end
 
 t = leftImageData.timestamps;
-save(['../datasets/' fileName], 'r_i_vk_i','w_vk_vk_i','v_vk_vk_i', 'cu','cv','fu','fv','b', 'y_k_j', 'C_c_v', 'rho_v_c_v', 't');
+save(['../datasets/' fileName], 'r_i_vk_i','theta_vk_i','w_vk_vk_i','v_vk_vk_i', 'cu','cv','fu','fv','b', 'y_k_j', 'C_c_v', 'rho_v_c_v', 't');
 
 %% Plot Stuff!
 
