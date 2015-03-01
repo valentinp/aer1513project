@@ -83,8 +83,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(20);
-            rightPoints = rightPoints.selectStrongest(20);
+            leftPoints = leftPoints.selectStrongest(50);
+            rightPoints = rightPoints.selectStrongest(50);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
