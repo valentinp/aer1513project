@@ -48,6 +48,7 @@ seenFeatureStructs = {};
 trackedFeatureIdx = [];
 oldLeftPoints = [];
 oldRightPoints = [];
+oldFeatureIdx = [];
 
 numFrames = size(leftImageData.rectImages, 3);
 detectNewPoints = false;
@@ -110,14 +111,14 @@ for i=1:skipFrames:numFrames
           %For all new features,add a new struct
             fCount = length(seenFeatureStructs) + 1;
             trackedFeatureIdx = [];
-            for obs_i = 1:size(trackingPointsLeft,1)
+            for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
                 seenFeatureStructs{fCount}.rightPixels = trackingPointsRight(obs_i, :)';
                 seenFeatureStructs{fCount}.imageIndex = i;
                 trackedFeatureIdx(end+1) = fCount;
                 fCount = fCount + 1;
             end
-
+            trackedFeatureIdx = [oldFeatureIdx, trackedFeatureIdx];
     else
        
          [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
@@ -131,6 +132,7 @@ for i=1:skipFrames:numFrames
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
+             oldFeatureIdx = trackedFeatureIdx;
          end
          if isempty(trackedIdx)
             continue;
