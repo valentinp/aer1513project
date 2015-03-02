@@ -7,7 +7,7 @@ close all
 addpath('utils')
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-fileName = '2011_09_26_drive_0036_sync_KLT.mat';
+fileName = '2011_09_30_drive_0020_sync_KLT.mat';
 load(['../datasets/' fileName]);
 
 tic
@@ -26,15 +26,15 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 
 %Set up the noise parameters for MSCKF calcGNPosEst
-v_var = 0.05*ones(3,1);
-w_var = 0.05*ones(3,1);
+v_var = 0.1*ones(3,1);
+w_var = 0.1*ones(3,1);
 
-y_var = 2^2*ones(2,1);                 % pixel coord var
+y_var = 5^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
-LMLambda = 1e-5;
+LMLambda = 1e-4;
 lineLambda = 0.25;
 JcostThresh = 1e-2;
 useMonoCamera = true; %If true, only left camera will be used
@@ -43,7 +43,7 @@ kappa = 10; %Sliding window size
 maxOptIter = 5;
 
 kStart = 1;
-kEnd = size(y_k_j,2) - kappa - 1 
+kEnd = 300%size(y_k_j,2) - kappa - 1 
 
 
 k1 = kStart;

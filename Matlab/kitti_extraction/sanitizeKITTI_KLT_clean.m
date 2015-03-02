@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Users/valentinp/Desktop/KITTI/2011_09_26/2011_09_26_drive_0036_sync';
-dataCalibDir = '/Users/valentinp/Desktop/KITTI/2011_09_26';
+dataBaseDir = '/Users/valentinp/Desktop/KITTI/2011_09_30/2011_09_30_drive_0020_sync';
+dataCalibDir = '/Users/valentinp/Desktop/KITTI/2011_09_30';
 
 %% Get ground truth and import data
-frameRange = 1:250;
+frameRange = 1:1000;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -21,7 +21,7 @@ T_wIMU_GT = getGroundTruth(dataBaseDir, imuFrames);
 
 skipFrames = 1;
 minObsNum = 3;
-ransacMaxDistance = 2;
+ransacMaxDistance = 5;
 
 %% Load calibration
 [T_camvelo_struct, P_rect_cam1] = loadCalibration(dataCalibDir);
