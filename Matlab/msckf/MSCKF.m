@@ -402,7 +402,7 @@ msckf_trans_err = p_C_G_est - p_C_G_GT;
 msckf_rot_err = theta_CG_err;
 imu_trans_err = p_C_G_imu - p_C_G_GT;
 imu_rot_err = theta_CG_err_imu;
-save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
+save('msckf_est.mat');
 
 armse_trans_msckf = mean(sqrt(sum(msckf_trans_err.^2, 1)/3));
 armse_rot_msckf = mean(sqrt(sum(msckf_rot_err.^2, 1)/3));
