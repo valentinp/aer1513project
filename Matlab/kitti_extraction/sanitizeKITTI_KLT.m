@@ -117,6 +117,13 @@ for i=1:skipFrames:numFrames
                 seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
             end
             
+            allFeaturesStructIdx = [oldFeatureIdx, allFeaturesStructIdx];
+            
+             % Clear old features so we don't double count
+             oldLeftPoints = [];
+             oldRightPoints = [];
+             oldFeatureIdx = [];
+            
             %New features
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
@@ -126,12 +133,7 @@ for i=1:skipFrames:numFrames
                 observedIdx(end+1) = fCount;
                 fCount = fCount + 1;
             end
-            allFeaturesStructIdx = [oldFeatureIdx, allFeaturesStructIdx];
-            
-             % Clear old features so we don't double count
-             oldLeftPoints = [];
-             oldRightPoints = [];
-             oldFeatureIdx = [];
+
     else
        
          [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);

@@ -27,5 +27,6 @@ if kNum > 0
     legend('MSCKF','IMU integration','Ground Truth');
 %     legend('MSCKF','IMU integration');
     grid on;
-     drawnow;
+    
+    drawnow;
 end
