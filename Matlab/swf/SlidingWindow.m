@@ -26,17 +26,17 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 
 %Set up the noise parameters for MSCKF calcGNPosEst
-v_var = 0.01*ones(3,1);
-w_var = 0.01*ones(3,1);
+v_var = 0.05*ones(3,1);
+w_var = 0.05*ones(3,1);
 
 y_var = 5^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
-LMLambda = 1e-4;
+LMLambda = 1e-5;
 lineLambda = 0.25;
-JcostThresh = 5e-2;
+JcostThresh = 5e-1;
 useMonoCamera = true; %If true, only left camera will be used
 
 kappa = 10; %Sliding window size
