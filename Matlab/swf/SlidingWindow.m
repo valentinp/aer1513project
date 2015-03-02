@@ -5,11 +5,12 @@ clc
 clear
 close all
 addpath('utils')
-
+%%
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
-
+fileName = '2011_09_26_drive_0001_sync_KLT.mat';
+load(['../datasets/' fileName]);
+%%
 tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -453,6 +454,7 @@ armse_rot = mean(sqrt(sum(rotErrVec(:,2:end).^2,1)/3))
 norm(transErrVecImu(:,end))
 norm(transErrVec(:,end))
 
+save(sprintf('../KITTI Trials/SWF_%s', fileName));
 %%
 % numFeat = NaN(1, 100);
 % for f_i = 1:100
