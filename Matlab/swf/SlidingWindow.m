@@ -34,7 +34,7 @@ noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
-LMLambda = 1e-4;
+LMLambda = 1e-5;
 lineLambda = 0.25;
 JcostThresh = 1e-2;
 useMonoCamera = true; %If true, only left camera will be used
@@ -43,7 +43,7 @@ kappa = 10; %Sliding window size
 maxOptIter = 5;
 
 kStart = 1;
-kEnd = 300%size(y_k_j,2) - kappa - 1 
+kEnd = 900%size(y_k_j,2) - kappa - 1 
 
 
 k1 = kStart;
