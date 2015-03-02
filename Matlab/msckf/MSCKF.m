@@ -22,14 +22,15 @@ tic
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-% load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
+load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
 % load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
-load('../datasets/2011_10_03_drive_0042_sync_KLT.mat');
+% load('../datasets/2011_10_03_drive_0042_sync_KLT.mat');
+% load('../datasets/2011_09_30_drive_0020_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
 %Dataset window bounds
-kStart = 2; kEnd = 500;
+kStart = 2; kEnd = 87;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -45,25 +46,25 @@ camera.q_CI     = rotMatToQuat(C_c_v);  % 4x1 IMU-to-Camera rotation quaternion
 camera.p_C_I    = rho_v_c_v;            % 3x1 Camera position in IMU frame
 
 %Set up the noise parameters
-y_var = 12^2 * ones(1,4);                 % pixel coord var
+y_var = 11^2 * ones(1,4);               % pixel coord var
 noiseParams.u_var_prime = y_var(1)/camera.f_u^2;
 noiseParams.v_var_prime = y_var(2)/camera.f_v^2;
 
 w_var = 4e-2 * ones(1,3);               % rot vel var
 v_var = 4e-2 * ones(1,3);               % lin vel var
-dbg_var = 1e-6 * ones(1,3);             % gyro bias change var
-dbv_var = 1e-6 * ones(1,3);             % vel bias change var
+dbg_var = 1e-6 * ones(1,3);            % gyro bias change var
+dbv_var = 1e-6 * ones(1,3);            % vel bias change var
 noiseParams.Q_imu = diag([w_var, dbg_var, v_var, dbv_var]);
 
-q_var_init = 1e-12 * ones(1,3);         % init rot var
-p_var_init = 1e-12 * ones(1,3);         % init pos var
-bg_var_init = 1e-4 * ones(1,3);        % init gyro bias var
-bv_var_init = 1e-4 * ones(1,3);        % init vel bias var
+q_var_init = 1e-6 * ones(1,3);         % init rot var
+p_var_init = 1e-6 * ones(1,3);         % init pos var
+bg_var_init = 1e-6 * ones(1,3);        % init gyro bias var
+bv_var_init = 1e-6 * ones(1,3);        % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
    
 % MSCKF parameters
-msckfParams.minTrackLength = 3;        % Set to inf to dead-reckon only
-msckfParams.maxTrackLength = 100;      % Set to inf to wait for features to go out of view
+msckfParams.minTrackLength = 10;        % Set to inf to dead-reckon only
+msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
 msckfParams.maxGNCostNorm  = 5e-3;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
 msckfParams.doNullSpaceTrick = true;
