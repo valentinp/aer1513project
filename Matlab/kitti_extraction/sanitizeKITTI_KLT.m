@@ -85,8 +85,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(50);
-            rightPoints = rightPoints.selectStrongest(50);
+            leftPoints = leftPoints.selectStrongest(20);
+            rightPoints = rightPoints.selectStrongest(20);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -119,11 +119,6 @@ for i=1:skipFrames:numFrames
             
             allFeaturesStructIdx = [oldFeatureIdx, allFeaturesStructIdx];
             
-             % Clear old features so we don't double count
-             oldLeftPoints = [];
-             oldRightPoints = [];
-             oldFeatureIdx = [];
-            
             %New features
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
@@ -133,6 +128,11 @@ for i=1:skipFrames:numFrames
                 observedIdx(end+1) = fCount;
                 fCount = fCount + 1;
             end
+            
+             % Clear old features so we don't double count
+             oldLeftPoints = [];
+             oldRightPoints = [];
+             oldFeatureIdx = [];
 
     else
        
@@ -145,7 +145,7 @@ for i=1:skipFrames:numFrames
 
          observedIdx = observedIdx(trackedIdx);
          
-         if length(trackedIdx) < 50
+         if length(trackedIdx) < 100
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
