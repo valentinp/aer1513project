@@ -30,6 +30,7 @@ xlim(xLim);
 legend('Noise Correlated to State', 'Noise De-correlated from State', ...
     'Location','northwest');
 ylabel('Trans. RMSE (m)')
+title('Effect of Nullspace Projection');
 set(gca,'FontSize',fontSize);
 grid minor;
 box on;
