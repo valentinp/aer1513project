@@ -7,11 +7,9 @@ close all
 addpath('utils')
 addpath('../msckf')
 
-
-
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
+load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
 v_var = 0.5*ones(3,1);
 w_var = 0.5*ones(3,1);
 tic
@@ -30,19 +28,21 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 
 %Set up the noise parameters for MSCKF calcGNPosEst
-y_var = 4^2 * ones(2,1);                 % pixel coord var
+y_var = 1^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
-LMLambda = 1e-3;
-lineLambda = 1;
+LMLambda = 1e-5;
+lineLambda = 0.25;
 useMonoCamera = true; %If true, only left camera will be used
 
+kappa = 20; %Sliding window size
+maxOptIter = 5;
+
 kStart = 1;
-kEnd = 120; 
-kappa = 5; %Sliding window size
-maxOptIter = 10;
+kEnd = size(v_vk_vk_i,2) - kappa - 1 
+
 
 k1 = kStart;
 k2 = k1+kappa;
@@ -158,7 +158,7 @@ for kIdx = 1:K
 
             yMeas = y_k_j(:, k, lmId);
             camState = {};
-            camState.q_CG = rotMatToQuat(T_ci(1:3,1:3));
+            camState.C_CG = T_ci(1:3,1:3);
             camState.p_C_G = T_ic(1:3,4);
             observedLandmarkStructs{lmId}.camStates{end+1} = camState;
             observedLandmarkStructs{lmId}.observations(:, end+1) = [(yMeas(1) - calibParams.c_u)/calibParams.f_u; (yMeas(2) - calibParams.c_v)/calibParams.f_v];
@@ -188,11 +188,13 @@ for lmId = 1:length(observedLandmarkStructs)
     if length(observedLandmarkStructs{lmId}.camStates) > 1
         camStates = observedLandmarkStructs{lmId}.camStates;
         observations = observedLandmarkStructs{lmId}.observations;
-        [rho_pi_i, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
-        rho_i_pj_i_est(:, lmId) = rho_pi_i;
-        totalLandmarkObs = totalLandmarkObs + length(observedLandmarkStructs{lmId}.camStates);
-        totalUniqueObservedLandmarks = totalUniqueObservedLandmarks + 1;
-        observedLandmarkIds(end+1) = lmId;
+        [rho_pi_i, Jcost, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
+        if Jcost < 0.5
+            rho_i_pj_i_est(:, lmId) = rho_pi_i;
+            totalLandmarkObs = totalLandmarkObs + length(observedLandmarkStructs{lmId}.camStates);
+            totalUniqueObservedLandmarks = totalUniqueObservedLandmarks + 1;
+            observedLandmarkIds(end+1) = lmId;
+        end
     end
 end
 
@@ -242,7 +244,7 @@ for kIdx = 1:K
     if kIdx == 1 && optIdx == 1
         fprintf('Tracking %d features. \n', length(validLmObsId));
     end
-    
+
     if ~isempty(validLmObsId)
         
         extErrorVec = NaN(pixMeasDim*length(validLmObsId), 1);
@@ -438,6 +440,15 @@ armse = mean(sqrt(sum(transErrVec.^2,1)/3))
 armse_rot = mean(sqrt(sum(rotErrVec(:,2:end).^2,1)/3))
 
 
+norm(transErrVecImu(:,end))
+norm(transErrVec(:,end))
+
+%%
+% numFeat = NaN(1, 100);
+% for f_i = 1:100
+%    numFeat(f_i) = sum(y_k_j(1,f_i,:) > -1);
+% end
+% plot(numFeat)
 % Save estimates
 % swf_trans_err = transErrVec;
 % swf_rot_err = rotErrVec;

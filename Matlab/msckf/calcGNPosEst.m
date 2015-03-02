@@ -17,8 +17,8 @@ function [p_f_G, Jnew, RCOND] = calcGNPosEst(camStates, observations, noiseParam
 %Use the first 2 camStates
 secondViewIdx = length(camStates);
 
-C_12 = quatToRotMat(camStates{1}.q_CG)*quatToRotMat(camStates{secondViewIdx}.q_CG)';
-t_21_1 = quatToRotMat(camStates{1}.q_CG)*(camStates{secondViewIdx}.p_C_G - camStates{1}.p_C_G);
+C_12 = camStates{1}.C_CG*camStates{secondViewIdx}.C_CG';
+t_21_1 = camStates{1}.C_CG*(camStates{secondViewIdx}.p_C_G - camStates{1}.p_C_G);
 
 p_f1_1_bar = triangulate(observations(:,1), observations(:,secondViewIdx),C_12, t_21_1);
 
@@ -51,8 +51,8 @@ for optI = 1:maxIter
         %Form the weight matrix
         W((2*iState - 1):(2*iState),(2*iState - 1):(2*iState)) = diag([noiseParams.u_var_prime noiseParams.v_var_prime]);
 
-        C_i1 = quatToRotMat(camStates{iState}.q_CG)*(quatToRotMat(camStates{1}.q_CG)');
-        t_1i_i = quatToRotMat(camStates{iState}.q_CG)*(camStates{1}.p_C_G - camStates{iState}.p_C_G);
+        C_i1 = camStates{iState}.C_CG*camStates{1}.C_CG';
+        t_1i_i = camStates{iState}.C_CG*(camStates{1}.p_C_G - camStates{iState}.p_C_G);
         
 
         %Form the error vector
@@ -99,7 +99,7 @@ for optI = 1:maxIter
     
 end
 
-    p_f_G = (1/xEst(3))*quatToRotMat(camStates{1}.q_CG)'*[xEst(1:2); 1] + camStates{1}.p_C_G; 
+    p_f_G = (1/xEst(3))*camStates{1}.C_CG'*[xEst(1:2); 1] + camStates{1}.p_C_G; 
 
 
     function [p_f1_1] = triangulate(obs1, obs2, C_12, t_21_1)
