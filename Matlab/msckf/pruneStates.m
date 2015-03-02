@@ -32,7 +32,7 @@ function [ prunedMsckfState, deletedCamStates ] = pruneStates( msckfState )
     prunedMsckfState.imuCamCovar = msckfState.imuCamCovar(:, keepCovarIdx);
     
     deletedCamCovar = msckfState.camCovar(deleteCovarIdx, deleteCovarIdx);
-    deletedCamSigma = sqrt(abs(diag(deletedCamCovar)));
+    deletedCamSigma = sqrt(diag(deletedCamCovar));
     
     % Grab the variances of the deleted states for plotting
     for c_i = 1:size(deletedCamStates, 2)
