@@ -18,33 +18,38 @@ swf_rot_rmse = sqrt(mean(swfData.rotErrVec.^2,1));
 msckf_trans_rmse = sqrt(mean(msckfData.msckf_trans_err.^2,1));
 msckf_rot_rmse = sqrt(mean(msckfData.msckf_rot_err.^2,1));
 
+imu_trans_rmse = sqrt(mean(msckfData.imu_trans_err.^2,1));
+imu_rot_rmse = sqrt(mean(msckfData.imu_rot_err.^2,1));
+
 %% Plot stuff
 figure(1); clf;
-fontSize = 18;
+fontSize = 16;
 lineWidth = 2;
 pos = [200,200,640,480];
 xLim = [1, min([size(msckf_rot_rmse,2),size(swf_rot_rmse,2)])];
 
 % Translational RMSE
 subplot(2,1,1);
-plot(swf_trans_rmse,'LineWidth',lineWidth); hold on;
-plot(msckf_trans_rmse,'LineWidth',lineWidth);
+plot(imu_trans_rmse,'-k','LineWidth',lineWidth); hold on;
+plot(swf_trans_rmse,'-r','LineWidth',lineWidth); 
+plot(msckf_trans_rmse,'-b','LineWidth',lineWidth);
 xlim(xLim);
 title(fileName,'Interpreter','none');
-ylabel('Translation RMSE');
-legend('SWF','MSCKF','Location','NorthWest');
-grid minor;
+ylabel('Trans. RMSE (m)');
+legend('IMU Only','SWF','MSCKF','Location','NorthWest');
+grid minor; box on;
 set(gca,'FontSize',fontSize);
 set(gcf,'Position',pos);
 
 % Rotational RMSE
 subplot(2,1,2);
-plot(swf_rot_rmse,'LineWidth',lineWidth); hold on;
-plot(msckf_rot_rmse,'LineWidth',lineWidth);
+plot(imu_rot_rmse,'-k','LineWidth',lineWidth); hold on;
+plot(swf_rot_rmse,'-r','LineWidth',lineWidth); 
+plot(msckf_rot_rmse,'-b','LineWidth',lineWidth);
 xlim(xLim);
-xlabel('Timestep'); ylabel('Rotational RMSE');
-legend('SWF','MSCKF','Location','NorthWest');
-grid minor;
+xlabel('Timestep'); ylabel('Rot. RMSE (Axis-Angle)');
+legend('IMU Only','SWF','MSCKF','Location','NorthWest');
+grid minor; box on;
 set(gca,'FontSize',fontSize);
 set(gcf,'Position',pos);
 

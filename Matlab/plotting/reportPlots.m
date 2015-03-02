@@ -622,3 +622,140 @@ set(findall(gcf,'type','text'),'FontSize',fontSize)
 
 filename = sprintf('RMSE-Comparison-Feat-Density-1215-1715-Noisy-Rot.pdf');
 export_fig(gcf, filename, '-transparent');
+
+%% RMSE 500-1000 or 1215_1715
+% Run relevent calculcateRMSE_1215_1715.m file first
+
+load('../datasets/dataset3.mat');
+kStart = 1215;
+kEnd = 1715;
+plotAbsErr = true;
+transLim = [0 0.7];
+rotLim = [0 0.5];
+fontSize = 8;
+
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), imu_trans, '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), msckf5_inf_trans, '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf10_50_trans, '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf20_100_trans, '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf10_trans, '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf50_trans, '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf100_trans, '-.g', 'LineWidth', 1.2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(transLim)
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-20', 'MSCKF 20-100', 'SWF 10','SWF 50','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',fontSize);
+title(sprintf('Translation RMSE (Interval 2)'))
+xlabel('t_k [s]');
+ylabel('RMSE [m]')
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+filename = sprintf('RMSE-Comparison-1215-1715-Trans.pdf');
+export_fig(gcf, filename, '-transparent');
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), imu_rot, '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), msckf5_inf_rot, '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf10_50_rot, '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf20_100_rot, '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf10_rot, '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf50_rot, '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf100_rot, '-.g', 'LineWidth', 1.2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(rotLim)
+title(sprintf('Rotation RMSE (Interval 2)'))
+ylabel('RMSE')
+xlabel('t_k [s]');
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',fontSize);
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+set(gca,'FontSize',fontSize)
+set(findall(gcf,'type','text'),'FontSize',fontSize)
+
+filename = sprintf('RMSE-Comparison-1215-1715-Rot.pdf');
+export_fig(gcf, filename, '-transparent');
+
+%% RMSE 500-1000 or 1215_1715
+% Run calculcateRMSE_500_1000.m file first
+
+load('../datasets/dataset3.mat');
+kStart = 500;
+kEnd = 1000;
+plotAbsErr = true;
+transLim = [0 0.7];
+rotLim = [0 0.5];
+fontSize = 8;
+
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), imu_trans, '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), msckf5_inf_trans, '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf10_50_trans, '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf20_100_trans, '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf10_trans, '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf50_trans, '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf100_trans, '-.g', 'LineWidth', 1.2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(transLim)
+h_legend = legend('IMU Only','MSCKF 5-Inf', 'MSCKF 10-20', 'MSCKF 20-100', 'SWF 10','SWF 50','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',fontSize);
+title(sprintf('Translation RMSE (Interval 1)'))
+xlabel('t_k [s]');
+ylabel('RMSE [m]')
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+filename = sprintf('RMSE-Comparison-500-1000-Trans.pdf');
+export_fig(gcf, filename, '-transparent');
+
+figure
+set(gcf, 'Position', [100 100 600 200]);
+plot(t(kStart:kEnd), imu_rot, '-k', 'LineWidth', 1.2)
+hold on
+plot(t(kStart:kEnd), msckf5_inf_rot, '-b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf10_50_rot, '--b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), msckf20_100_rot, '-.b', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf10_rot, '-g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf50_rot, '--g', 'LineWidth', 1.2)
+plot(t(kStart:kEnd), swf100_rot, '-.g', 'LineWidth', 1.2)
+
+
+xlim([t(kStart) t(kEnd) ]);
+ylim(rotLim)
+title(sprintf('Rotation RMSE (Interval 1)'))
+ylabel('RMSE')
+xlabel('t_k [s]');
+h_legend = legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
+set(h_legend,'FontSize',fontSize);
+set(gca,'FontSize',fontSize)
+grid on
+grid minor
+box on
+set(gca,'FontSize',fontSize)
+set(findall(gcf,'type','text'),'FontSize',fontSize)
+
+filename = sprintf('RMSE-Comparison-500-1000-Rot.pdf');
+export_fig(gcf, filename, '-transparent');
+
+
+
