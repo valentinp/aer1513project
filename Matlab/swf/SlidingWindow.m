@@ -29,7 +29,7 @@ T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 v_var = 0.5*ones(3,1);
 w_var = 0.5*ones(3,1);
 
-y_var = 2^2*ones(2,1);                 % pixel coord var
+y_var = 0.5^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 

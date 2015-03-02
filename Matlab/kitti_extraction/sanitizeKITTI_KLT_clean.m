@@ -10,7 +10,7 @@ dataBaseDir = '/Users/valentinp/Desktop/KITTI/2011_09_30/2011_09_30_drive_0020_s
 dataCalibDir = '/Users/valentinp/Desktop/KITTI/2011_09_30';
 
 %% Get ground truth and import data
-frameRange = 1:100;
+frameRange = 1:500;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
