@@ -5,12 +5,11 @@ clc
 clear
 close all
 addpath('utils')
-%%
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-fileName = '2011_09_26_drive_0001_sync_KLT.mat';
+fileName = '2011_09_26_drive_0005_sync_KLT.mat';
 load(['../datasets/' fileName]);
-%%
+
 tic
 %Set number of landmarks
 numLandmarks = size(y_k_j,3);
@@ -27,19 +26,20 @@ vehicleCamTransform.rho_cv_v = rho_v_c_v;
 T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 
 %Set up the noise parameters for MSCKF calcGNPosEst
-v_var = 0.5*ones(3,1);
-w_var = 0.5*ones(3,1);
+v_var = 0.1*ones(3,1);
+w_var = 0.1*ones(3,1);
 
-y_var = 0.5^2*ones(2,1);                 % pixel coord var
+y_var = 2^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
 %Set up sliding window
 LMLambda = 1e-5;
 lineLambda = 0.25;
+JcostThresh = 1e-1;
 useMonoCamera = true; %If true, only left camera will be used
 
-kappa = 20; %Sliding window size
+kappa = 10; %Sliding window size
 maxOptIter = 5;
 
 kStart = 1;
@@ -204,7 +204,7 @@ for lmId = 1:length(observedLandmarkStructs)
         camStates = observedLandmarkStructs{lmId}.camStates;
         observations = observedLandmarkStructs{lmId}.observations;
         [rho_pi_i, Jcost, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
-        if Jcost < 0.1*length(camStates)^2
+        if Jcost < JcostThresh*length(camStates)^2
             rho_i_pj_i_est(:, lmId) = rho_pi_i;
             totalLandmarkObs = totalLandmarkObs + length(observedLandmarkStructs{lmId}.camStates);
             totalUniqueObservedLandmarks = totalUniqueObservedLandmarks + 1;
