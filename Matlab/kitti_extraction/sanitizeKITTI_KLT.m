@@ -64,7 +64,7 @@ for i=1:skipFrames:numFrames
         detectNewPoints = false; 
         
         % Binning
-        uBin = 1:floor(size(viLeftImage,2)/8):size(viLeftImage,2);
+        uBin = 1:floor(size(viLeftImage,2)/6):size(viLeftImage,2);
         vBin = 1:floor(size(viLeftImage,1)/2):size(viLeftImage,1);
         uBinSize = diff([uBin,size(viLeftImage,2)]);
         vBinSize = diff([vBin,size(viLeftImage,1)]);
@@ -85,8 +85,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(30);
-            rightPoints = rightPoints.selectStrongest(30);
+%             leftPoints = leftPoints.selectStrongest(30);
+%             rightPoints = rightPoints.selectStrongest(30);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -117,11 +117,6 @@ for i=1:skipFrames:numFrames
                 seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
             end
             
-            % Clear old features so we don't double count
-             oldLeftPoints = [];
-             oldRightPoints = [];
-             oldFeatureIdx = [];
-            
             %New features
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
@@ -132,6 +127,12 @@ for i=1:skipFrames:numFrames
                 fCount = fCount + 1;
             end
             allFeaturesStructIdx = [oldFeatureIdx, allFeaturesStructIdx];
+            
+             % Clear old features so we don't double count
+             oldLeftPoints = [];
+             oldRightPoints = [];
+             oldFeatureIdx = [];
+             fCount
     else
        
          [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
