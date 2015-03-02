@@ -26,13 +26,13 @@ dataDir = '../datasets';
 % fileName = '2011_09_26_drive_0005_sync_KLT';
 % fileName = '2011_09_30_drive_0020_sync_KLT';
 % fileName = '2011_09_26_drive_0027_sync_KLT';
+% fileName = '2011_09_30_drive_0020_sync_KLT'; kStart = 2; kEnd = 900;
 
 % Good KITTI runs
 % fileName = '2011_09_26_drive_0001_sync_KLT'; kStart = 2; kEnd = 98;
 % fileName = '2011_09_26_drive_0051_sync_KLT'; kStart = 2; kEnd = 114;
 % fileName = '2011_09_26_drive_0095_sync_KLT'; kStart = 2; kEnd = 139;
-% fileName = '2011_09_26_drive_0036_sync_KLT'; kStart = 2; kEnd = 239;
-fileName = '2011_09_30_drive_0020_sync_KLT'; kStart = 2; kEnd = 300;
+fileName = '2011_09_26_drive_0036_sync_KLT'; kStart = 2; kEnd = 239;
 
 
 load(sprintf('%s/%s.mat',dataDir,fileName));
@@ -68,14 +68,14 @@ noiseParams.Q_imu = diag([w_var, dbg_var, v_var, dbv_var]);
 
 q_var_init = 1e-6 * ones(1,3);         % init rot var
 p_var_init = 1e-6 * ones(1,3);         % init pos var
-bg_var_init = 1e-2 * ones(1,3);        % init gyro bias var
-bv_var_init = 1e-2 * ones(1,3);        % init vel bias var
+bg_var_init = 1e-6 * ones(1,3);        % init gyro bias var
+bv_var_init = 1e-6 * ones(1,3);        % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
    
 % MSCKF parameters
 msckfParams.minTrackLength = 3;        % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
-msckfParams.maxGNCostNorm  = 5e-3;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.maxGNCostNorm  = 1e-3;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;
