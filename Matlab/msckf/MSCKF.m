@@ -310,7 +310,7 @@ for state_k = kStart:(kEnd-1)
 
             % State correction
             deltaX = K * r_n;
-            msckfState = updateState(msckfState, deltaX);
+            msckfState = updateState(msckfState, 0.5*deltaX);
 
             % Covariance correction
             tempMat = (eye(12 + 6*size(msckfState.camStates,2)) - K*T_H);
