@@ -11,6 +11,7 @@ clc;
 addpath('utils');
 
 tic
+fileName = '2011_09_26_drive_0001_sync_KLT';
 % load('../datasets/dataset3.mat')
 % load('../datasets/dataset3_fresh_10noisy.mat')
 % load('../datasets/dataset3_fresh_10lessnoisy.mat')
@@ -22,10 +23,10 @@ tic
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
 % load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
 % load('../datasets/2011_10_03_drive_0042_sync_KLT.mat');
 % load('../datasets/2011_09_30_drive_0020_sync_KLT.mat');
+load(sprintf('../datasets/%s.mat',fileName));
 
 % r_i_vk_i = p_vi_i;
 
@@ -402,7 +403,7 @@ msckf_trans_err = p_C_G_est - p_C_G_GT;
 msckf_rot_err = theta_CG_err;
 imu_trans_err = p_C_G_imu - p_C_G_GT;
 imu_rot_err = theta_CG_err_imu;
-save('msckf_est.mat', 'msckf_trans_err', 'msckf_rot_err', 'tPlot', 'err_sigma');
+save(sprintf('../KITTI Trials/msckf_%s', fileName));
 
 armse_trans_msckf = mean(sqrt(sum(msckf_trans_err.^2, 1)/3));
 armse_rot_msckf = mean(sqrt(sum(msckf_rot_err.^2, 1)/3));
