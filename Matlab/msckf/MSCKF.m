@@ -31,7 +31,8 @@ dataDir = '../datasets';
 % fileName = '2011_09_26_drive_0001_sync_KLT'; kStart = 2; kEnd = 98;
 % fileName = '2011_09_26_drive_0051_sync_KLT'; kStart = 2; kEnd = 114;
 % fileName = '2011_09_26_drive_0095_sync_KLT'; kStart = 2; kEnd = 139;
-fileName = '2011_09_26_drive_0036_sync_KLT'; kStart = 2; kEnd = 239;
+% fileName = '2011_09_26_drive_0036_sync_KLT'; kStart = 2; kEnd = 239;
+fileName = '2011_09_30_drive_0020_sync_KLT'; kStart = 2; kEnd = 300;
 
 
 load(sprintf('%s/%s.mat',dataDir,fileName));
