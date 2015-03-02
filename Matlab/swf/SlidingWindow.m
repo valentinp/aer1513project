@@ -98,7 +98,7 @@ stateVecHistStruct = {};
 stateVecHistStruct{1} = firstState;
 
 %stateSigmaHistMat = [];
-
+figure
 
 for k1 = kStart:kEnd        
 k2 = k1+kappa;

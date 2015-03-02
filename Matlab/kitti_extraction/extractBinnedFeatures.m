@@ -22,8 +22,8 @@ inlierPointsRight = [];
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(50);
-            rightPoints = rightPoints.selectStrongest(50);
+            %leftPoints = leftPoints.selectStrongest(50);
+            %rightPoints = rightPoints.selectStrongest(50);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -33,7 +33,7 @@ inlierPointsRight = [];
             matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
             matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
 
-            inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 1 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 1;
+            inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 1 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 3;
 
             inlierPointsLeft = [inlierPointsLeft; matchedPointsLeft(inliers).Location];
             inlierPointsRight = [inlierPointsRight; matchedPointsRight(inliers).Location];
