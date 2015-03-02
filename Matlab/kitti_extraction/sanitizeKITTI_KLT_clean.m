@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_10_03/2011_10_03_drive_0042_sync';
-dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_10_03';
+dataBaseDir = '/Users/valentinp/Desktop/KITTI/2011_09_30/2011_09_30_drive_0020_sync';
+dataCalibDir = '/Users/valentinp/Desktop/KITTI/2011_09_30';
 
 %% Get ground truth and import data
-frameRange = 1:500;
+frameRange = 1:100;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -21,6 +21,7 @@ T_wIMU_GT = getGroundTruth(dataBaseDir, imuFrames);
 
 skipFrames = 1;
 minObsNum = 3;
+ransacMaxDistance = 5;
 
 %% Load calibration
 [T_camvelo_struct, P_rect_cam1] = loadCalibration(dataCalibDir);
@@ -40,8 +41,8 @@ end
 
 seenFeatureStructs = {};
 currentlyObservedIds = [];
-oldLeftPoints = [];
-oldRightPoints = [];
+lastLeftPoints = [];
+lastRightPoints = [];
 oldFeatureIdx = [];
 
 
@@ -64,6 +65,9 @@ for image_i=1:numFrames
        pointTrackerR = vision.PointTracker('MaxBidirectionalError', 5);
        initialize(pointTrackerR, inlierPointsRight, viLeftImage);
     
+       lastLeftPoints = inlierPointsLeft;
+       lastRightPoints = inlierPointsRight;
+       
        %Initialize structs
        for obs_i = 1:size(inlierPointsLeft,1)
             seenFeatureStructs{obs_i}.leftPixels = inlierPointsLeft(obs_i, :)';
@@ -79,7 +83,12 @@ for image_i=1:numFrames
         [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
         [validRightPoints, isFoundR] = step(pointTrackerR, viRightImage);
 
-        trackedIdx = find(isFoundL & isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
+        %RANSAC
+        [~,inlierPtsPastLeft,inlierPtsCurrentLeft] = estimateGeometricTransform(lastLeftPoints,validLeftPoints,'similarity', 'MaxDistance', ransacMaxDistance);
+        ransacInliers = ismember(validLeftPoints,inlierPtsCurrentLeft);
+        ransacInliers = ransacInliers(:,1);
+        
+        trackedIdx = find(ransacInliers & isFoundL & isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
              & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
              & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
         
@@ -116,14 +125,23 @@ for image_i=1:numFrames
         %Track old points and new points  
         setPoints(pointTrackerL,[trackedLeftPoints; newPointsLeft]);
         setPoints(pointTrackerR, [trackedRightPoints; newPointsRight]); 
+        
+        lastLeftPoints = [trackedLeftPoints; newPointsLeft];
+        lastRightPoints = [trackedRightPoints; newPointsRight];
+     
 
    else
        
          %Step all of the old points through
         [validLeftPoints, isFoundL] = step(pointTrackerL, viLeftImage);
         [validRightPoints, isFoundR] = step(pointTrackerR, viRightImage);
+        
+        %RANSAC
+        [~,inlierPtsPastLeft,inlierPtsCurrentLeft] = estimateGeometricTransform(lastLeftPoints,validLeftPoints,'similarity', 'MaxDistance', ransacMaxDistance);
+        ransacInliers = ismember(validLeftPoints,inlierPtsCurrentLeft);
+        ransacInliers = ransacInliers(:,1);
 
-        trackedIdx = find(isFoundL & isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
+        trackedIdx = find(ransacInliers & isFoundL & isFoundR & validLeftPoints(:,1) > 0 & validLeftPoints(:,2) > 0 ...
              & validRightPoints(:,1) > 0 & validRightPoints(:,2) > 0 ...
              & abs(validLeftPoints(:, 2) - validRightPoints(:, 2)) <= 1);
         
@@ -149,7 +167,9 @@ for image_i=1:numFrames
            setPoints(pointTrackerL, trackedLeftPoints);
            setPoints(pointTrackerR, trackedRightPoints); 
 
-
+            lastLeftPoints = trackedLeftPoints;
+            lastRightPoints = trackedRightPoints;
+     
            showMatchedFeatures(viLeftImage, viRightImage, trackedLeftPoints, trackedRightPoints);
    end
     %=====Temporal tracking======
