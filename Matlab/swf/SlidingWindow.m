@@ -7,7 +7,7 @@ close all
 addpath('utils')
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-fileName = '2011_09_30_drive_0020_sync_KLT.mat';
+fileName = '2011_09_26_drive_0001_sync_KLT.mat';
 load(['../datasets/' fileName]);
 
 tic
@@ -43,7 +43,7 @@ kappa = 10; %Sliding window size
 maxOptIter = 5;
 
 kStart = 1;
-kEnd = 900%size(y_k_j,2) - kappa - 1 
+kEnd = size(y_k_j,2) - kappa - 1 
 
 
 k1 = kStart;
