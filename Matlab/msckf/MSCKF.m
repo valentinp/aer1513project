@@ -127,6 +127,7 @@ for state_k = kStart:kEnd
     p_C_G = p_I_G + C_IG' * camera.p_C_I;
     
     groundTruthStates{state_k}.camState.q_CG = q_CG;
+    groundTruthStates{state_k}.camState.C_CG = quatToRotMat(q_CG);
     groundTruthStates{state_k}.camState.p_C_G = p_C_G;
     
 end
