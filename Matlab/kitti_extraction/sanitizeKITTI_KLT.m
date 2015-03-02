@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_26/2011_09_26_drive_0001_sync';
-dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_26';
+dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_30/2011_09_30_drive_0027_sync';
+dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_30';
 
 %% Get ground truth and import data
-frameRange = 1:108;
+frameRange = 1:500;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -64,8 +64,8 @@ for i=1:skipFrames:numFrames
         detectNewPoints = false; 
         
         % Binning
-        uBin = 1:round(size(viLeftImage,2)/6):size(viLeftImage,2);
-        vBin = 1:round(size(viLeftImage,1)/2):size(viLeftImage,1);
+        uBin = 1:floor(size(viLeftImage,2)/6):size(viLeftImage,2);
+        vBin = 1:floor(size(viLeftImage,1)/2):size(viLeftImage,1);
         uBinSize = diff([uBin,size(viLeftImage,2)]);
         vBinSize = diff([vBin,size(viLeftImage,1)]);
         [UBIN, VBIN] = meshgrid(uBin, vBin);
@@ -85,8 +85,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(50);
-            rightPoints = rightPoints.selectStrongest(50);
+            leftPoints = leftPoints.selectStrongest(10);
+            rightPoints = rightPoints.selectStrongest(10);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -138,7 +138,7 @@ for i=1:skipFrames:numFrames
 
          observedIdx = observedIdx(trackedIdx);
          
-         if length(trackedIdx) < 50
+         if length(trackedIdx) < 60
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
