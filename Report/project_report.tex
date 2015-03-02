@@ -26,6 +26,7 @@
 \usepackage{subfigure}
 \usepackage{epstopdf}
 \usepackage{threeparttable}
+\usepackage{cite}
 
 % Some handy commands
 \newcommand{\norm}[1]{\left\Vert#1\right\Vert}
@@ -59,7 +60,7 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 %\thanks{*This work was not supported by any organization}% <-this % stops a space
 \thanks{All authors are at the Institute for Aerospace Studies,
         University of Toronto, Canada
-        {\tt \{lee.clement, v.peretroukhin, jacob.lambert\}@mail.utoronto.ca, jkelly@utias.utoronto.ca}
+        {\tt \{lee.clement, v.peretroukhin, jacob.lambert\} @mail.utias.utoronto.ca, jkelly@utias.utoronto.ca}
         }%
 }
 
@@ -102,19 +103,37 @@ This problem is often complicated by the absence of a known map of features from
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
 
 In this work, we compare and contrast two modern solutions: the Sliding Window Filter (SWF) and the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}.
-The MSCKF is a hybrid estimator that combines the accuracy of the SWF with the computational efficiency of an Extended Kalman Filter (EKF).
-The MSCKF has recently been used to achieve accurate, online position tracking onboard a smartphone \cite{Li:2013:ICRA}, while the SWF has been applied to planetary landing \cite{Sibley:2010:JFR}.
-We present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions.
-In order to provide context for the MSCKF and SWF, we first outline the EKF approach to the SLAM problem.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}
+\begin{figure}[t]
+    \vspace{0.25cm}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/sensorhead}
     \caption{The sensor head used in our experiments. The IMU measures translational and rotational velocities, while the stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
     \label{fig:sensorhead}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Related Work} \label{sec:relatedwork}
+
+Visual-inertial navigation systems (VINS) have been applied broadly in robotics \cite{Mourikis:2007:ICRA, Sibley:2010:JFR, Huster:2002:OC, Kottas:2013:IROS, Kim:2007:RSS, Li:2013coa,  You:2001:VR}. 
+As such, there is a considerable body of work on the subject and a wide range of optimal filtering algorithms for the Camera-IMU sensor pair. 
+These techniques are often characterized as either \textit{loosely coupled}, when image and IMU measurements are processed individually to produce pose estimates before being fused into a single estimate, or \textit{tightly coupled}, when all information is processed together in a single estimation paradigm.  
+The decoupling of inertial and visual measurements in the former case necessarily leads to inexpensive computations, but at the cost of information: processing the IMU measurements separate from the filtering framework makes optimal estimation of biases impossible\cite{Li:2013coa}. 
+The filters presented in this work fall in the latter category; tightly coupled methods are preferred when the goal is accurate, consistent visual-inertial navigation. 
+
+In both cases, the optimal filtering algorithm used is typically based on the Extended Kalman filter (EKF)(\cite{Huster:2002:OC, You:2001:VR, Kottas:2013:RSS, Kim:2007:RSS, Mourikis:2007:ICRA}), though methods exist that employ unscented Kalman filters \cite{Ebcin:2007:ION}, particle filters \cite{Fox:1999:JAIR, Pupilli:2005:BMVC}, or batch optimization methods\cite{Triggs:2000va}, \cite{Strelow:2004:IJR}. 
+The EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is a weakness for navigation over long distances. Indeed, the computational complexity of such algorithm scales far too poorly with the number of features to be applied naively to this problem.
+Additionally, EKF-based methods for visual-inertial navigation are fundamentally inconsistent, that is, the state uncertainties are underestimated. It was shown in \cite{Li:2013coa} that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system, severely reducing the reliability of such estimators.
+
+The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features. 
+It also takes advantage of \textit{delayed linearization} in attempt to minimize linearization inaccuracies. The SWF analyzed in this work is similar as a both a recursive and batch approach, but unlike the VSDF it incorporates a dynamic model and applies batch optimization. 
+The SWF is a constant time algorithm as it actively marginalizes states and landmarks to maintain a state vector remains of constant size. Batch optimization of a window of states is suboptimal but still leads to exceptional accuracy for its cost, making it applicable on delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
+The MSCKF is also a sliding window approach, taking advantage of delayed linearization and exploiting the computational efficiency of an EKF. It has recently been used to achieve accurate, online position tracking onboard a smartphone \cite{Li:2013:ICRA}.
+
+In this work, we present an experimental comparison of the SWF and MSCKF using different datasets consisting of IMU and camera data with accurate ground truth for both sensor motion and landmark positions. In order to provide context for the MSCKF and SWF, we first outline the EKF approach to the SLAM problem.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Extended Kalman Filter (EKF)} \label{sec:EKF}
 In the Extended Kalman Filter (EKF) solution, vehicle poses and feature positions are simultaneously estimated at each time step by augmenting the filter state with feature positions.
 This technique, sometimes referred to as EKF-SLAM, attempts to track vehicle motion and create a globally consistent map of features by recursively updating the state as new measurements become available.
