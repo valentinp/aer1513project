@@ -29,7 +29,7 @@ T_cv = [C_c_v -C_c_v*rho_v_c_v; 0 0 0 1];
 v_var = 0.5*ones(3,1);
 w_var = 0.5*ones(3,1);
 
-y_var = 0.5^2*ones(2,1);                 % pixel coord var
+y_var = 4^2*ones(2,1);                 % pixel coord var
 noiseParams.u_var_prime = y_var(1)/fu^2;
 noiseParams.v_var_prime = y_var(2)/fv^2;
 
@@ -91,6 +91,17 @@ for kIdx = 1:K
 end
 
 
+%% IMU Only
+imuOnlyStateStruct{1} = firstState;
+%There are K + 1 states (there is a '0' state)
+for k = kStart+1:kEnd+1
+    imuMeasurement.omega = w_vk_vk_i(:, k-1);
+    imuMeasurement.v = v_vk_vk_i(:, k-1);
+    deltaT = t(k) - t(k-1);
+    %Propagate the state forward
+    imuOnlyStateStruct{k} = propagateState(imuOnlyStateStruct{k-1}, imuMeasurement, deltaT);
+end
+
 %%
 
 %Slide the window along
@@ -99,7 +110,9 @@ stateVecHistStruct{1} = firstState;
 
 %stateSigmaHistMat = [];
 figure
-
+plot(-firstState.r_vi_i(2),firstState.r_vi_i(1), '*b')
+hold on;
+grid on;
 for k1 = kStart:kEnd        
 k2 = k1+kappa;
 
@@ -190,7 +203,7 @@ for lmId = 1:length(observedLandmarkStructs)
         camStates = observedLandmarkStructs{lmId}.camStates;
         observations = observedLandmarkStructs{lmId}.observations;
         [rho_pi_i, Jcost, RCOND] = calcGNPosEst(camStates, observations, noiseParams);
-        if Jcost < 0.05*length(camStates)^2
+        if Jcost < 0.1*length(camStates)^2
             rho_i_pj_i_est(:, lmId) = rho_pi_i;
             totalLandmarkObs = totalLandmarkObs + length(observedLandmarkStructs{lmId}.camStates);
             totalUniqueObservedLandmarks = totalUniqueObservedLandmarks + 1;
@@ -378,6 +391,12 @@ fprintf('%d done. J = %.5f. %d iterations. \n', k1, Jbest, optIdx)
 %     warning('Variances not positive');
 % end
 stateVecHistStruct{end+1} = currentStateStruct{2};
+plot(-currentStateStruct{2}.r_vi_i(2),currentStateStruct{2}.r_vi_i(1), '*b')
+plot(-imuOnlyStateStruct{k1}.r_vi_i(2),imuOnlyStateStruct{k1}.r_vi_i(1), '*r')
+plot(-r_i_vk_i(2,k1),r_i_vk_i(1,k1), '*k');
+
+
+drawnow;
 %stateSigmaHistMat(:,k1 - kStart + 1) = sqrt(abs(stateVar(1:6)));
 
 end %End Sliding window
@@ -392,16 +411,6 @@ toc
 % sigma_th3 = (stateSigmaHistMat(6,:));
 
 
-%% IMU Only
-imuOnlyStateStruct{1} = firstState;
-%There are K + 1 states (there is a '0' state)
-for k = kStart+1:kEnd+1
-    imuMeasurement.omega = w_vk_vk_i(:, k-1);
-    imuMeasurement.v = v_vk_vk_i(:, k-1);
-    deltaT = t(k) - t(k-1);
-    %Propagate the state forward
-    imuOnlyStateStruct{k} = propagateState(imuOnlyStateStruct{k-1}, imuMeasurement, deltaT);
-end
 
 %% Plot error and variances
 %addpath('/Users/valentinp/Research/MATLAB/export_fig'); %Use Oliver Woodford's awesome export_fig package to get trimmed PDFs

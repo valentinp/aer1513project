@@ -33,7 +33,7 @@ inlierPointsRight = [];
             matchedPointsLeft = validLeftPoints(indexPairs(:, 1), :);
             matchedPointsRight = validRightPoints(indexPairs(:, 2), :);
 
-            inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 1 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 3;
+            inliers = abs((matchedPointsLeft.Location(:, 2) - matchedPointsRight.Location(:, 2))) <= 1 & abs((matchedPointsLeft.Location(:, 1) - matchedPointsRight.Location(:, 1))) > 5;
 
             inlierPointsLeft = [inlierPointsLeft; matchedPointsLeft(inliers).Location];
             inlierPointsRight = [inlierPointsRight; matchedPointsRight(inliers).Location];
