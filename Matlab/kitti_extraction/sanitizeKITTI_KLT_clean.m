@@ -6,8 +6,8 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_30/2011_09_30_drive_0027_sync';
-dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_30';
+dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_10_03/2011_10_03_drive_0042_sync';
+dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_10_03';
 
 %% Get ground truth and import data
 frameRange = 1:500;
