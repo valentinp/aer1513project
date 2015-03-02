@@ -21,7 +21,7 @@ T_wIMU_GT = getGroundTruth(dataBaseDir, imuFrames);
 
 skipFrames = 1;
 minObsNum = 3;
-ransacMaxDistance = 5;
+ransacMaxDistance = 2;
 
 %% Load calibration
 [T_camvelo_struct, P_rect_cam1] = loadCalibration(dataCalibDir);

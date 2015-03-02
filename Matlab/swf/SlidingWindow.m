@@ -7,7 +7,7 @@ close all
 addpath('utils')
 %fileName = '100noisy';
 %load(['../datasets/dataset3_fresh_' fileName '.mat'])
-fileName = '2011_09_26_drive_0095_sync_KLT.mat';
+fileName = '2011_09_26_drive_0036_sync_KLT.mat';
 load(['../datasets/' fileName]);
 
 tic
@@ -36,7 +36,7 @@ noiseParams.v_var_prime = y_var(2)/fv^2;
 %Set up sliding window
 LMLambda = 1e-5;
 lineLambda = 0.25;
-JcostThresh = 5e-2;
+JcostThresh = 1e-2;
 useMonoCamera = true; %If true, only left camera will be used
 
 kappa = 10; %Sliding window size
