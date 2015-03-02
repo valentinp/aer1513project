@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Users/valentinp/Desktop/KITTI/2011_09_26/2011_09_26_drive_0001_sync';
-dataCalibDir = '/Users/valentinp/Desktop/KITTI/2011_09_26';
+dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_10_03/2011_10_03_drive_0042_sync';
+dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_10_03';
 
 %% Get ground truth and import data
-frameRange = 1:108;
+frameRange = 1:500;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
