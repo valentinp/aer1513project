@@ -22,13 +22,13 @@ tic
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-% load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
-load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
+load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
+% load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
 %Dataset window bounds
-kStart = 2; kEnd = 400;
+kStart = 2; kEnd = 108;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -63,7 +63,7 @@ noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_
 % MSCKF parameters
 msckfParams.minTrackLength = 3;        % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
-msckfParams.maxGNCostNorm  = 5e-2;     % Set to inf to allow any triangulation, no matter how bad
+msckfParams.maxGNCostNorm  = 1e-2;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
 msckfParams.doNullSpaceTrick = true;
 msckfParams.doQRdecomp = true;

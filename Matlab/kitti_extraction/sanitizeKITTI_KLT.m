@@ -6,11 +6,11 @@ addpath('utils');
 addpath('utils/devkit');
 
 
-dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_30/2011_09_30_drive_0027_sync';
-dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_30';
+dataBaseDir = '/Volumes/STARSExFAT/KITTI/2011_09_26/2011_09_26_drive_0001_sync';
+dataCalibDir = '/Volumes/STARSExFAT/KITTI/2011_09_26';
 
 %% Get ground truth and import data
-frameRange = 1:500;
+frameRange = 1:108;
 %Image data
 leftImageData = loadImageData([dataBaseDir '/image_00'], frameRange);
 rightImageData = loadImageData([dataBaseDir '/image_01'], frameRange);
@@ -64,7 +64,7 @@ for i=1:skipFrames:numFrames
         detectNewPoints = false; 
         
         % Binning
-        uBin = 1:floor(size(viLeftImage,2)/6):size(viLeftImage,2);
+        uBin = 1:floor(size(viLeftImage,2)/8):size(viLeftImage,2);
         vBin = 1:floor(size(viLeftImage,1)/2):size(viLeftImage,1);
         uBinSize = diff([uBin,size(viLeftImage,2)]);
         vBinSize = diff([vBin,size(viLeftImage,1)]);
@@ -85,8 +85,8 @@ for i=1:skipFrames:numFrames
             leftPoints = detectSURFFeatures(viLeftImage,'ROI',roiVec);
             rightPoints = detectSURFFeatures(viRightImage,'ROI',roiVec);
 
-            leftPoints = leftPoints.selectStrongest(10);
-            rightPoints = rightPoints.selectStrongest(10);
+            leftPoints = leftPoints.selectStrongest(30);
+            rightPoints = rightPoints.selectStrongest(30);
 
             %Extract features and stereo match
            [featuresLeft, validLeftPoints] = extractFeatures(viLeftImage, leftPoints);
@@ -117,6 +117,11 @@ for i=1:skipFrames:numFrames
                 seenFeatureStructs{struct_i}.imageIndex(end+1) = i;
             end
             
+            % Clear old features so we don't double count
+             oldLeftPoints = [];
+             oldRightPoints = [];
+             oldFeatureIdx = [];
+            
             %New features
             for obs_i = size(oldLeftPoints,1)+1:size(trackingPointsLeft,1)
                 seenFeatureStructs{fCount}.leftPixels = trackingPointsLeft(obs_i, :)';
@@ -138,7 +143,7 @@ for i=1:skipFrames:numFrames
 
          observedIdx = observedIdx(trackedIdx);
          
-         if length(trackedIdx) < 60
+         if length(trackedIdx) < 100
              detectNewPoints = true;
              oldLeftPoints = validLeftPoints(trackedIdx,:);
              oldRightPoints = validRightPoints(trackedIdx,:);
