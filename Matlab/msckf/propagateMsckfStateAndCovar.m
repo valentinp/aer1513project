@@ -20,6 +20,7 @@ function msckfState_prop = propagateMsckfStateAndCovar(msckfState, measurements_
 
     msckfState_prop.imuCovar = Phi * msckfState.imuCovar * Phi' ...
                                 + G * Q_imu * G' * measurements_k.dT; % Leutenegger 2013
+                            
                                     
     % Camera-Camera Covariance
     msckfState_prop.camCovar = msckfState.camCovar;
