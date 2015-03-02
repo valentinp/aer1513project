@@ -22,13 +22,13 @@ tic
 % load('../datasets/dataset3_fresh2_500lessnoisy.mat')
 % load('../datasets/2011_09_26_drive_0009_sync_KLT.mat')
 % load('../datasets/2011_09_26_drive_0035_sync_KLT.mat');
-load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
-% load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
+% load('../datasets/2011_09_26_drive_0001_sync_KLT.mat');
+load('../datasets/2011_09_30_drive_0027_sync_KLT.mat');
 
 % r_i_vk_i = p_vi_i;
 
 %Dataset window bounds
-kStart = 2; kEnd = 108;
+kStart = 2; kEnd = 400;
 % kStart = 1215; kEnd = 1715;
 
 %Set constant
@@ -215,7 +215,7 @@ for state_k = kStart:(kEnd-1)
                
                 %Remove the track
                 featureTracks = featureTracks(trackedFeatureIds ~= featureId);
-                trackedFeatureIds(trackedFeatureIds == featureId) = [];                
+                trackedFeatureIds(trackedFeatureIds == featureId) = []; 
             end
             
         elseif ~outOfView && state_k+1 < kEnd % && ~ismember(featureId, trackedFeatureIds)
@@ -240,7 +240,7 @@ for state_k = kStart:(kEnd-1)
         for f_i = 1:length(featureTracksToResidualize)
 
             track = featureTracksToResidualize{f_i};
-
+            
             %Estimate feature 3D location through Gauss Newton inverse depth
             %optimization
             [p_f_G, Jcost, RCOND] = calcGNPosEst(track.camStates, track.observations, noiseParams);
