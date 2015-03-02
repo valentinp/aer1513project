@@ -464,21 +464,21 @@ The correlation between the measurement noise and the state causes the filter es
 As an aside, note that the SWF does not have this problem because feature positions are part of the state itself and are jointly optimized along with the poses.
 
 \setcounter{figure}{2}
-\begin{figure*}
+\begin{figure}
     \centering
     \subfigure {
-        \includegraphics[width=0.45\textwidth]{figs/NST_trans}
+        \includegraphics[width=0.45\textwidth]{figs/CRV/NST_RMSE_trans}
         \label{fig:nullspace:trans_err}
     }
     ~
     \subfigure {
-        \includegraphics[width=0.45\textwidth]{figs/NST_rot}
+        \includegraphics[width=0.45\textwidth]{figs/CRV/NST_RMSE_rot}
         \label{fig:nullspace:rot_err}
     }
     
     \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement noise.}
     \label{fig:nullspace}
-\end{figure*}
+\end{figure}
 
 In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form (to first order):
 \begin{align}
