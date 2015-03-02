@@ -59,7 +59,7 @@ p_var_init = 1e-4 * ones(1,3);         % init pos var
 bg_var_init = 1e-6 * ones(1,3);        % init gyro bias var
 bv_var_init = 1e-6 * ones(1,3);        % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
-    
+   
 % MSCKF parameters
 msckfParams.minTrackLength = 3;        % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
