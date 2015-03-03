@@ -100,19 +100,23 @@ In these cases, IMU data can be relied upon more heavily in estimating egomotion
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 This problem is often complicated by the absence of a known map of features from which the camera can generate measurements.
 Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
+
 In this work we characterize, compare, and contrast the performance of two modern solutions to the visual-inertial SLAM problem, the Sliding Window Filter (SWF) and the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}, on data from a moving hand-held sensor rig, as well as several traverses from the KITTI dataset \cite{Geiger:2013:IJRR}.
+The most similar work to ours is that of Leutenegger et al. \cite{Leutenegger:2015:IJRR}, which compares the accuracy of the MSCKF to a keyframe-based SWF on datasets consisting of relatively planar motion through urban and indoor environments.
+In contrast to \cite{Leutenegger:2015:IJRR}, our SWF optimizes over a constant number of timesteps rather than keyframes.
+We also conduct a more extensive characterization of the sensitivity of the MSCKF to certain parameters and compare both algorithms using data from a hand-held sensor rig that mimics the more arbitrary motion of a micro aerial vehicle (MAV).
 
 \begin{figure}[t]
     \vspace{0.25cm}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/sensorhead}
-    \caption{The sensor head used in our experiments. An IMU measures translational and rotational velocities, while a stereo camera measures the positions of point features. In our experiments, we artificially blinded the stereo camera by using measurements from the left camera only.}
+    \caption{The hand-held sensor head used in our experiments with the ``Starry Night'' dataset. An IMU reports translational and rotational velocities, while a stereo camera observes point features. We artificially blinded the stereo camera by using measurements from the left camera only.}
     \label{fig:sensorhead}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Related Work} \label{sec:relatedwork}
+\section{Background} \label{sec:relatedwork}
 
 Visual-inertial navigation systems (VINS) have been applied broadly in robotics \cite{Mourikis:2007:ICRA, Sibley:2010:JFR, Huster:2002:OC, Kottas:2013:IROS, Kim:2007:RSS, Li:2013coa,  You:2001:VR}, and there is a considerable body of work covering a wide range of estimation algorithms for the camera-IMU sensor pair. 
 These techniques are often characterized as either \textit{loosely coupled}, when image and IMU measurements are processed individually before being fused into a single estimate, or \textit{tightly coupled}, when all information is processed together.  
@@ -131,7 +135,7 @@ By locking in past poses, EKF-SLAM sub-optimally estimates both vehicle motion a
 
 The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors. The SWF analyzed in this work is similar in that it is both a recursive and batch approach, but unlike the VSDF, it incorporates a motion model from interoceptive data and applies batch optimization. 
 The SWF operates in constant time by limiting the optimization problem to a set number of states at all times. Batch optimization over a window of states is suboptimal but still leads to exceptional accuracy for its cost, making it useful for delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
-The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It is also notable for its computationally efficiency, achieving accurate, real-time position tracking onboard a consumer smartphone \cite{Li:2013:ICRA}.
+The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It is also notable for its computationally efficiency, achieving accurate, real-time position tracking onboard a smartphone \cite{Li:2013:ICRA}.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Extended Kalman Filter (EKF)} \label{sec:EKF}
@@ -601,7 +605,7 @@ Neither filter performs substantially better than pure IMU integration on this i
 
     \caption{Comparison of Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration for three synthetic maps generated using the IMU data in the interval $(1215,1715)$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
-    \vspace{-0.4cm}
+    % \vspace{-0.4cm}
 \end{figure}
 
 In order to investigate the effect of feature density on the performance of the MSCKF and SWF, we modified the ``Starry Night'' dataset by creating synthetic feature distributions with larger spatial extents and more features than the original dataset.
