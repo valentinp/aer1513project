@@ -73,7 +73,7 @@ bv_var_init = 1e-6 * ones(1,3);        % init vel bias var
 noiseParams.initialIMUCovar = diag([q_var_init, bg_var_init, bv_var_init, p_var_init]);
    
 % MSCKF parameters
-msckfParams.minTrackLength = 5;        % Set to inf to dead-reckon only
+msckfParams.minTrackLength = 10;        % Set to inf to dead-reckon only
 msckfParams.maxTrackLength = Inf;      % Set to inf to wait for features to go out of view
 msckfParams.maxGNCostNorm  = 1e-2;     % Set to inf to allow any triangulation, no matter how bad
 msckfParams.minRCOND       = 1e-12;
