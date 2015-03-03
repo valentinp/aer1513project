@@ -518,7 +518,7 @@ We compared the performance of the MSCKF and SWF on two intervals in the ``Starr
 Both datasets include data streams from a stereo camera and IMU.
 Since our algorithms are designed to make use of a monocular camera, we artificially blinded the stereo camera by using images from the left camera only.
 
-We implemented and tested both algorithms in MATLAB 2014b on a MacBook Pro Retina (11,3) with a 2.3GHz Intel Core i7 processor and 16 GB of DDR3L RAM.
+We implemented and tested both algorithms in MATLAB 2014b on a MacBook Pro Retina (11,3) with a 2.3 GHz Intel Core i7 processor and 16 GB of DDR3L RAM.
 For both algorithms, we bootstrapped the filter window with one ground truth pose.
 For the SWF, we initialized feature positions using two-view triangulation.
 
@@ -530,7 +530,7 @@ For the SWF, we initialized feature positions using two-view triangulation.
 %     \label{fig:trajectory_groundtruth}
 % \end{figure}
 
-\subsection{Starry Night Dataset}
+\subsection{``Starry Night'' Dataset}
 The ``Starry Night'' dataset consists of a rigidly attached stereo camera and IMU (Figure \ref{fig:sensorhead}) observing a set of 20 features while moving along an arbitrary 3D path.
 This dataset is well-suited to evaluating SLAM algorithms since ground truth from a Vicon motion capture system is available for both the sensor head motion and the feature positions.
 We conducted three experiments on this dataset to compare the effect of feature visibility and window size on each algorithm.
@@ -658,7 +658,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
                     & Compute Time\tnote{\dag}     & 114.3 s   & 175.9 s   & 245.3 s   \B      \\ \hline
     \end{tabular}
     \begin{tablenotes}
-        \item [\dag] Running MATLAB 2014b on a MacBook Pro Retina (11,3) with a 2.3GHz Intel Core i7 processor and 16 GB of DDR3L RAM.
+        \item [\dag] Running MATLAB 2014b on a MacBook Pro Retina (11,3) with a 2.3 GHz Intel Core i7 processor and 16 GB of DDR3L RAM.
     \end{tablenotes}
     \end{threeparttable}
     \label{tab:rmse_nees}
@@ -675,26 +675,26 @@ As expected, the MSCKF produced estimates that were more consistent than those o
 
 \begin{figure*}
     \centering
-    \subfigure[RMSE on KITTI traverse \texttt{0001}.] {
+    \subfigure[Translational RMSE on KITTI traverse \texttt{0001}.] {
         \centering
         \includegraphics[width=0.45\textwidth]{figs/kitti/RMSE_trans_2011_09_26_drive_0001}
     }
     ~
-    \subfigure[RMSE on KITTI traverse \texttt{0036}.] {
+    \subfigure[Translational RMSE on KITTI traverse \texttt{0036}.] {
         \centering
         \includegraphics[width=0.45\textwidth]{figs/kitti/RMSE_trans_2011_09_26_drive_0036}
     }
 
-    \subfigure[RMSE on KITTI traverse \texttt{0051}.] {
+    \subfigure[Translational RMSE on KITTI traverse \texttt{0051}.] {
         \centering
         \includegraphics[width=0.45\textwidth]{figs/kitti/RMSE_trans_2011_09_26_drive_0051}
     }
     ~
-    \subfigure[RMSE on KITTI traverse \texttt{0095}.] {
+    \subfigure[Translational RMSE on KITTI traverse \texttt{0095}.] {
         \centering
         \includegraphics[width=0.45\textwidth]{figs/kitti/RMSE_trans_2011_09_26_drive_0095}
     }
-    \caption{Translational and rotational RMSE over four traverses from the KITTI dataset \cite{Geiger:2013:IJRR} totaling 534 m of urban driving.}
+    \caption{Translational RMSE over four traverses from the KITTI dataset \cite{Geiger:2013:IJRR} totaling 534 m of urban driving.}
     \label{fig:kitti}
 \end{figure*}
 
@@ -707,7 +707,7 @@ As expected, the MSCKF produced estimates that were more consistent than those o
 
 \begin{table}
     \centering
-    \caption{Comparison of Average Root Mean Squared Error (ARMSE) and Average Normalized Estimation Error Squared (ANEES) IMU integration, MSCKF, and SWF on KITTI traverses.}
+    \caption{Comparison of Average Root Mean Squared Error (ARMSE) and Average Normalized Estimation Error Squared (ANEES) of IMU integration, MSCKF, and SWF on KITTI traverses.}
     \begin{tabular}{llcccc} 
                     &                   & \multicolumn{4}{c}{KITTI Traverse} \B      \\ \cline{3-6}
                     &                   & \texttt{0001} & \texttt{0036} & \texttt{0051} & \texttt{0095}    \T\B    \\ \hline
@@ -729,15 +729,15 @@ As expected, the MSCKF produced estimates that were more consistent than those o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \vspace{-0.1cm}
 \section{Conclusions} \label{sec:conclusions}
-Based on our experimental results, we conclude that neither the SWF nor the MSCKF is more effective than pure IMU integration in environments with few features.
-We stress that our inertial data was obtained from high-quality IMUs and has been sanitized to account for gravity, biases, and integration error.
-Using raw data from a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and that the benefit of the SWF and MSCKF would have been more apparent.
-
-In environments with more features, both algorithms provided substantial gains in accuracy over pure IMU integration, with the SWF slightly outperforming the MSCKF on the datasets we tested.
-However, the accuracy of the MSCKF improves as more features are added, while the SWF is less sensitive to feature quantity.
+Our experimental results show that both the MSCKF and SWF provide substantial gains in accuracy over pure IMU integration on typical datasets with many visible features.
+On the datasets we tested, the SWF slightly outperformed the MSCKF, however, the accuracy of the MSCKF improved as more features were added while the SWF was less sensitive to feature quantity.
 It is unclear from these results which algorithm would perform best as the number of features grows very large.
 
-Although the SWF appears to produce more accurate pose estimates than the MSCKF in many cases, the MSCKF is less computationally intensive than the SWF and of has better consistency properties.
+In relatively featureless environments, neither filter performed substantially better than pure IMU integration.
+We stress that our inertial data was obtained from high-quality IMUs and has been sanitized to account for gravity, biases, and integration error.
+Using a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and that the benefit of the SWF and MSCKF would have been more apparent in these cases.
+
+Although the SWF appears to produce more accurate pose estimates than the MSCKF in many cases, the MSCKF is less computationally intensive than the SWF and has better consistency properties in its most basic form.
 The MSCKF may be a better choice of algorithm in applications where computational resources are limited and the operational environment is feature-rich.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
