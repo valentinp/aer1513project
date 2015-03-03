@@ -4,8 +4,7 @@
 clc
 clear
 close all
-load('../KITTI Trials/SWF_2011_09_26_drive_0095_sync_KLT.mat');
-
+load('../KITTI Trials/SWF_2011_09_26_drive_0036_sync_KLT.mat');
 k1 = kStart;
 k2 = k1+kappa;
 K = k2 - k1;  %There are K + 1 total states, since x0 is the k1th state

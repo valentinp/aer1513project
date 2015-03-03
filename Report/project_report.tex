@@ -340,6 +340,7 @@ We obtain the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integ
 with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{II,k}$. 
 
 \subsection{Feature Position Estimation}
+\label{sec:featPosinvDepth}
 When a tracked feature $f_j$ is selected for a state update, the MSCKF estimates its position $\hat{\Vec{p}}_G^{f_j G}$ using an inverse-depth least-squares Gauss-Newton optimization. 
 The procedure takes as input $N$ camera poses and $N$ sets of ``ideal'' pixel measurements, where ``ideal'' means that the pixel measurements have been corrected for the camera intrinsics:
 \begin{align}
@@ -668,7 +669,9 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 
 \subsection{KITTI Dataset}
 In addition to the ``Starry Night'' datasets, we also compared the performance of the MSCKF and SWF over several traverses from the KITTI dataset \cite{Geiger:2013:IJRR} totalling $530$ m of urban driving.
-To accommodate our alternative state parametrization, we used the pre-integrated linear velocity measurements provided in the dataset instead of the raw linear accelerations from the IMU.
+To accommodate our alternative state parametrization, we used the pre-integrated linear velocity measurements provided in the dataset instead of the raw linear accelerations from the IMU. 
+We extracted point features from the left camera in the stereo pair using SURF (Speeded Up Robust Features \cite{Bay:2008:CVIU}) and tracked them temporally using KLT (Kanade-Lucas-Tomasi \cite{Tomasi:91}). We employed an MSAC (M-estimator SAmple Consensus \cite{TorrZisserman:1998}) procedure with a 2-point similarity transform to reject outliers.  To initialize 3D points, we used the same inverse-depth optimization used by MSCKF (see section \ref{sec:featPosinvDepth}).
+
 Figure \ref{fig:kitti} shows the RMSE of pure IMU integration, the MSCKF, and the SWF over each of the four traverses we tested, representative images from which are shown in Figure \ref{fig:composite-kitti}.
 Similarly to the ``Starry Night'' results, both algorithms outperformed pure IMU integration, and the SWF slightly outperformed MSCKF in terms of rotational and translational RMSE.
 As expected, the MSCKF produced estimates that were more consistent than those of the SWF.
