@@ -15,7 +15,6 @@ dists = [0,cumsum(sqrt(sum(diff(msckfData.p_I_G_GT,1,2).^2,1)))];
 swfData.transErrVec = swfData.transErrVec(:,1:size(dists,2));
 swfData.rotErrVec = swfData.rotErrVec(:,1:size(dists,2));
 
-dists(end)
 %% Compute RMSE
 swf_trans_rmse = sqrt(mean(swfData.transErrVec.^2,1));
 swf_rot_rmse = sqrt(mean(swfData.rotErrVec.^2,1));
@@ -26,11 +25,16 @@ msckf_rot_rmse = sqrt(mean(msckfData.msckf_rot_err.^2,1));
 imu_trans_rmse = sqrt(mean(msckfData.imu_trans_err.^2,1));
 imu_rot_rmse = sqrt(mean(msckfData.imu_rot_err.^2,1));
 
+%% Compute ANEES
+% swf_anees = ANEES(swfData.transErrVec,swfData.rotErrVec,
+msckf_anees = ANEES(msckfData.msckf_trans_err, msckfData.msckf_rot_err,...
+    msckfData.err_sigma);
+
 %% Plot stuff
 figure(1); clf;
 fontSize = 14;
 lineWidth = 2;
-pos = [200,200,640,480];
+pos = [200,200,640,320];
 xLim = [dists(1), dists(end)];
 
 % Translational RMSE
@@ -60,4 +64,11 @@ set(gcf,'Position',pos);
 
 %% Export figure
 figFileName = ['RMSE_',fileName,'.pdf'];
-export_fig(gcf, figFileName, '-transparent');
+export_fig(gcf, figFileName, '-nocrop','-transparent');
+
+%% Stats
+fprintf('Total distance: %f \n', dists(end));
+fprintf('MSCKF:\n\t trans armse %f \n\t rot armse %f \n\t anees %f',...
+    mean(msckf_trans_rmse),mean(msckf_rot_rmse),msckf_anees);
+fprintf('SF:\n\t trans armse %f \n\t rot armse %f \n\t anees %f',...
+    mean(swf_trans_rmse),mean(swf_rot_rmse),swf_anees);
