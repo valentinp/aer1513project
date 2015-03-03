@@ -730,8 +730,8 @@ As expected, the MSCKF produced estimates that were more consistent than those o
 % \vspace{-0.1cm}
 \section{Conclusions} \label{sec:conclusions}
 Our experimental results show that both the MSCKF and SWF provide substantial gains in accuracy over pure IMU integration on typical datasets with many visible features.
-On the datasets we tested, the SWF slightly outperformed the MSCKF, however, the accuracy of the MSCKF improved as more features were added while the SWF was less sensitive to feature quantity.
-It is unclear from these results which algorithm would perform best as the number of features grows very large.
+On the datasets we tested, the SWF slightly outperformed the MSCKF, however, the MSCKF improved in accuracy with additional features while the SWF was less sensitive to feature quantity.
+It is unclear which algorithm would perform best as the number of features grows very large.
 
 In relatively featureless environments, neither filter performed substantially better than pure IMU integration.
 We stress that our inertial data was obtained from high-quality IMUs and has been sanitized to account for gravity, biases, and integration error.
