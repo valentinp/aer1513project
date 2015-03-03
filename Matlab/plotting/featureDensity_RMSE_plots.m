@@ -39,7 +39,7 @@ imu_rot_rmse = sqrt(mean(imu.msckf_rot_err.^2,1));
 figure(1); clf;
 fontSize = 14;
 lineWidth = 2;
-pos = [200,200,640,480];
+pos = [200,200,640,400];
 xLim = [kStart,kEnd];
 k = kStart:kEnd;
 xticks = linspace(kStart,kEnd,11);
