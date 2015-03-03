@@ -37,11 +37,12 @@ imu_rot_rmse = sqrt(mean(imu.msckf_rot_err.^2,1));
 
 %% Plot Stuff
 figure(1); clf;
-fontSize = 16;
+fontSize = 14;
 lineWidth = 2;
 pos = [200,200,640,480];
 xLim = [kStart,kEnd];
 k = kStart:kEnd;
+xticks = linspace(kStart,kEnd,11);
 
 set(gcf, 'Position', pos);
 
@@ -55,6 +56,7 @@ plot(k,swf40_trans_rmse, '-g', 'LineWidth', lineWidth);
 plot(k,swf60_trans_rmse, '--g', 'LineWidth', lineWidth);
 plot(k,swf100_trans_rmse, '-.g', 'LineWidth', lineWidth);
 xlim(xLim);
+set(gca,'XTick',xticks);
 legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
 title('Feature Density Comparison');
 ylabel('Trans. RMSE (m)')
@@ -71,6 +73,7 @@ plot(k,swf40_rot_rmse, '-g', 'LineWidth', lineWidth);
 plot(k,swf60_rot_rmse, '--g', 'LineWidth', lineWidth);
 plot(k,swf100_rot_rmse, '-.g', 'LineWidth', lineWidth);
 xlim(xLim);
+set(gca,'XTick',xticks);
 legend('IMU Only','MSCKF 40', 'MSCKF 60', 'MSCKF 100', 'SWF 40','SWF 60','SWF 100', 'Location', 'northwest');
 ylabel('Rot. RMSE (Axis-Angle)');
 xlabel('Timestep');
