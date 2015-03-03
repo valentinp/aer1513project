@@ -133,7 +133,7 @@ Another limitation of EKF-SLAM is that it is \textit{forgetful}.
 Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later feature measurements ought to constrain them.
 By locking in past poses, EKF-SLAM sub-optimally estimates both vehicle motion and feature positions.
 
-The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors. The SWF analyzed in this work is similar in that it is both a recursive and batch approach, but unlike the VSDF, it incorporates a motion model from interoceptive data and applies batch optimization. 
+T he shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors. The SWF analyzed in this work is similar in that it is both a recursive and batch approach, but unlike the VSDF, it incorporates a motion model from interoceptive data and applies batch optimization. 
 The SWF operates in constant time by limiting the optimization problem to a set number of states at all times. Batch optimization over a window of states is suboptimal but still leads to exceptional accuracy for its cost, making it useful for delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
 The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It is also notable for its computationally efficiency, achieving accurate, real-time position tracking onboard a smartphone \cite{Li:2013:ICRA}.
 
@@ -749,7 +749,8 @@ The MSCKF may be a better choice of algorithm in applications where computationa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section*{ACKNOWLEDGMENT}
+\section*{ACKNOWLEDGMENT}
+We would like to thank Professor Timothy D. Barfoot for the use of the \textit{Starry Night Dataset} that was prepared for the graduate state estimation course, AER1513, at the University of Toronto.
 %\vspace{8pt}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
