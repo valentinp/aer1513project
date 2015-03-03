@@ -12,6 +12,7 @@
 *.synctex.gz
 *.toc
 *.fdb_latexmk
+project_report.pdf
 
 #MATLAB
 *.m~
