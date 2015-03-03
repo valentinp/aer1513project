@@ -1,6 +1,6 @@
 function avgNEES = ANEES(trans_err, rot_err, err_sigma)
 
-    stateErr = [trans_err; rot_err];
+    stateErr = [rot_err;trans_err];
     stateVar = err_sigma.^2;
     avgNEES = 0;
     stepNum = size(stateErr, 2);
