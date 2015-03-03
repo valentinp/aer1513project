@@ -1,10 +1,11 @@
 %% Load data
 clear; close all; clc;
 
- fileName = '2011_09_26_drive_0001';
-%fileName = '2011_09_26_drive_0036';
+%fileName = '2011_09_26_drive_0001';
+fileName = '2011_09_26_drive_0036';
 % fileName = '2011_09_26_drive_0051';
 % fileName = '2011_09_26_drive_0095';
+
 
 fileSuffix = '_sync_KLT';
 
