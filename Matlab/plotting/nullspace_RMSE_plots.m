@@ -17,13 +17,15 @@ nst_on_rot_rmse = sqrt(mean(nst_on.msckf_rot_err.^2,1));
 figure(1); clf;
 fontSize = 14;
 lineWidth = 2;
-pos = [200,200,640,480];
+pos = [200,200,640,400];
 xLim = [kStart, kEnd];
 k = kStart:kEnd;
 xticks = linspace(kStart,kEnd,11);
 
 transLim = [0 0.6];
 rotLim = [0 0.25];
+
+set(gcf,'Position',pos);
 
 % Translational RMSE
 subplot(2,1,1);
