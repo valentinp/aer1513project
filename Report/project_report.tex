@@ -129,10 +129,9 @@ Another limitation of EKF-SLAM is that it is \textit{forgetful}.
 Because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later feature measurements ought to constrain them.
 By locking in past poses, EKF-SLAM sub-optimally estimates both vehicle motion and feature positions.
 
-The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features. 
-It also takes advantage of \textit{delayed linearization} in attempt to minimize linearization errors. The SWF analyzed in this work is similar as a both a recursive and batch approach, but unlike the VSDF it incorporates a motion model and applies batch optimization. 
+The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable. The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors. The SWF analyzed in this work is similar in that it is both a recursive and batch approach, but unlike the VSDF, it incorporates a motion model from interoceptive data and applies batch optimization. 
 The SWF operates in constant time by limiting the optimization problem to a set number of states at all times. Batch optimization over a window of states is suboptimal but still leads to exceptional accuracy for its cost, making it useful for delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
-The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It has recently been used to achieve accurate, online position tracking onboard a smartphone \cite{Li:2013:ICRA}.
+The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It is also notable for its computationally efficiency, achieving accurate, real-time position tracking onboard a consumer smartphone \cite{Li:2013:ICRA}.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Extended Kalman Filter (EKF)} \label{sec:EKF}
@@ -152,8 +151,8 @@ The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of a
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Sliding Window Filter} \label{sec:SWF}
-In contrast to EKF-SLAM, the aim of the Sliding Window Filter (SWF) is not to construct a globally consistent map, but rather to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and feature positions.
-The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) optimization over a sliding window of $K$ poses $\Vec x_{k\in[1,K]}$ observing $M$ features $f_{j\in[1,M]}$: 
+The aim of the Sliding Window Filter (SWF) is to estimate a vehicle's motion by optimizing a sliding window of vehicle poses and observed landmarks.
+The optimization problem in the SWF is typically solved as a non-linear least squares problem using Gauss-Newton (GN) or Levenberg-Marquardt (LM) optimization over a sliding window of $K$ poses $\Vec x_{k\in[1,K]}$ observing $M$ features $f_{j\in[1,M]}$: 
 \begin{equation}
 \Vec{x} := \bbm \Vec x_0^T & \hdots & \Vec x_K^T & {\Vec {p}_G^{f_1G \hspace{0.3em} T}} & \hdots & {\Vec {p}_G^{f_MG \hspace{0.3em} T}} \ebm ^T.
 \end{equation}
@@ -161,7 +160,8 @@ In our notation, $\Vec p^{BA}_A$ is the vector from the origin of frame $\mathca
 
 The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear system:
 \begin{equation}
-(\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}})
+\label{eqn:gnOpt}
+(\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}}).
 \end{equation}
 The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
 \begin{equation}
@@ -175,13 +175,13 @@ The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
 \end{equation}
 where
 \begin{align}
-\Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T
+\Vec G_{\Vec x, k} &= \bbm \Vec G_{\Vec x, k}^1 & \hdots & \Vec G_{\Vec x, k}^M \ebm ^T,
 \\[0.5em]
 \Vec G_{\Vec{x}, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}}
-    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec p_{G,k}^{IG} ) )^\times  \ebm ^T
+    \bbm -\Vec C_{CG} \Vec C_{IG,k} \\[0.5em] \Vec C_{CG} (\Vec C_{IG,k} (\Vec{p}_G^{f_j G} - \Vec p_{G,k}^{IG} ) )^\times  \ebm ^T,
 \\[0.5em]
-\Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j\in[1,M]$}} \\[0.5em]
-\Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k}
+\Vec G_{\Vec f, k} &= \underbrace{\bbm \Vec G_{\Vec f, k}^1 & & \\ & & \Vec G_{\Vec f, k}^2 & \\ & & \vdots &  \\ & & & \Vec G_{\Vec f, k}^M \ebm}_{\text{$j$th block column position given by feature ID $j\in[1,M]$}}, \\[0.5em]
+\Vec G_{\Vec f, k}^j &= \pd{\Vec g}{ \Vec p}\Bigr|_{\bar{\Vec p}_{C_k}^{f_j C_k}} \Vec C_{CI} \Vec C_{IG,k},
 \end{align}
 with
 \begin{equation}
@@ -193,16 +193,14 @@ with
 \end{equation}
 The weight matrix $\Vec T$ is given by
 \begin{equation}
-\Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\}
+\Vec{T} := \text{diag} \left\{ \Vec{T}_1,\hdots,\Vec{T}_K \right\},
 \end{equation}
 where
 \begin{equation}
 \Vec{T}_k := \bbm \Vec H_{\Vec w, k} \Vec Q_k \Vec H_{\Vec w, k}^T & \Vec 0 \\
 \Vec 0 & \Vec G_{\Vec n, k} \Vec R_k \Vec G_{\Vec n, k}^T \ebm,
 \end{equation}
-and $\Vec R_k$, $\Vec Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise.
-The update is performed repeatedly until convergence (in this work we use the criterion $|\delta \Vec{x}^*| < 10^{-3} $).
-
+and $\Vec R_k$, $\Vec Q_k$ are observation and motion model noise covariances, and $\Vec G_{\Vec n, k}$, $\Vec H_{\Vec w, k}$ are the observation and motion model Jacobians with respect to the noise. 
 An important advantage of the SWF is that its computational cost depends on the number of features in the current window rather than the number of features in the entire map.
 By varying the extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
@@ -216,7 +214,7 @@ The key idea of the MSCKF is to maintain a variable window of vehicle poses and 
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds some preset threshold.
 
 \subsection{MSCKF State Parametrization}
-We evaluated the MSCKF using a dataset in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
+We evaluated the MSCKF with datasets in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
 In order to accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from that described in \cite{Mourikis:2006:TechReport} and \cite{Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
@@ -230,7 +228,7 @@ At time $k$, the full state of the MSCKF consists of the current IMU state estim
     \hat{\Vec{x}}_k &:= \bbm \hat{\Vec{x}}_{I,k}^T & \hat{\Vec{q}}_{C_1 G}^T & \hat{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \hat{\Vec{q}}_{C_N G}^T & \hat{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T.
 \end{align*}
 
-We can also define the MSCKF ``error state'' at time $k$:
+We can also define the MSCKF  \textit{error state} at time $k$:
 \begin{align*}
     \widetilde{\Vec{x}}_k &:= \bbm \widetilde{\Vec{x}}_{I,k}^T & \boldsymbol{\delta\theta}_{C_1}^T & \widetilde{\Vec{p}}_G^{C_1 G \hspace{0.3em} T} & \hdots & \boldsymbol{\delta\theta}_{C_N}^T & \widetilde{\Vec{p}}_G^{C_N G \hspace{0.3em} T} \ebm ^T
 \end{align*}
@@ -389,7 +387,7 @@ and rewrite the camera measurement error as
 \begin{align}
 \Vec e(\hat{\Vec{y}}) = \hat{\Vec{z}}_i^{(j)} - \frac{1}{h_3 (\hat{\Vec{y}}) } \bbm h_1 (\hat{\Vec{y}}) \\ h_2 (\hat{\Vec{y}}) \ebm .
 \end{align}
-The linear least-squares system then becomes
+The least-squares system then becomes
 \begin{align}
 (\Vec  E^T \Vec W ^{-1} \Vec E ) \delta \Vec{y}^*  = - \Vec{E}^T\Vec{W}^{-1}\Vec{e}(\hat{\Vec{y}})
 \end{align}
