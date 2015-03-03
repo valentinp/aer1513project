@@ -1,8 +1,8 @@
 %% Load data
 clear; close all; clc;
 
-% fileName = '2011_09_26_drive_0001';
-fileName = '2011_09_26_drive_0036';
+ fileName = '2011_09_26_drive_0001';
+%fileName = '2011_09_26_drive_0036';
 % fileName = '2011_09_26_drive_0051';
 % fileName = '2011_09_26_drive_0095';
 
@@ -42,13 +42,13 @@ imu_anees = ANEES(msckfData.imu_trans_err, msckfData.imu_rot_err, imu_err_sigma)
 figure(1); clf;
 fontSize = 14;
 lineWidth = 2;
-pos = [200,200,640,400];
+pos = [200,200,640,200];
 xLim = [dists(1), dists(end)];
 
 set(gcf,'Position',pos);
 
 % Translational RMSE
-subplot(2,1,1);
+%subplot(2,1,1);
 plot(dists,imu_trans_rmse,'-k','LineWidth',lineWidth); hold on;
 plot(dists,swf_trans_rmse,'-r','LineWidth',lineWidth); 
 plot(dists,msckf_trans_rmse,'-b','LineWidth',lineWidth);
@@ -61,18 +61,18 @@ set(gca,'FontSize',fontSize);
 set(gcf,'Position',pos);
 
 % Rotational RMSE
-subplot(2,1,2);
-plot(dists,imu_rot_rmse,'-k','LineWidth',lineWidth); hold on;
-plot(dists,swf_rot_rmse,'-r','LineWidth',lineWidth); 
-plot(dists,msckf_rot_rmse,'-b','LineWidth',lineWidth);
-xlim(xLim);
-xlabel('Distance Travelled (m)'); ylabel('Rot. RMSE (Axis-Angle)');
-legend('IMU Only','SWF','MSCKF','Location','NorthWest');
-grid minor; box on;
-set(gca,'FontSize',fontSize);
+% subplot(2,1,2);
+% plot(dists,imu_rot_rmse,'-k','LineWidth',lineWidth); hold on;
+% plot(dists,swf_rot_rmse,'-r','LineWidth',lineWidth); 
+% plot(dists,msckf_rot_rmse,'-b','LineWidth',lineWidth);
+% xlim(xLim);
+% xlabel('Distance Travelled (m)'); ylabel('Rot. RMSE (Axis-Angle)');
+% legend('IMU Only','SWF','MSCKF','Location','NorthWest');
+% grid minor; box on;
+% set(gca,'FontSize',fontSize);
 
 %% Export figure
-figFileName = ['RMSE_',fileName,'.pdf'];
+figFileName = ['RMSE_trans_',fileName,'.pdf'];
 export_fig(gcf, figFileName, '-nocrop','-transparent');
 
 %% Stats
