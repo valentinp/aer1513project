@@ -81,7 +81,7 @@ Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a 
 While the SWF estimates feature positions as part of the filter state itself, the MSCKF optimizes feature positions in a separate procedure without including them in the filter state.
 We present experimental characterizations and comparisons of the MSCKF and SWF on data from a moving hand-held sensor rig, as well as several traverses from the KITTI dataset.
 In particular, we compare the accuracy and consistency of the two filters, and analyze the effect of feature track length and feature density on the performance of each filter.
-In general, our results show the SWF to be more accurate than the MSCKF.
+In general, our results show the SWF to be more accurate and less sensitive to tuning parameters than the MSCKF.
 However, the MSCKF is significantly more computationally efficient, has good consistency properties, and improves in accuracy as more features are tracked. 
 \end{abstract}
 
