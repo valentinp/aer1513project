@@ -1,10 +1,10 @@
 %% Load data
 clear; close all; clc;
 
-%fileName = '2011_09_26_drive_0001';
-fileName = '2011_09_26_drive_0036';
+% fileName = '2011_09_26_drive_0001';
+% fileName = '2011_09_26_drive_0036';
 % fileName = '2011_09_26_drive_0051';
-% fileName = '2011_09_26_drive_0095';
+fileName = '2011_09_26_drive_0095';
 
 
 fileSuffix = '_sync_KLT';
@@ -56,6 +56,7 @@ plot(dists,msckf_trans_rmse,'-b','LineWidth',lineWidth);
 xlim(xLim);
 title(fileName,'Interpreter','none');
 ylabel('Trans. RMSE (m)');
+xlabel('Distance Travelled (m)');
 legend('IMU Only','SWF','MSCKF','Location','NorthWest');
 grid minor; box on;
 set(gca,'FontSize',fontSize);
