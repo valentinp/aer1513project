@@ -222,13 +222,11 @@ As a result, the filter may not maximally constrain some poses, and hence locali
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a variable window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds a preset threshold.
-Except where otherwise noted (i.e., state parametrization and integration method), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
+Except where otherwise noted (i.e., \ref{sec:state_parametrization} and \ref{sec:imu_prop}), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
 
-\subsection{MSCKF State Parametrization}
+\subsection{MSCKF State Parametrization} \label{sec:state_parametrization}
 We evaluated the MSCKF on datasets in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
-To accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
-
-In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
+To accommodate this alternative sensor configuration, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
     \Vec{x}_{I,k} &:= \bbm \Vec{q}_{IG,k}^T & \Vec{b}_{\boldsymbol{\omega},k}^T & \Vec{b}_{\Vec{v},k}^T & \Vec{p}_{G,k}^{IG \hspace{0.3em} T} \ebm^T
 \end{align}
@@ -286,7 +284,7 @@ where the Jacobian $\Vec{J}_k$ is given by
 \end{align}
 with $\Vec 1_m$ denoting the $m$-dimensional identity matrix and $\Vec 0_{n\times p}$ an $n\times p$ matrix of zeros.
 
-\subsection{IMU State Estimate Propagation}
+\subsection{IMU State Estimate Propagation} \label{sec:imu_prop}
 The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is described by a continuous-time motion model:
 \begin{align}
     \dot{\hat{\Vec{q}}}_{IG} &= \frac{1}{2}\boldsymbol{\Omega}\left(\hat{\boldsymbol{\omega}}\right)\hat{\Vec{q}}_{IG} 
