@@ -124,13 +124,13 @@ In loosely coupled systems, image and IMU measurements are processed individuall
 The decoupling of inertial and visual measurements in loosely coupled systems limits computational complexity \cite{Leutenegger:2015:IJRR}, but at the cost of information: processing camera and IMU measurements separately makes optimal estimation of biases impossible \cite{Li:2013coa}. 
 In this work, we consider tightly coupled algorithms, which are preferable for accurate and consistent visual-inertial navigation. 
 
-For both tightly coupled and loosely coupled VINS, a popular choice of estimator is the Extended Kalman filter (EKF) or one of its variants \cite{Huster:2002:OC, You:2001:VR, Kottas:2013:RSS, Kim:2007:RSS, Mourikis:2007:ICRA}, though methods also exist that employ unscented Kalman filters \cite{Ebcin:2007:ION}, particle filters \cite{Fox:1999:JAIR, Pupilli:2005:BMVC}, or batch optimization methods\cite{Triggs:2000va,Strelow:2004:IJR}. 
+For both tightly coupled and loosely coupled VINS, a popular estimator is the Extended Kalman filter (EKF) or one of its variants \cite{Huster:2002:OC, You:2001:VR, Kottas:2013:RSS, Kim:2007:RSS, Mourikis:2007:ICRA}, though methods also exist that employ unscented Kalman filters \cite{Ebcin:2007:ION}, particle filters \cite{Fox:1999:JAIR, Pupilli:2005:BMVC}, or batch optimization methods\cite{Triggs:2000va,Strelow:2004:IJR}. 
 
 EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is a weakness for navigation over long distances.
 Indeed, the computational complexity of EKF-SLAM scales far too poorly with the number of features to be applied naively to this problem.
 
 Furthermore, EKF-based VINS are inconsistent, that is, the state uncertainties are underestimated.
-Li and Mourikis \cite{Li:2013coa} showed that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system, which reduces the reliability of such estimators.
+Li and Mourikis \cite{Li:2013coa} showed that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system, reducing the reliability of such estimators.
 
 Finally, EKF-SLAM is \textit{forgetful}:
 because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later feature measurements ought to constrain them.
@@ -222,7 +222,7 @@ As a result, the filter may not maximally constrain some poses, and hence locali
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a variable window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds a preset threshold.
-Except where otherwise noted (i.e., \ref{sec:state_parametrization} and \ref{sec:imu_prop}), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
+Except where otherwise noted (i.e., state parametrization in \ref{sec:state_parametrization} and integration method in \ref{sec:imu_prop}), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Parametrization} \label{sec:state_parametrization}
 We evaluated the MSCKF on datasets in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
