@@ -221,11 +221,12 @@ As a result, the filter may not maximally constrain some poses, and hence locali
 \section{Multi-State Constraint Kalman Filter} \label{sec:MSCKF}
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a variable window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
-This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds some preset threshold.
+This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds a preset threshold.
+Except where otherwise noted (i.e., state parametrization and integration method), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Parametrization}
 We evaluated the MSCKF on datasets in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
-To accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from \cite{Mourikis:2006:TechReport} and \cite{Mourikis:2007:ICRA}.
+To accommodate this alternative sensor configuration, the mathematical framework described in this section differs slightly from \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
 
 In our implementation, we parametrize the IMU state at time $k$ as the 13-dimensional vector
 \begin{align}
@@ -336,12 +337,12 @@ With reference to the partitions defined in (\ref{eq:covariance}), we compute th
     \hat{\Vec{P}}^-_{CC,k+1} &= \hat{\Vec{P}}_{CC,k} \\
     \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) \hat{\Vec{P}}_{IC,k}
 \end{align}
-where $\Delta T$ is the IMU sampling period, and the state transition matrix $\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right)$ is obtained from
-\begin{align} \label{eq:statetransition}
-	\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) &= \Vec{1}_{12} + \Vec{F} \Delta T.
-\end{align}
+where $\Delta T$ is the IMU sampling period.
 
-We obtain the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ according to
+The state transition matrix $\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right)$ and the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ are computed according to \cite{Leutenegger:2013:RSS}:
+\begin{align} \label{eq:statetransition}
+	\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) &= \Vec{1}_{12} + \Vec{F} \Delta T
+\end{align}
 \begin{align}
 	\hat{\Vec{P}}^-_{II,k+1} &= \boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) \hat{\Vec{P}}_{II,k} \boldsymbol{\Phi}^T\left(t_k + \Delta T, t_k \right) \notag \\ &+ \Vec{G} \Vec{Q}_I \Vec{G}^T \Delta T.
 \end{align}
@@ -554,6 +555,8 @@ We initialized both filters with the first ground truth pose, and obtained initi
         \label{fig:comp_2}
     }
     \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on two intervals of the ``Starry Night'' dataset. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the numbers next to ``SWF'' refer to the number of states in the sliding window.}
+
+    \vspace{-0.2cm}
 \end{figure*}
 
 \subsection{``Starry Night'' Dataset}
@@ -645,7 +648,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 
     \caption{Comparison of Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration for three synthetic maps generated using the IMU data in the interval $(1215,1715)$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
-    % \vspace{-0.4cm}
+    \vspace{-0.2cm}
 \end{figure}
 
 \begin{table}
@@ -673,7 +676,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
     \end{tablenotes}
     \end{threeparttable}
     \label{tab:rmse_nees}
-    % \vspace{-0.4cm}
+    \vspace{-0.2cm}
 \end{table}
 
 
@@ -721,7 +724,7 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
     \includegraphics[width=0.9\textwidth]{figs/kitti/composite-kitti}
     \caption{Sample frames from the four KITTI traverses shown in Figure \ref{fig:kitti}.}
     \label{fig:composite-kitti}
-    % \vspace{-0.4cm}
+    \vspace{-0.2cm}
 \end{figure*}
 
 \begin{table}
@@ -741,7 +744,7 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
         (10)        & ANEES             & 358.3     & 703.2     & 1124      & 3767    \B      \\ \hline
     \end{tabular}
     \label{tab:kitti_results}
-    % \vspace{-0.4cm}
+    \vspace{-0.2cm}
 \end{table}
 
 
