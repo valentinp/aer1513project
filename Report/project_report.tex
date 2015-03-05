@@ -120,15 +120,16 @@ We also conduct a more extensive characterization of the sensitivity of the MSCK
 
 Visual-inertial navigation systems (VINS) have been applied broadly in robotics \cite{Mourikis:2007:ICRA, Sibley:2010:JFR, Huster:2002:OC, Kottas:2013:IROS, Kim:2007:RSS, Li:2013coa,  You:2001:VR}, and there is a considerable body of work covering a wide range of estimation algorithms for the camera-IMU sensor pair. 
 These techniques are often characterized as either \textit{loosely coupled} or \textit{tightly coupled}.
-In loosely coupled systems, image and IMU measurements are processed individually before being fused into a single estimate, while tightly coupled systems process all information together.  
+In loosely coupled systems, image and IMU measurements are processed separately before being fused into a single estimate, while tightly coupled systems process all information together.  
 The decoupling of inertial and visual measurements in loosely coupled systems leads to inexpensive computations, but at the cost of information: processing camera and IMU measurements separately makes optimal estimation of biases impossible \cite{Li:2013coa}. 
 In this work, we consider tightly coupled algorithms, which are preferable for accurate and consistent visual-inertial navigation. 
 
 For both tightly coupled and loosely coupled VINS, a popular choice of estimator is the Extended Kalman filter (EKF) or one of its variants \cite{Huster:2002:OC, You:2001:VR, Kottas:2013:RSS, Kim:2007:RSS, Mourikis:2007:ICRA}, though methods also exist that employ unscented Kalman filters \cite{Ebcin:2007:ION}, particle filters \cite{Fox:1999:JAIR, Pupilli:2005:BMVC}, or batch optimization methods\cite{Triggs:2000va,Strelow:2004:IJR}. 
-EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is a weakness for navigation over long distances.
-Indeed, the computational complexity of such algorithm scales far too poorly with the number of features to be applied naively to this problem.
 
-Furthermore, EKF-based VINS are fundamentally inconsistent, that is, the state uncertainties are underestimated.
+EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is a weakness for navigation over long distances.
+Indeed, the computational complexity of EKF-SLAM scales far too poorly with the number of features to be applied naively to this problem.
+
+Furthermore, EKF-based VINS are inconsistent, that is, the state uncertainties are underestimated.
 Li and Mourikis \cite{Li:2013coa} showed that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system, which reduces the reliability of such estimators.
 
 Finally, EKF-SLAM is \textit{forgetful}:
@@ -137,8 +138,7 @@ By locking in past poses, EKF-SLAM condemns itself to sub-optimally estimating b
 
 The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable.
 % The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors.
-The SWF analyzed in this work is a modern example of such algorithms, operating in constant time by limiting the optimization problem to a set number of states.
-It applies batch optimization over a set window of states, which is suboptimal but still leads to exceptional accuracy for its cost.
+The SWF analyzed in this work is a modern example of such algorithms, operating in constant time by performing a batch optimization over a set number of states, which is suboptimal but still leads to exceptional accuracy for its cost.
 This makes the SWF useful for delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
 The MSCKF \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF in the sense that it maintains a variable window of poses and applies batch updates using all observations of each landmark. It is also notable for its computationally efficiency, achieving accurate, real-time position tracking onboard a smartphone \cite{Li:2013:ICRA}.
 In Sections \ref{sec:SWF} and \ref{sec:MSCKF}, we discuss both the SWF and MSCKF in detail.
@@ -173,7 +173,7 @@ The optimization applies an update, $ \delta \Vec{x}^*$, by solving the linear s
 \label{eqn:gnOpt}
 (\Vec H^T \Vec T ^{-1} \Vec H ) \delta \Vec{x}^*  = - \Vec{H}^T\Vec{T}^{-1}\Vec{e}(\bar{\Vec{x}}).
 \end{equation}
-The matrix $\Vec{H}$ is given by (showing non-zero blocks only)
+Showing non-zero blocks only, the matrix $\Vec{H}$ is given by
 \begin{equation}
 \mathbf{H} = \left[\begin{array}{cccccc}
  -\Vec H_{\Vec x, 1} & \Vec 1 & & &   \\ 
@@ -215,7 +215,7 @@ An important advantage of the SWF is that its computational cost depends on the 
 By varying the spatial or temporal extent of the sliding window, the computational cost of the algorithm can be tailored to fit a given compute envelope, which makes the algorithm suitable for online operation over paths of arbitrary length.
 
 However, the hard cut-off of the SWF may result in only a subset of measurements of each feature contributing to the optimization.
-As a result, the filter may not maximally constrain some poses, and hence localization may be less accurate than we could expect from the full batch solution.
+As a result, the filter may not maximally constrain some poses, and hence localization may be less accurate than one would expect from the full batch solution.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Multi-State Constraint Kalman Filter} \label{sec:MSCKF}
@@ -283,7 +283,7 @@ where the Jacobian $\Vec{J}_k$ is given by
                             \left(\hat{\Vec{C}}_{I G, k}^T \Vec{p}_{I,k}^{CI}\right)^\times & \Vec{0}_{3\times6} & \Vec{1}_3 & \Vec{0}_{3\times6N}
                 \ebm
 \end{align}
-with $\Vec 1_m$ denoting the $m$-dimensional identity matrix and $\Vec 0_{m\times n}$ an $m\times n$ matrix of zeros.
+with $\Vec 1_m$ denoting the $m$-dimensional identity matrix and $\Vec 0_{n\times p}$ an $n\times p$ matrix of zeros.
 
 \subsection{IMU State Estimate Propagation}
 The evolution of the mean estimated IMU state $\hat{\Vec{x}}_I$ over time is described by a continuous-time motion model:
@@ -334,21 +334,17 @@ and $\Vec{n}_I = \bbm \Vec{n}_{\boldsymbol{\omega}}^T & \Vec{n}_{\Vec{b}_{\bolds
 With reference to the partitions defined in (\ref{eq:covariance}), we compute the predicted camera state covariances and IMU-camera cross-correlations as follows:
 \begin{align}
     \hat{\Vec{P}}^-_{CC,k+1} &= \hat{\Vec{P}}_{CC,k} \\
-    \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + T, t_k \right) \hat{\Vec{P}}_{IC,k}
+    \hat{\Vec{P}}^-_{IC,k+1} &= \boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) \hat{\Vec{P}}_{IC,k}
 \end{align}
-where $T$ is the IMU sampling period, and the state transition matrix $\boldsymbol{\Phi}\left(t_k + T, t_k \right)$ is obtained by integrating
+where $\Delta T$ is the IMU sampling period, and the state transition matrix $\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right)$ is obtained from
 \begin{align} \label{eq:statetransition}
-    \dot{\boldsymbol{\Phi}}\left(t_k + \tau, t_k \right) &= \Vec{F} \boldsymbol{\Phi}\left(t_k + \tau, t_k \right), \tau\in\left[0,T\right]
+	\boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) &= \Vec{1}_{12} + \Vec{F} \Delta T.
 \end{align}
-with the initial condition $\boldsymbol{\Phi}\left(t_k, t_k \right) = \Vec{1}_{12}$.
 
-We obtain the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ by integrating
-\begin{align} \label{eq:imucovar}
-    \dot{\hat{\Vec{P}}}_{II}\left(t_k  + \tau \right) &= \Vec{F} \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) 
-                 + \hat{\Vec{P}}_{II}\left(t_k  + \tau \right) \Vec{F}^T \notag \\ 
-                & + \Vec{G} \Vec{Q}_I \Vec{G}^T, \tau\in\left[0,T\right]
+We obtain the predicted IMU state covariance $\hat{\Vec{P}}^-_{II,k+1}$ according to
+\begin{align}
+	\hat{\Vec{P}}^-_{II,k+1} &= \boldsymbol{\Phi}\left(t_k + \Delta T, t_k \right) \hat{\Vec{P}}_{II,k} \boldsymbol{\Phi}^T\left(t_k + \Delta T, t_k \right) \notag \\ &+ \Vec{G} \Vec{Q}_I \Vec{G}^T \Delta T.
 \end{align}
-with the initial condition $\hat{\Vec{P}}_{II}\left(t_k\right) = \hat{\Vec{P}}_{II,k}$. 
 To improve numerical stability, we found it useful to enforce the positive semi-definiteness of $\hat{\Vec{P}}^-_{II,k+1}$ by making the replacements
 \begin{align*}
     P_{ii} \leftarrow |P_{ii}| && \text{and} && P_{ij}, P_{ji} \leftarrow \dfrac{1}{2}\left(P_{ij} + P_{ji}\right), i\neq j,
