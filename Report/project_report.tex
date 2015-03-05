@@ -682,7 +682,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 In addition to the ``Starry Night'' datasets, we also compared the performance of the MSCKF and SWF over four traverses from the KITTI dataset \cite{Geiger:2013:IJRR} totaling $534$ m of urban driving.
 We selected these particular traverses because they contained few moving objects, which we found to be common failure cases for both filters.
 To accommodate our alternative state parametrization, we used the pre-integrated linear velocity measurements provided in the dataset instead of the raw linear accelerations from the IMU. 
-We extracted point features from the left camera in the stereo pair using Speeded Up Robust Features (SURF) \cite{Bay:2008:CVIU} and tracked them temporally using Kanade-Lucas-Tomasi (KLT) tracking \cite{Tomasi:91}.
+We extracted between 50 and 100 salient point features from the left camera in the stereo pair using Speeded Up Robust Features (SURF) \cite{Bay:2008:CVIU} and tracked them temporally using Kanade-Lucas-Tomasi (KLT) tracking \cite{Tomasi:91}.
 We rejected outliers using an M-estimator Sample Consensus (MSAC) \cite{TorrZisserman:1998} procedure with a 2-point similarity transform.
 % Like the ``Starry Night'' datasets, we initialized 3D points in both filters using the inverse-depth batch optimization of Section \ref{sec:featPosinvDepth}.
 
@@ -749,17 +749,18 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \vspace{-0.1cm}
 \section{Conclusions} \label{sec:conclusions}
-Our results show that both the MSCKF and SWF provide substantial gains in accuracy over pure IMU integration on typical datasets with many visible features.
+% Our results show that both the MSCKF and SWF provide substantial gains in accuracy over pure IMU integration on typical datasets with many visible features.
 On the datasets we tested, the SWF slightly outperformed the MSCKF, but the MSCKF improved in accuracy with additional features while the SWF was less sensitive to feature quantity.
-It is unclear from these results which algorithm would perform best as the number of features grows very large.
-
 In relatively featureless environments, neither filter performed substantially better than pure IMU integration.
+
 We stress that our inertial data was obtained from high-quality IMUs and has been sanitized to account for gravity, biases, and integration error.
 Using a consumer-grade IMU, we expect that pure IMU integration would have performed much worse, and that the benefit of the SWF and MSCKF would have been more apparent in these cases.
 
 Although the SWF appears to produce more accurate pose estimates than the MSCKF in many cases, the MSCKF is less computationally intensive than the SWF and has better consistency properties in its most basic form.
 However, in our experiments we found the MSCKF to be much more sensitive to tuning parameters than the SWF, sometimes diverging wildly with small changes in parameters.
 We conclude that the MSCKF may be a better choice of algorithm when computational resources are limited and the operational environment is feature-rich, but that the SWF may be preferable in situations where robustness is paramount.
+
+In future work we would like to investigate the sensitivity of these algorithms to variations in other parameters such as scene geometry, frame rate, field of view, and camera type (e.g., stereo and omnidirectional cameras).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
