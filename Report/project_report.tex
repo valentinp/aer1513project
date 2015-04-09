@@ -56,9 +56,9 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 }
 
 
-\author{Lee Clement, Valentin Peretroukhin, Jacob Lambert, and Jonathan Kelly% <-this % stops a space
+\author{Lee E Clement, Valentin Peretroukhin, Jacob Lambert, and Jonathan Kelly% <-this % stops a space
 %\thanks{*This work was not supported by any organization}% <-this % stops a space
-\thanks{All authors are at the Institute for Aerospace Studies, University of Toronto, Canada
+\thanks{Lee E Clement and Valentin Peretroukhin jointly assert first authorship. All authors are at the Institute for Aerospace Studies, University of Toronto, Canada
         {\tt \{lee.clement, v.peretroukhin, jacob.lambert\} @mail.utoronto.ca, jkelly@utias.utoronto.ca}
         }%
 }
@@ -74,15 +74,15 @@ The Battle for Filter Supremacy: A Comparative Study of the Multi-State Constrai
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Accurate and consistent egomotion estimation is an important part of autonomous navigation.
-For this task, the combination of visual and inertial sensors is an inexpensive, compact, and complementary hardware suite that can be used on many ground and aerial vehicles.
+Accurate and consistent egomotion estimation is a critical component of autonomous navigation.
+For this task, the combination of visual and inertial sensors is an inexpensive, compact, and complementary hardware suite that can be used on many types of vehicles.
 In this work, we compare two modern approaches to egomotion estimation: the Multi-State Constraint Kalman Filter (MSCKF) and the Sliding Window Filter (SWF).
 Both filters use an Inertial Measurement Unit (IMU) to estimate the motion of a vehicle and then correct this estimate with observations of salient features from a monocular camera.
 While the SWF estimates feature positions as part of the filter state itself, the MSCKF optimizes feature positions in a separate procedure without including them in the filter state.
 We present experimental characterizations and comparisons of the MSCKF and SWF on data from a moving hand-held sensor rig, as well as several traverses from the KITTI dataset.
 In particular, we compare the accuracy and consistency of the two filters, and analyze the effect of feature track length and feature density on the performance of each filter.
 In general, our results show the SWF to be more accurate and less sensitive to tuning parameters than the MSCKF.
-However, the MSCKF is significantly more computationally efficient, has good consistency properties, and improves in accuracy as more features are tracked. 
+However, the MSCKF is computationally cheaper, has good consistency properties, and improves in accuracy as more features are tracked. 
 \end{abstract}
 
 
@@ -91,27 +91,28 @@ However, the MSCKF is significantly more computationally efficient, has good con
 
 The combination of visual and inertial sensors is a powerful tool for autonomous navigation in unknown environments.
 Indeed, cameras and inertial measurement units (IMUs) are complementary in several respects.
-Since an IMU directly measures linear accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
+Since an IMU measures linear accelerations and rotational velocities, these values must be integrated to arrive at a new pose estimate.
 However, the noise inherent in the IMU's measurements is included in the integration as well, and consequently the pose estimates can drift unbounded over time.
 The addition of a camera is an excellent way to bound this cumulative drift error because the camera's signal-to-noise ratio is highest when the camera is moving slowly.
 On the other hand, cameras are not robust to motion blur induced by rapid motions.
-In these cases, IMU data can be relied upon more heavily in estimating egomotion.
+In these cases, IMU data can be relied upon more heavily when estimating egomotion.
 
 The question, then, is how best to fuse measurements from these two sensor types to arrive at an accurate estimate of a vehicle's motion over time.
 This problem is often complicated by the absence of a known map of features from which the camera can generate measurements.
-Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on the mapping component may vary from algorithm to algorithm.
+Any solution must therefore solve a Simultaneous Localization and Mapping (SLAM) problem, although the importance placed on mapping may vary from algorithm to algorithm.
 
 In this work we characterize, compare, and contrast the performance of two modern solutions to the visual-inertial SLAM problem, the Sliding Window Filter (SWF) and the Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA}, on data from a moving hand-held sensor rig, as well as several traverses from the KITTI dataset \cite{Geiger:2013:IJRR}.
 The most similar work to ours is that of Leutenegger et al. \cite{Leutenegger:2015:IJRR}, which compares the accuracy of the MSCKF to a keyframe-based SWF on datasets consisting of relatively planar motion through urban and indoor environments.
 In contrast to \cite{Leutenegger:2015:IJRR}, our SWF optimizes over a constant number of timesteps rather than keyframes.
-We also conduct a more extensive characterization of the sensitivity of the MSCKF to certain parameters and compare both algorithms using data from a hand-held sensor rig that mimics the more arbitrary motion of a micro aerial vehicle (MAV).
+We also conduct a more extensive characterization of the sensitivity of the MSCKF to certain tuning parameters and compare both algorithms using data from a hand-held sensor rig that mimics the more arbitrary motion of a micro aerial vehicle (MAV).
 
 \begin{figure}[t]
     \vspace{0.25cm}
     \centering
     \includegraphics[width=0.45\textwidth]{figs/sensorhead}
-    \caption{The hand-held sensor head used in our experiments with the ``Starry Night'' dataset. The IMU reports translational and rotational velocities, while the stereo camera observes point features. We artificially blinded the stereo camera by using measurements from the left camera only.}
+    \caption{The hand-held sensor head used in our experiments with the ``Starry Night'' dataset. The IMU reports translational and rotational velocities, while the stereo camera observes point features. Since we are comparing monocular algorithms, we used measurements from the left camera of the stereo pair only.}
     \label{fig:sensorhead}
+    \vspace{-0.25cm}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,17 +127,17 @@ In this work, we consider tightly coupled algorithms, which are preferable for a
 
 For both tightly coupled and loosely coupled VINS, a popular estimator is the Extended Kalman filter (EKF) or one of its variants \cite{Huster:2002:OC, You:2001:VR, Kottas:2013:RSS, Kim:2007:RSS, Mourikis:2007:ICRA}, though methods also exist that employ unscented Kalman filters \cite{Ebcin:2007:ION}, particle filters \cite{Fox:1999:JAIR, Pupilli:2005:BMVC}, or batch optimization methods\cite{Triggs:2000va,Strelow:2004:IJR}. 
 
-EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is a weakness for navigation over long distances.
+EKF-SLAM is an efficient recursive algorithm for small-scale, online tasks, but maintaining the entire map as part of the state is computationally expensive when navigating over long distances.
 Indeed, the computational complexity of EKF-SLAM scales far too poorly with the number of features to be applied naively to this problem.
 
 Furthermore, EKF-based VINS are inconsistent, that is, the state uncertainties are underestimated.
-Li and Mourikis \cite{Li:2013coa} showed that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system, reducing the reliability of such estimators.
+Prior work has shown that this is due to the fact that the Jacobians in the linearized model of a VINS have different observability properties than the actual nonlinear system \cite{Huang:2010:IJRR,Li:2013coa}.
 
 Finally, EKF-SLAM is \textit{forgetful}:
 because the filter state includes only the most recent vehicle pose, a given update step can never modify past poses even if later feature measurements ought to constrain them.
 By locking in past poses, EKF-SLAM condemns itself to sub-optimally estimating both vehicle motion and feature positions.
 
-The shortcomings of the EKF motivate the use of filters that operate on a subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable.
+The shortcomings of the EKF motivate the use of filters that operate on a larger subset of the problem. Algorithms operating in constant time with respect to map size are particularly desirable.
 % The Variable State Dimension Filter (VSDF)\cite{McLauchlan:1993:SPIE} is an early example of such algorithms. It applied a Kalman filter over a sliding window of states to achieve linear complexity with the number of features, taking advantage of \textit{delayed linearization} in attempt to minimize linearization errors.
 The SWF analyzed in this work is a modern example of such algorithms, operating in constant time by performing a batch optimization over a set number of states, which is suboptimal but still leads to exceptional accuracy for its cost.
 This makes the SWF useful for delicate, large scale operations such as planetary landing\cite{Sibley:2010:JFR}. 
@@ -222,7 +223,7 @@ As a result, the filter may not maximally constrain some poses, and hence locali
 The Multi-State Constraint Kalman Filter (MSCKF) \cite{Mourikis:2006:TechReport,Mourikis:2007:ICRA} can be thought of as a hybrid of EKF-SLAM and the SWF.
 The key idea of the MSCKF is to maintain a variable window of vehicle poses and to simultaneously update each pose in the window using batch-optimized estimates of features that are visible across the entire window.
 This update step typically occurs when a tracked feature goes out of view of the camera, but it may also be triggered if the length of a feature track exceeds a preset threshold.
-Except where otherwise noted (i.e., state parametrization in \ref{sec:state_parametrization} and integration method in \ref{sec:imu_prop}), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
+Except where otherwise noted (i.e., state parametrization in Section \ref{sec:state_parametrization} and integration method in Section \ref{sec:imu_prop}), we implemented the MSCKF as presented in \cite{Mourikis:2006:TechReport, Mourikis:2007:ICRA}.
 
 \subsection{MSCKF State Parametrization} \label{sec:state_parametrization}
 We evaluated the MSCKF on datasets in which the IMU `measures' gravity-corrected linear velocities rather than raw linear accelerations (see Section \ref{sec:experiments}).
@@ -257,7 +258,7 @@ Accordingly, the MSCKF state covariance $\hat{\Vec{P}}_k$ is a $(12+6N)\times(12
 \begin{align} \label{eq:covariance}
     \hat{\Vec{P}}_k &= \bbm \hat{\Vec{P}}_{II,k} & \hat{\Vec{P}}_{IC,k} \\ \hat{\Vec{P}}_{IC,k}^T & \hat{\Vec{P}}_{CC,k} \ebm
 \end{align}
-where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-correlation between the current IMU state and the past camera poses.
+where $\hat{\Vec{P}}_{II,k}$ is the $12\times12$ covariance matrix of the current IMU state, $\hat{\Vec{P}}_{CC,k}$ is the $6N\times6N$ covariance matrix of the camera poses, and $\hat{\Vec{P}}_{IC,k}$ is the $12\times6N$ cross-covariance between the current IMU state and the past camera poses.
 
 \subsection{MSCKF State Augmentation}
 When a new camera image becomes available, the MSCKF state must be augmented with the current camera pose.
@@ -485,6 +486,7 @@ As an aside, we note that the SWF does not have this problem because feature pos
     \includegraphics[width=0.45\textwidth]{figs/NST_RMSE}    
     \caption{Effect of correlation between measurement noise and filter state on MSCKF performance. The correlation between the measurement noise and the state causes the filter estimates to drift further from the true values than with a modified, de-correlated measurement noise.}
     \label{fig:nullspace}
+    \vspace{-0.25cm}
 \end{figure}
 
 In order to transform $\Vec{r}^{(j)}$ into a usable form for the EKF, we can define a semi-unitary matrix $\Vec{A}$ whose columns form the basis of the left nullspace of $\Vec{H}_{f}^{(j)}$, and project $\Vec{r}^{(j)}$ into this nullspace to obtain an error equation of the correct form (to first order):
@@ -554,7 +556,7 @@ We initialized both filters with the first ground truth pose, and obtained initi
     }
     \caption{Comparison of MSCKF, SWF, and IMU integration for multiple parameter settings on two intervals of the ``Starry Night'' dataset. The numbers next to ``MSCKF'' in the legend refer to the minimum and maximum feature track lengths before an EKF update is triggered, while the numbers next to ``SWF'' refer to the number of states in the sliding window.}
 
-    \vspace{-0.2cm}
+    \vspace{-0.25cm}
 \end{figure*}
 
 \subsection{``Starry Night'' Dataset}
@@ -638,7 +640,7 @@ The authors of \cite{Sibley:2010:JFR} describe how this can be remedied by margi
 % The accumulated drift error in the SWF quickly escapes the estimator's reported uncertainty envelope, and so this form of the SWF may be considered inconsistent in the absence of a known map.
 
 Another point in favour of the MSCKF is that the computational effort required was an order of magnitude smaller than for the SWF.
-The MSCKF may therefore be better suited to vehicles with limited computational resources, particularly if they are operating in feature-rich environments.
+The MSCKF may therefore be better suited to platforms with limited computational resources, particularly if they are operating in feature-rich environments.
 
 \begin{figure}
     \centering
@@ -646,7 +648,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
 
     \caption{Comparison of Root Mean Squared Error (RMSE) of the MSCKF, SWF, and pure IMU integration for three synthetic maps generated using the IMU data in the interval $(1215,1715)$. The numbers next to ``MSCKF'' and ``SWF'' refer to the number of features in the dataset (40, 60 or 100).}
     \label{fig:comp_3}
-    \vspace{-0.2cm}
+    \vspace{-0.25cm}
 \end{figure}
 
 \begin{table}
@@ -674,7 +676,7 @@ The MSCKF may therefore be better suited to vehicles with limited computational 
     \end{tablenotes}
     \end{threeparttable}
     \label{tab:rmse_nees}
-    \vspace{-0.2cm}
+    \vspace{-0.5cm}
 \end{table}
 
 
@@ -715,6 +717,7 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
     }
     \caption{Translational RMSE over four traverses from the KITTI dataset \cite{Geiger:2013:IJRR} totaling 534 m of urban driving.}
     \label{fig:kitti}
+
 \end{figure*}
 
 \begin{figure*}
@@ -722,7 +725,7 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
     \includegraphics[width=0.9\textwidth]{figs/kitti/composite-kitti}
     \caption{Sample frames from the four KITTI traverses shown in Figure \ref{fig:kitti}.}
     \label{fig:composite-kitti}
-    \vspace{-0.2cm}
+    \vspace{-0.5cm}
 \end{figure*}
 
 \begin{table}
@@ -742,7 +745,7 @@ As expected, the reported ANEES values show that the MSCKF produced estimates th
         (10)        & ANEES             & 358.3     & 703.2     & 1124      & 3767    \B      \\ \hline
     \end{tabular}
     \label{tab:kitti_results}
-    \vspace{-0.2cm}
+    \vspace{-0.25cm}
 \end{table}
 
 
